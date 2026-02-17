@@ -1,5 +1,3 @@
-# (C) Copyright 2019- NOAA/NWS/NCEP/EMC
-
 if( NOT CMAKE_BUILD_TYPE MATCHES "Debug" )
   add_definitions( -DNDEBUG )
 endif( )
