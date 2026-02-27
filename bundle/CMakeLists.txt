@@ -14,6 +14,19 @@ option(TEST_IODA "download and ioda-data repo needed for ioda ctests" OFF)
 option(TEST_UFO "download and ufo-data repo needed for ufo ctests" OFF)
 option(TEST_SABER "download and saber-data repo needed for ioda ctests" OFF)
 
+# ECMWF libraries
+option("BUNDLE_SKIP_ECKIT" "Don't build eckit" "ON" ) # Skip eckit build unless user passes -DBUNDLE_SKIP_ECKIT=OFF
+option("BUNDLE_SKIP_FCKIT" "Don't build fckit" "ON") # Skip fckit build unless user passes -DBUNDLE_SKIP_FCKIT=OFF
+option("BUNDLE_SKIP_ATLAS" "Don't build atlas" "ON") # Skip atlas build unless user passes -DBUNDLE_SKIP_ATLAS=OFF
+
+# turn off optional OOPS toy models
+option( ENABLE_LORENZ95_MODEL "Build Lorenz95 toy model" OFF )
+option( ENABLE_QG_MODEL "Build QG toy model" OFF )
+
+ecbuild_bundle( PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0 )
+ecbuild_bundle( PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2 )
+ecbuild_bundle( PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0 )
+
 #===============================================================================
 # required repositories
 #===============================================================================

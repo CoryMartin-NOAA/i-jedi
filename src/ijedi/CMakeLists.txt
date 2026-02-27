@@ -16,6 +16,7 @@ Geometry/Geometry.h
 # Increment
 
 # IO
+)
 
 ecbuild_add_library(TARGET          ${PROJECT_NAME}
                     SOURCES         ${ijedi_src_files}
