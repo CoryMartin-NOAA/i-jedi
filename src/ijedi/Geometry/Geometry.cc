@@ -12,6 +12,7 @@
 #include "oops/util/Logger.h"
 
 #include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Geometry/base/GeometryBase.h"
 
 // -----------------------------------------------------------------------------
 namespace ijedi {
@@ -21,23 +22,19 @@ namespace ijedi {
   Geometry::Geometry(const eckit::Configuration & conf,
                      const eckit::mpi::Comm & comm)
     : comm_(comm) {
-    const eckit::Configuration * configc = &conf;
-
     eckit::LocalConfiguration atlas_config = conf.getSubConfiguration("atlas");
     halo_size_ = atlas_config.getInt("halo", HALO_SIZE);
 
-    // Initialize eckit communicator for atlas
-    eckit::mpi::setCommDefault(comm_.name().c_str());
-
-    // Create the grid
-    grid_ = atlas::Grid(atlas_config);
+    geometryImpl_ = GeometryBase::create(conf, comm_);
+    grid_ = geometryImpl_->getGrid();
 
     // Finally, print a summary of the geometry
     this->print(oops::Log::info());
   }
 // -----------------------------------------------------------------------------
   Geometry::Geometry(const Geometry & other)
-    : comm_(other.comm_) {
+    : comm_(other.comm_),
+      geometryImpl_(other.geometryImpl_) {
 
     grid_ = other.grid_;
   }
@@ -46,16 +43,14 @@ namespace ijedi {
   }
 // -----------------------------------------------------------------------------
   void Geometry::print(std::ostream & os) const {
+    if (geometryImpl_) {
+      geometryImpl_->print(os);
+      return;
+    }
+
     os << "Geometry:" << std::endl;
     os << "  Grid Name: " << grid_.name() << std::endl;
     os << "  Number of Points: " << grid_.size() << std::endl;
-    os << "  Grid nx, ny: " << grid_.nxmax() << ", " << grid_.ny() << std::endl;
-    os << "  Grid y: " << grid_.y() << std::endl;
-    os << "  Grid Projection Units: " << grid_.projection().units()
-       << std::endl;
-    os << "  Domain: " << grid_.domain() << std::endl;
-    os << "  Periodic: " << grid_.periodic() << std::endl;
-    os << "  Spec: " << grid_.spec() << std::endl;
   }
 // -----------------------------------------------------------------------------
   void Geometry::latlon(std::vector<double> & lats,

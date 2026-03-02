@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -26,6 +27,8 @@
 
 #include "oops/util/ObjectCounter.h"
 #include "oops/util/Printable.h"
+
+#include "ijedi/Geometry/base/GeometryBase.h"
 
 // Forward declarations
 namespace eckit {
@@ -87,7 +90,7 @@ namespace ijedi {
     int halo_size_;
     std::vector<double> ak_, bk_;
     atlas::Vertical vcoord_;
-    boost::shared_ptr<const Geometry> geom_;
+    std::shared_ptr<GeometryBase> geometryImpl_;
   };
 // -----------------------------------------------------------------------------
 

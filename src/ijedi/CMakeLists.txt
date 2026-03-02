@@ -8,6 +8,14 @@ list( APPEND ijedi_src_files
 # Geometry
 Geometry/Geometry.cc
 Geometry/Geometry.h
+Geometry/base/GeometryBase.cc
+Geometry/base/GeometryBase.h
+Geometry/fv3/GeometryFV3.cc
+Geometry/fv3/GeometryFV3.h
+Geometry/mpas/GeometryMPAS.cc
+Geometry/mpas/GeometryMPAS.h
+Geometry/mom6/GeometryMOM6.cc
+Geometry/mom6/GeometryMOM6.h
 
 # Fields
 
