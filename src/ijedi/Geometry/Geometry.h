@@ -30,24 +30,30 @@
 
 #include "ijedi/Geometry/base/GeometryBase.h"
 
+#include "ijedi/FieldMetadata/FieldsMetadata.h"
+
 // Forward declarations
-namespace eckit {
+namespace eckit
+{
   class Configuration;
 }
 
-namespace oops {
+namespace oops
+{
   class Variables;
 }
 
-namespace ijedi {
+namespace ijedi
+{
 
-// -----------------------------------------------------------------------------
-// Geometry handles geometry.
+  // -----------------------------------------------------------------------------
+  // Geometry handles geometry.
 
-  class Geometry:public util::Printable,
-                 private util::ObjectCounter<Geometry> {
-   public:
-    static const std::string classname() {return "ijedi::Geometry";}
+  class Geometry : public util::Printable,
+                   private util::ObjectCounter<Geometry>
+  {
+  public:
+    static const std::string classname() { return "ijedi::Geometry"; }
 
     explicit Geometry(const eckit::Configuration &,
                       const eckit::mpi::Comm &);
@@ -56,29 +62,31 @@ namespace ijedi {
 
     bool levelsAreTopDown() const { return true; }
 
-    std::vector<double> verticalCoord(std::string &) const {return {};}
+    std::vector<double> verticalCoord(std::string &) const { return {}; }
     std::vector<size_t> variableSizes(const oops::Variables &) const;
     void latlon(std::vector<double> &, std::vector<double> &, const bool) const;
 
-    const eckit::mpi::Comm & getComm() const {return comm_;}
-    const atlas::StructuredGrid & getGrid() const {return grid_;}
-    const atlas::grid::Partitioner partitioner() const {return partitioner_;}
-    const atlas::Mesh & getMesh() const {return mesh_;}
-    const atlas::FunctionSpace & functionSpace() const {return functionSpace_;}
-    const atlas::FieldSet & fields() const {return fields_;}
-    const atlas::Vertical & getVerticalCoord() const {return vcoord_;}
+    const eckit::mpi::Comm &getComm() const { return comm_; }
+    const atlas::StructuredGrid &getGrid() const { return grid_; }
+    const atlas::grid::Partitioner partitioner() const { return partitioner_; }
+    const atlas::Mesh &getMesh() const { return mesh_; }
+    const atlas::FunctionSpace &functionSpace() const { return functionSpace_; }
+    const atlas::FieldSet &fields() const { return fields_; }
+    const atlas::Vertical &getVerticalCoord() const { return vcoord_; }
 
-    atlas::FunctionSpace & functionSpace() {return functionSpace_;}
-    atlas::FieldSet & fields() {return fields_;}
+    atlas::FunctionSpace &functionSpace() { return functionSpace_; }
+    atlas::FieldSet &fields() { return fields_; }
 
-    size_t getNlevs() const {return nLevs_;}
-    std::vector<double> getAk() const {return ak_;}
-    std::vector<double> getBk() const {return bk_;}
+    size_t getNlevs() const { return nLevs_; }
+    std::vector<double> getAk() const { return ak_; }
+    std::vector<double> getBk() const { return bk_; }
 
-   private:
-    Geometry & operator=(const Geometry &);
+  private:
+    Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;
-    const eckit::mpi::Comm & comm_;
+    const eckit::mpi::Comm &comm_;
+    std::shared_ptr<FieldsMetadata> fieldsMeta_;
+
     atlas::StructuredGrid grid_;
     atlas::grid::Partitioner partitioner_;
     atlas::grid::Distribution distribution_;
@@ -92,6 +100,6 @@ namespace ijedi {
     atlas::Vertical vcoord_;
     std::shared_ptr<GeometryBase> geometryImpl_;
   };
-// -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
 
-}  // namespace ijedi
+} // namespace ijedi
