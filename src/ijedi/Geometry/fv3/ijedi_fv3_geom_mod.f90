@@ -33,11 +33,10 @@ use ijedi_fv3_arrays_mod,     only: fv_atmos_type, deallocate_fv_atmos_type
 use ijedi_fv3_control_mod,    only: fv_control_init
 
 ! ijedi uses
-use fields_metadata_mod,        only: fields_metadata
 use ijedi_constants_mod,      only: constant
 use ijedi_kinds_mod,          only: kind_int, kind_real
 use ijedi_netcdf_utils_mod,   only: nccheck
-use ijedi_fmsnamelist_mod,    only: ijedi_fmsnamelist
+use ijedi_fv3_namelist_mod,   only: ijedi_fmsnamelist
 
 implicit none
 private
@@ -70,7 +69,6 @@ type :: ijedi_geom
   real(kind=kind_real), allocatable, dimension(:,:,:,:) :: es, ew
   real(kind=kind_real), allocatable, dimension(:,:)     :: a11, a12, a21, a22
   type(fckit_mpi_comm) :: f_comm
-  type(fields_metadata) :: fmd
   type(atlas_fieldset) :: geometry_fields
   ! Vertical Coordinate
   real(kind=kind_real), allocatable, dimension(:)       :: vCoord                   !Model vertical coordinate
@@ -445,11 +443,10 @@ end subroutine create
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine clone(self, other, fmd)
+subroutine clone(self, other)
 
 class(ijedi_geom),        intent(inout) :: self
 type(ijedi_geom), target, intent(in)    :: other
-type(fields_metadata),      intent(in)    :: fmd
 
 allocate(self%ak(other%npz+1) )
 allocate(self%bk(other%npz+1) )
@@ -563,8 +560,6 @@ self%domain => other%domain
 self%afunctionspace = atlas_functionspace(other%afunctionspace%c_ptr())
 
 self%geometry_fields = atlas_fieldset(other%geometry_fields%c_ptr())
-
-self%fmd = fmd
 
 self%lat_us = other%lat_us
 self%lon_us = other%lon_us

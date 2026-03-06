@@ -4,6 +4,9 @@ list(APPEND ijedi_src_files
   Traits.h
 )
 
+# ###############################################################################
+# Project source files
+# ###############################################################################
 list(APPEND ijedi_src_files
 
   # Geometry
@@ -23,11 +26,22 @@ list(APPEND ijedi_src_files
   # Increment
 
   # IO
+
+  # Utilities
+  Utilities/Constants.cc
+  Utilities/Constants.h
+  Utilities/ijedi_constants_mod.f90
+  Utilities/ijedi_kinds_mod.f90
+  Utilities/ijedi_netcdf_utils_mod.F90
 )
+
+# ###############################################################################
+# FV3 specific project source files and setup
+# ###############################################################################
 
 # fv3 pieces if FMS is found
 if(FMS_FOUND)
-  list(APPEND ijedi_src_files
+  list(APPEND ijedi_fv3_src_files
     Geometry/fv3/GeometryFV3.cc
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/ijedi_fv3_arrays.F90
@@ -37,10 +51,27 @@ if(FMS_FOUND)
     Geometry/fv3/ijedi_fv3_grid_tools.F90
     Geometry/fv3/ijedi_fv3_grid_utils.F90
     Geometry/fv3/ijedi_fv3_mp_mod.F90
+    Geometry/fv3/ijedi_fv3_namelist_mod.f90
     Geometry/fv3/ijedi_fv3_sorted_index.F90
   )
+
+  # fv3 ported files have specific required properties
+  list(APPEND fv3_defs SPMD)
+  list(APPEND fv3_defs MOIST_CAPPA)
+  list(APPEND fv3_defs USE_COND)
+  list(APPEND fv3_defs OVERLOAD_R4)
+  list(APPEND fv3_defs OVERLOAD_R8)
+  list(APPEND fv3_defs INTERNAL_FILE_NML)
+  list(APPEND fv3_defs ENABLE_QUAD_PRECISION)
+  set_source_files_properties(${ijedi_fv3_src_files} PROPERTIES COMPILE_DEFINITIONS "${fv3_defs}")
+
+  # Combine with main source files
+  list(APPEND ijedi_src_files ${ijedi_fv3_src_files})
 endif()
 
+# ###############################################################################
+# Model specific project source files
+# ###############################################################################
 ecbuild_add_library(TARGET ${PROJECT_NAME}
   SOURCES ${ijedi_src_files}
   INSTALL_HEADERS LISTED
@@ -58,13 +89,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC fckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC atlas atlas_f)
 target_link_libraries(${PROJECT_NAME} PUBLIC oops)
 
-if(FMS_FOUND)
-  target_link_libraries(${PROJECT_NAME} PUBLIC FMS)
-endif()
-
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
-if(OpenMP_Fortran_FOUND)
-  target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_Fortran)
+if(FMS_FOUND)
+  target_link_libraries(${PROJECT_NAME} PUBLIC fms)
 endif()
 
 if(OpenMP_CXX_FOUND)
