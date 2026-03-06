@@ -1,4 +1,4 @@
-module fv3jedi_fv3_control_mod
+module ijedi_fv3_control_mod
    ! Modules Included:
    ! <table>
    ! <tr>
@@ -20,7 +20,7 @@ module fv3jedi_fv3_control_mod
    !         check_nml_error, close_file, file_exist</td>
    !   </tr>
    !   <tr>
-   !     <td>fv3jedi_fv3_arrays_mod</td>
+   !     <td>ijedi_fv3_arrays_mod</td>
    !     <td>fv_atmos_type, allocate_fv_atmos_type, deallocate_fv_atmos_type,
    !          R_GRID</td>
    !   </tr>
@@ -106,14 +106,14 @@ module fv3jedi_fv3_control_mod
 
       !use fv_io_mod,           only: fv_io_exit
       !use fv_restart_mod,      only: fv_restart_init, fv_restart_end
-      use fv3jedi_fv3_arrays_mod,       only: fv_atmos_type, allocate_fv_atmos_type, deallocate_fv_atmos_type, &
+      use ijedi_fv3_arrays_mod,       only: fv_atmos_type, allocate_fv_atmos_type, deallocate_fv_atmos_type, &
                                      R_GRID
-      use fv3jedi_fv3_grid_utils_mod,   only: grid_utils_init, grid_utils_end, ptop_min
-      use fv3jedi_fv3_eta_mod,          only: set_eta
-      use fv3jedi_fv3_grid_tools_mod,   only: init_grid
-      use fv3jedi_fv3_mp_mod,           only: mp_start, domain_decomp, mp_assign_gid, global_nest_domain
-      use fv3jedi_fv3_mp_mod,           only: broadcast_domains, mp_barrier, is_master, setup_master, grids_master_procs, tile_fine
-      use fv3jedi_fv3_mp_mod,           only: MAX_NNEST, MAX_NTILE
+      use ijedi_fv3_grid_utils_mod,   only: grid_utils_init, grid_utils_end, ptop_min
+      use ijedi_fv3_eta_mod,          only: set_eta
+      use ijedi_fv3_grid_tools_mod,   only: init_grid
+      use ijedi_fv3_mp_mod,           only: mp_start, domain_decomp, mp_assign_gid, global_nest_domain
+      use ijedi_fv3_mp_mod,           only: broadcast_domains, mp_barrier, is_master, setup_master, grids_master_procs, tile_fine
+      use ijedi_fv3_mp_mod,           only: MAX_NNEST, MAX_NTILE
       !use test_cases_mod,      only: read_namelist_test_case_nml
       !use fv_timing_mod,       only: timing_on, timing_off, timing_init, timing_prt
       use mpp_domains_mod,     only: domain2D
@@ -126,8 +126,8 @@ module fv3jedi_fv3_control_mod
       !use fv_diagnostics_mod,  only: fv_diag_init_gn
       !use coarse_grained_restart_files_mod, only: deallocate_coarse_restart_type
 
-! fv3jedi uses
-use fv3jedi_kinds_mod,          only: kind_real
+! ijedi uses
+use ijedi_kinds_mod,          only: kind_real
 
 #ifdef MULTI_GASES
       use constants_mod,       only: rvgas, cp_air
@@ -1357,4 +1357,4 @@ use fv3jedi_kinds_mod,          only: kind_real
 
    end subroutine read_namelist_test_case_nml
 
-   end module fv3jedi_fv3_control_mod
+   end module ijedi_fv3_control_mod

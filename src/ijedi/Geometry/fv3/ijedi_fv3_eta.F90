@@ -1,4 +1,4 @@
-module fv3jedi_fv3_eta_mod
+module ijedi_fv3_eta_mod
 
 ! <table>
 ! <tr>
@@ -20,12 +20,12 @@ module fv3jedi_fv3_eta_mod
 ! </table>
 
  use constants_mod,  only: kappa, grav, cp_air, rdgas
- use fv3jedi_fv3_mp_mod,      only: is_master
+ use ijedi_fv3_mp_mod,      only: is_master
  use fms_mod,        only: FATAL, error_mesg
  use fms2_io_mod,    only: ascii_read
 
-! fv3jedi uses
- use fv3jedi_kinds_mod, only: kind_real
+! ijedi uses
+ use ijedi_kinds_mod, only: kind_real
 
  implicit none
  private
@@ -3506,4 +3506,4 @@ module fv3jedi_fv3_eta_mod
 
   end subroutine zflip
 
-end module fv3jedi_fv3_eta_mod
+end module ijedi_fv3_eta_mod

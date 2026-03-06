@@ -1,4 +1,4 @@
- module fv3jedi_fv3_grid_utils_mod
+ module ijedi_fv3_grid_utils_mod
 
    ! Modules Included:
    ! <table>
@@ -15,7 +15,7 @@
    !     <td>i_sst, j_sst, sst_ncep, sst_anom</td>
    !   </tr>
    !   <tr>
-   !     <td>fv3jedi_fv3_arrays_mod</td>
+   !     <td>ijedi_fv3_arrays_mod</td>
    !     <td>fv_atmos_type, fv_grid_type, fv_grid_bounds_type,R_GRID</td>
    !   </tr>
    !   <tr>
@@ -58,16 +58,16 @@
     use mpp_parameter_mod, only: AGRID_PARAM=>AGRID, CGRID_NE_PARAM=>CGRID_NE
     use mpp_parameter_mod, only: CORNER, SCALAR_PAIR
 
-    use fv3jedi_fv3_arrays_mod,   only: fv_atmos_type, fv_grid_type, fv_grid_bounds_type, &
+    use ijedi_fv3_arrays_mod,   only: fv_atmos_type, fv_grid_type, fv_grid_bounds_type, &
                                R_GRID
-    use fv3jedi_fv3_eta_mod,      only: set_eta
-    use fv3jedi_fv3_mp_mod,       only: is_master
-    use fv3jedi_fv3_mp_mod,       only: mp_reduce_sum, mp_reduce_min, mp_reduce_max
-    use fv3jedi_fv3_mp_mod,       only: fill_corners, XDir, YDir
+    use ijedi_fv3_eta_mod,      only: set_eta
+    use ijedi_fv3_mp_mod,       only: is_master
+    use ijedi_fv3_mp_mod,       only: mp_reduce_sum, mp_reduce_min, mp_reduce_max
+    use ijedi_fv3_mp_mod,       only: fill_corners, XDir, YDir
     !use fv_timing_mod,   only: timing_on, timing_off
 
-! fv3jedi uses
-use fv3jedi_kinds_mod,          only: kind_real
+! ijedi uses
+use ijedi_kinds_mod,          only: kind_real
 
     implicit none
     private
@@ -3846,4 +3846,4 @@ use fv3jedi_kinds_mod,          only: kind_real
     end subroutine init_mq
 #endif
 
-    end module fv3jedi_fv3_grid_utils_mod
+    end module ijedi_fv3_grid_utils_mod

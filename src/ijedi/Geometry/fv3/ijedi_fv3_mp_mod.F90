@@ -1,4 +1,4 @@
-      module fv3jedi_fv3_mp_mod
+      module ijedi_fv3_mp_mod
 
          ! <table>
          ! <tr>
@@ -18,7 +18,7 @@
          !     <td>set_domain</td>
          !   </tr>
          !   <tr>
-         !     <td>fv3jedi_fv3_arrays_mod</td>
+         !     <td>ijedi_fv3_arrays_mod</td>
          !     <td>fv_atmos_type</td>
          !   </tr>
          !     <td>mpp_mod</td>
@@ -71,13 +71,13 @@ use mpi
                use mpp_domains_mod, only : group_halo_update_type => mpp_group_update_type
                use mpp_domains_mod, only : nest_domain_type, mpp_get_io_domain_layout, mpp_get_layout, mpp_copy_domain
                use mpp_parameter_mod, only : WUPDATE, EUPDATE, SUPDATE, NUPDATE, XUPDATE, YUPDATE
-               use fv3jedi_fv3_arrays_mod, only: fv_atmos_type, fv_grid_bounds_type
+               use ijedi_fv3_arrays_mod, only: fv_atmos_type, fv_grid_bounds_type
                use mpp_mod, only : mpp_get_current_pelist, mpp_set_current_pelist
                use mpp_domains_mod, only : mpp_get_domain_shift
                use ensemble_manager_mod, only : get_ensemble_id
 
-! fv3jedi uses
-use fv3jedi_kinds_mod,          only: kind_real
+! ijedi uses
+use ijedi_kinds_mod,          only: kind_real
 
                implicit none
                private
@@ -2406,7 +2406,7 @@ use fv3jedi_kinds_mod,          only: kind_real
                public gid, masterproc, ng
 #endif
 
-               end module fv3jedi_fv3_mp_mod
+               end module ijedi_fv3_mp_mod
          !-------------------------------------------------------------------------------
 
 

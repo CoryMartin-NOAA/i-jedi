@@ -1,4 +1,4 @@
-module fv3jedi_fv3_arrays_mod
+module ijedi_fv3_arrays_mod
 #include <fms_platform.h>
      use mpp_domains_mod,       only: domain2d
      use fms2_io_mod,           only: FmsNetcdfFile_t, FmsNetcdfDomainFile_t
@@ -7,8 +7,8 @@ module fv3jedi_fv3_arrays_mod
      use mpp_mod,               only: mpp_broadcast
      use platform_mod,          only: r8_kind
 
-! fv3jedi uses
-use fv3jedi_kinds_mod,          only: kind_real
+! ijedi uses
+use ijedi_kinds_mod,          only: kind_real
 
      public
 
@@ -2201,4 +2201,4 @@ use fv3jedi_kinds_mod,          only: kind_real
 
    end subroutine deallocate_fv_nest_BC_type_3d
 
-   end module fv3jedi_fv3_arrays_mod
+   end module ijedi_fv3_arrays_mod

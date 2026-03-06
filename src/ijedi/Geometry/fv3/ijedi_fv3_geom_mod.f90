@@ -5,7 +5,7 @@
 
 !> Fortran module handling geometry for the FV3 model
 
-module fv3jedi_geom_mod
+module ijedi_geom_mod
 
 use netcdf
 use mpi
@@ -29,24 +29,24 @@ use ensemble_manager_mod,       only: get_ensemble_id,get_ensemble_size
 use field_manager_mod,          only: fm_string_len, field_manager_init
 
 ! fv3 uses
-use fv3jedi_fv3_arrays_mod,     only: fv_atmos_type, deallocate_fv_atmos_type
-use fv3jedi_fv3_control_mod,    only: fv_control_init
+use ijedi_fv3_arrays_mod,     only: fv_atmos_type, deallocate_fv_atmos_type
+use ijedi_fv3_control_mod,    only: fv_control_init
 
-! fv3jedi uses
+! ijedi uses
 use fields_metadata_mod,        only: fields_metadata
-use fv3jedi_constants_mod,      only: constant
-use fv3jedi_kinds_mod,          only: kind_int, kind_real
-use fv3jedi_netcdf_utils_mod,   only: nccheck
-use fv3jedi_fmsnamelist_mod,    only: fv3jedi_fmsnamelist
+use ijedi_constants_mod,      only: constant
+use ijedi_kinds_mod,          only: kind_int, kind_real
+use ijedi_netcdf_utils_mod,   only: nccheck
+use ijedi_fmsnamelist_mod,    only: ijedi_fmsnamelist
 
 implicit none
 private
-public :: fv3jedi_geom, getVerticalCoord, getVerticalCoordLogP, initialize, pedges2pmidlayer
+public :: ijedi_geom, getVerticalCoord, getVerticalCoordLogP, initialize, pedges2pmidlayer
 
 ! --------------------------------------------------------------------------------------------------
 
-!> Fortran derived type to hold geometry data for the FV3JEDI model
-type :: fv3jedi_geom
+!> Fortran derived type to hold geometry data for the ijedi model
+type :: ijedi_geom
   integer :: isd, ied, jsd, jed                                                     !data domain
   integer :: isc, iec, jsc, jec, kec                                                !compute domain
   integer :: npx,npy,npz,ngrid                                                      !x/y/z-dir grid edge points per tile
@@ -118,7 +118,7 @@ type :: fv3jedi_geom
     procedure, private :: fv3_nodes_to_atlas_nodes_i
     procedure, private :: fv3_nodes_to_atlas_nodes_r
 
-end type fv3jedi_geom
+end type ijedi_geom
 
 ! --------------------------------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ end subroutine initialize
 subroutine create(self, conf, comm, npx, npy, npz)
 
 !Arguments
-class(fv3jedi_geom), target, intent(inout) :: self
+class(ijedi_geom), target, intent(inout) :: self
 type(fckit_configuration),   intent(in)    :: conf
 type(fckit_mpi_comm),        intent(in)    :: comm
 integer,                     intent(out)   :: npx
@@ -185,7 +185,7 @@ real(kind=kind_real) :: sf, t_lon, t_lat
 logical :: do_write_geom = .false.
 integer :: iterator_dimension = 2
 
-type(fv3jedi_fmsnamelist) :: fmsnamelist
+type(ijedi_fmsnamelist) :: fmsnamelist
 
 ! Add the communicator to the geometry
 ! ------------------------------------
@@ -338,8 +338,8 @@ if (self%npz > 1) then
   if (readdim == -1) call abor1_ftn("ak/bk in file does not match dimension of npz from input.nml")
 
   !Read ak and bk from the file
-  call nccheck( nf90_get_var(ncid, akvarid, self%ak), "fv3jedi_geom, nf90_get_var ak" )
-  call nccheck( nf90_get_var(ncid, bkvarid, self%bk), "fv3jedi_geom, nf90_get_var bk" )
+  call nccheck( nf90_get_var(ncid, akvarid, self%ak), "ijedi_geom, nf90_get_var ak" )
+  call nccheck( nf90_get_var(ncid, bkvarid, self%bk), "ijedi_geom, nf90_get_var bk" )
 else
   self%ak = 0.0_kind_real
   self%bk = 0.0_kind_real
@@ -447,8 +447,8 @@ end subroutine create
 
 subroutine clone(self, other, fmd)
 
-class(fv3jedi_geom),        intent(inout) :: self
-type(fv3jedi_geom), target, intent(in)    :: other
+class(ijedi_geom),        intent(inout) :: self
+type(ijedi_geom), target, intent(in)    :: other
 type(fields_metadata),      intent(in)    :: fmd
 
 allocate(self%ak(other%npz+1) )
@@ -584,7 +584,7 @@ end subroutine clone
 
 subroutine delete(self)
 
-class(fv3jedi_geom), intent(inout) :: self
+class(ijedi_geom), intent(inout) :: self
 
 ! Deallocate
 deallocate(self%ak)
@@ -638,8 +638,8 @@ end subroutine delete
 
 subroutine is_equal(self, other, equal)
 
-class(fv3jedi_geom), intent(in) :: self
-class(fv3jedi_geom), intent(in) :: other
+class(ijedi_geom), intent(in) :: self
+class(ijedi_geom), intent(in) :: other
 logical, intent(out) :: equal
 
 equal = .false.
@@ -666,7 +666,7 @@ end subroutine is_equal
 subroutine set_and_fill_geometry_fields(self, afieldset, field_masks)
 
 !Arguments
-class(fv3jedi_geom),       intent(inout) :: self
+class(ijedi_geom),       intent(inout) :: self
 type(atlas_fieldset),      intent(inout) :: afieldset
 type(fckit_configuration), intent(in)    :: field_masks
 
@@ -724,7 +724,7 @@ else if (trim(self%vertcoord_type) == 'orography') then
    call afield2%data(real_ptr2)
    real_ptr(1,:) = real_ptr2(1,:)
 else
-   call abor1_ftn('fv3jedi_geom_mod%set_and_fill_geometry_fields: unknown vertical coordinate type')
+   call abor1_ftn('ijedi_geom_mod%set_and_fill_geometry_fields: unknown vertical coordinate type')
 endif
 call afieldset%add(afield)
 call afield%final()
@@ -880,7 +880,7 @@ end subroutine setup_domain
 
 subroutine write_geom(self)
 
-  type(fv3jedi_geom), intent(in) :: self
+  type(ijedi_geom), intent(in) :: self
 
   type(fckit_mpi_comm) :: f_comm
   character(len=255) :: filename
@@ -889,7 +889,7 @@ subroutine write_geom(self)
   integer :: varid(8)
 
 
-  ! Pointer to fv3jedi geom communicator
+  ! Pointer to ijedi geom communicator
   f_comm = self%f_comm
 
   write(filename,"(A9,I0.4,A4)") 'fv3grid_c', self%npx-1, '.nc4'
@@ -1015,7 +1015,7 @@ subroutine getVerticalCoord(self, vc, npz, psurf)
   ! prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
 
-  type(fv3jedi_geom),   intent(in) :: self
+  type(ijedi_geom),   intent(in) :: self
   integer,              intent(in) :: npz
   real(kind=kind_real), intent(in) :: psurf
   real(kind=kind_real), intent(out) :: vc(npz)
@@ -1041,7 +1041,7 @@ subroutine getVerticalCoordLogP(self, vc, npz, psurf)
   ! returns log(pressure) at mid level of the vertical column with surface prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
 
-  type(fv3jedi_geom),   intent(in) :: self
+  type(ijedi_geom),   intent(in) :: self
   integer,              intent(in) :: npz
   real(kind=kind_real), intent(in) :: psurf
   real(kind=kind_real), intent(out) :: vc(npz)
@@ -1058,7 +1058,7 @@ end subroutine getVerticalCoordLogP
 subroutine get_data(self, ak, bk, ptop)
 
 !Arguments
-class(fv3jedi_geom),  intent(in)  :: self
+class(ijedi_geom),  intent(in)  :: self
 real(kind=kind_real), intent(out) :: ak(self%npz+1)
 real(kind=kind_real), intent(out) :: bk(self%npz+1)
 real(kind=kind_real), intent(out) :: ptop
@@ -1074,7 +1074,7 @@ end subroutine get_data
 
 subroutine get_num_nodes_and_elements(self, num_nodes, num_tris, num_quads)
 
-  class(fv3jedi_geom),  intent(in)  :: self
+  class(ijedi_geom),  intent(in)  :: self
   integer, intent(out) :: num_nodes
   integer, intent(out) :: num_tris
   integer, intent(out) :: num_quads
@@ -1093,7 +1093,7 @@ end subroutine get_num_nodes_and_elements
 
 subroutine get_num_nodes_and_elements_global(self, num_nodes, num_tris, num_quads)
 
-  class(fv3jedi_geom),  intent(in)  :: self
+  class(ijedi_geom),  intent(in)  :: self
   integer, intent(out) :: num_nodes
   integer, intent(out) :: num_tris
   integer, intent(out) :: num_quads
@@ -1139,7 +1139,7 @@ end subroutine get_num_nodes_and_elements_global
 
 subroutine get_num_nodes_and_elements_regional(self, num_nodes, num_tris, num_quads)
 
-  class(fv3jedi_geom),  intent(in)  :: self
+  class(ijedi_geom),  intent(in)  :: self
   integer, intent(out) :: num_nodes
   integer, intent(out) :: num_tris
   integer, intent(out) :: num_quads
@@ -1175,7 +1175,7 @@ subroutine get_coords_and_connectivities(self, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
     raw_tri_boundary_nodes, raw_quad_boundary_nodes)
 
-  class(fv3jedi_geom),  intent(in)  :: self
+  class(ijedi_geom),  intent(in)  :: self
   integer, intent(in) :: num_nodes
   integer, intent(in) :: num_tri_boundary_nodes
   integer, intent(in) :: num_quad_boundary_nodes
@@ -1213,7 +1213,7 @@ subroutine get_coords_and_connectivities_global(self, &
 
   use mpp_domains_mod, only: mpp_update_domains
 
-  class(fv3jedi_geom),  intent(in)  :: self
+  class(ijedi_geom),  intent(in)  :: self
   integer, intent(in) :: num_nodes
   integer, intent(in) :: num_tri_boundary_nodes
   integer, intent(in) :: num_quad_boundary_nodes
@@ -1318,11 +1318,11 @@ subroutine get_coords_and_connectivities_global(self, &
 
   ! sanity checks: tri_counter-1 == num_tri_boundary_nodes
   if (tri_counter-1 /= num_tri_boundary_nodes) then
-    call abor1_ftn('fv3jedi_geom_mod: inconsistent tri counter when getting connectivities')
+    call abor1_ftn('ijedi_geom_mod: inconsistent tri counter when getting connectivities')
   end if
   ! quad_counter-1 == num_quad_boundary_nodes
   if (quad_counter-1 /= num_quad_boundary_nodes) then
-    call abor1_ftn('fv3jedi_geom_mod: inconsistent quad counter when getting connectivities')
+    call abor1_ftn('ijedi_geom_mod: inconsistent quad counter when getting connectivities')
   end if
 
 end subroutine get_coords_and_connectivities_global
@@ -1336,7 +1336,7 @@ subroutine get_coords_and_connectivities_regional(self, &
 
   use mpp_domains_mod, only: mpp_update_domains
 
-  class(fv3jedi_geom),  intent(in)  :: self
+  class(ijedi_geom),  intent(in)  :: self
   integer, intent(in) :: num_nodes
   integer, intent(in) :: num_tri_boundary_nodes
   integer, intent(in) :: num_quad_boundary_nodes
@@ -1558,7 +1558,7 @@ subroutine get_coords_and_connectivities_regional(self, &
 
   ! quad_counter-1 == num_quad_boundary_nodes
   if (quad_counter-1 /= num_quad_boundary_nodes) then
-    call abor1_ftn('fv3jedi_geom_mod: inconsistent quad counter when getting connectivities')
+    call abor1_ftn('ijedi_geom_mod: inconsistent quad counter when getting connectivities')
   end if
 
   ! Avoid compilation warning
@@ -1570,7 +1570,7 @@ end subroutine get_coords_and_connectivities_regional
 
 subroutine fv3_nodes_to_atlas_nodes_r(self, fv3_data, atlas_data)
 
-  class(fv3jedi_geom), intent(in) :: self
+  class(ijedi_geom), intent(in) :: self
   real(kind_real), intent(in) :: fv3_data(self%isd:self%ied, self%jsd:self%jed)
   real(kind_real), intent(inout) :: atlas_data(:)
 
@@ -1700,7 +1700,7 @@ subroutine fv3_nodes_to_atlas_nodes_r(self, fv3_data, atlas_data)
 
   ! sanity check on size: b = size(atlas_data)
   if (b /= size(atlas_data)) then
-    call abor1_ftn('fv3jedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
+    call abor1_ftn('ijedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
 end subroutine fv3_nodes_to_atlas_nodes_r
@@ -1711,7 +1711,7 @@ end subroutine fv3_nodes_to_atlas_nodes_r
 ! this is a copy of the real interface above with just one replacement real -> integer
 subroutine fv3_nodes_to_atlas_nodes_i(self, fv3_data, atlas_data)
 
-  class(fv3jedi_geom), intent(in) :: self
+  class(ijedi_geom), intent(in) :: self
   integer, intent(in) :: fv3_data(self%isd:self%ied, self%jsd:self%jed)
   integer, intent(inout) :: atlas_data(:)
 
@@ -1841,11 +1841,11 @@ subroutine fv3_nodes_to_atlas_nodes_i(self, fv3_data, atlas_data)
 
   ! sanity check on size: b = size(atlas_data)
   if (b /= size(atlas_data)) then
-    call abor1_ftn('fv3jedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
+    call abor1_ftn('ijedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
 end subroutine fv3_nodes_to_atlas_nodes_i
 
 ! --------------------------------------------------------------------------------------------------
 
-end module fv3jedi_geom_mod
+end module ijedi_geom_mod

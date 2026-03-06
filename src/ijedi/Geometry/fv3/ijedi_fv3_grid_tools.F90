@@ -1,4 +1,4 @@
-module fv3jedi_fv3_grid_tools_mod
+module ijedi_fv3_grid_tools_mod
 
    ! <table>
    ! <tr>
@@ -18,7 +18,7 @@ module fv3jedi_fv3_grid_tools_mod
    !     <td>file_exist, field_exist, read_data, get_global_att_value, get_var_att_value</td>
    !   </tr>
    !   <tr>
-   !     <td>fv3jedi_fv3_arrays_mod</td>
+   !     <td>ijedi_fv3_arrays_mod</td>
    !     <td>fv_atmos_type, fv_grid_type, fv_grid_bounds_type, R_GRID</td>
    !   </tr>
    !   <tr>
@@ -97,16 +97,16 @@ module fv3jedi_fv3_grid_tools_mod
 
      use constants_mod,     only: grav, omega, pi=>pi_8, cnst_radius=>radius, small_fac
      use fms_mod,           only: mpp_clock_id, mpp_clock_begin, mpp_clock_end, CLOCK_ROUTINE, clock_flag_default
-     use fv3jedi_fv3_arrays_mod,     only: fv_atmos_type, fv_grid_type, fv_grid_bounds_type, R_GRID
-     use fv3jedi_fv3_grid_utils_mod, only: gnomonic_grids, great_circle_dist, &
+     use ijedi_fv3_arrays_mod,     only: fv_atmos_type, fv_grid_type, fv_grid_bounds_type, R_GRID
+     use ijedi_fv3_grid_utils_mod, only: gnomonic_grids, great_circle_dist, &
                                   mid_pt_sphere, spherical_angle, &
                                   cell_center2, get_area, inner_prod, fill_ghost, &
                                   direct_transform, cube_transform, dist2side_latlon, &
                                   spherical_linear_interpolation, big_number
      !use fv_timing_mod,     only: timing_on, timing_off
-     use fv3jedi_fv3_mp_mod,         only: is_master, fill_corners, XDir, YDir
-     use fv3jedi_fv3_mp_mod,         only: mp_bcst, mp_reduce_max, mp_stop, grids_master_procs
-     use fv3jedi_fv3_sorted_index_mod,  only: sorted_inta, sorted_intb
+     use ijedi_fv3_mp_mod,         only: is_master, fill_corners, XDir, YDir
+     use ijedi_fv3_mp_mod,         only: mp_bcst, mp_reduce_max, mp_stop, grids_master_procs
+     use ijedi_fv3_sorted_index_mod,  only: sorted_inta, sorted_intb
      use mpp_mod,           only: mpp_error, FATAL, get_unit, mpp_chksum, mpp_pe, stdout, &
                                   mpp_send, mpp_recv, mpp_sync_self, EVENT_RECV, mpp_npes, &
                                   mpp_sum, mpp_max, mpp_min, mpp_root_pe, mpp_broadcast, mpp_gather
@@ -130,8 +130,8 @@ module fv3jedi_fv3_grid_tools_mod
                                   close_file, get_mosaic_tile_grid, FmsNetcdfFile_t
      use mosaic2_mod,        only: get_mosaic_ntiles
 
-! fv3jedi uses
-use fv3jedi_kinds_mod,          only: kind_real
+! ijedi uses
+use ijedi_kinds_mod,          only: kind_real
 
      implicit none
      private
@@ -3273,5 +3273,5 @@ use fv3jedi_kinds_mod,          only: kind_real
 
      end subroutine mirror_grid
 
-         end module fv3jedi_fv3_grid_tools_mod
+         end module ijedi_fv3_grid_tools_mod
 

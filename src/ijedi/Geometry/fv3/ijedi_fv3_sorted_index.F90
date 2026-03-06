@@ -1,9 +1,9 @@
-module fv3jedi_fv3_sorted_index_mod
+module ijedi_fv3_sorted_index_mod
 
-  use fv3jedi_fv3_arrays_mod, only: R_GRID
+  use ijedi_fv3_arrays_mod, only: R_GRID
 
-! fv3jedi uses
-  use fv3jedi_kinds_mod, only: kind_real
+! ijedi uses
+  use ijedi_kinds_mod, only: kind_real
 
   implicit none
   private
@@ -484,4 +484,4 @@ contains
     !------------------------------------------------------------------!
   end subroutine sorted_intb
 
-end module fv3jedi_fv3_sorted_index_mod
+end module ijedi_fv3_sorted_index_mod
