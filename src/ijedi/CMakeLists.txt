@@ -20,6 +20,9 @@ list(APPEND ijedi_src_files
   Geometry/mom6/GeometryMOM6.h
 
   # Fields
+  FieldMetadata/FieldsMetadata.cc
+  FieldMetadata/FieldsMetadata.h
+  FieldMetadata/FieldsMetadataDefault.h
 
   # State
 

@@ -75,7 +75,7 @@ namespace ijedi
     fieldmetadata.setNumLevls(md.levels);
     fieldmetadata.setMathSpac(md.space);
     fieldmetadata.setIsTracer(md.tracer);
-    fieldmetadata.setMask(md.mask);
+    fieldmetadata.setGridMask(md.mask);
 
     // Validate the choices
     fieldmetadata.validate();

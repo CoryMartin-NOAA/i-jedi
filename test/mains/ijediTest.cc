@@ -24,12 +24,11 @@ int runApp(int argc, char **argv, const std::string testName)
 
   tests["geometry"] = []()
   {
-    return std::make_unique<oops::AddIncrement<ijedi::Traits>>();
+    return std::make_unique<test::Geometry<ijedi::Traits>>();
   };
-  tests["geometry_iterator"] = []()
-  {
-    return std::make_unique<oops::ConvertToStructuredGrid<ijedi::Traits>>();
-  };
+  //{
+  //  return std::make_unique<test::GeometryIterator<ijedi::Traits>>();
+  //};
 
   // Create application object and point to it
   auto it = tests.find(testName);
@@ -61,15 +60,15 @@ int main(int argc, char **argv)
   };
   ASSERT_MSG(validtests.find(testApp) != validtests.end(), "Test not recognized: " + testApp);
 
-  // Remove traits and program from argc and argv
-  // --------------------------------------------
+  // Remove program from argc and argv
+  // ---------------------------------
   argv[1] = argv[0]; // Move executable name to second position
   argv += 1;         // Move pointer up one
   argc -= 1;         // Remove 1 from count
 
   // Call application specific main functions
   // ----------------------------------------
-  return runApp<fv3jedi::Traits>(argc, argv, testApp);
+  return runApp(argc, argv, testApp);
 }
 
 // -------------------------------------------------------------------------------------------------
