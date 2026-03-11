@@ -61,10 +61,8 @@ namespace ijedi
     ~Geometry();
 
     bool levelsAreTopDown() const { return true; }
-
-    std::vector<double> verticalCoord(std::string &) const { return {}; }
+    std::vector<double> verticalCoord(std::string &) const;
     std::vector<size_t> variableSizes(const oops::Variables &) const;
-    void latlon(std::vector<double> &, std::vector<double> &, const bool) const;
 
     const eckit::mpi::Comm &getComm() const { return comm_; }
     const atlas::StructuredGrid &getGrid() const { return grid_; }
@@ -76,10 +74,6 @@ namespace ijedi
 
     atlas::FunctionSpace &functionSpace() { return functionSpace_; }
     atlas::FieldSet &fields() { return fields_; }
-
-    size_t getNlevs() const { return nLevs_; }
-    std::vector<double> getAk() const { return ak_; }
-    std::vector<double> getBk() const { return bk_; }
 
   private:
     Geometry &operator=(const Geometry &);
@@ -93,7 +87,7 @@ namespace ijedi
     atlas::Mesh mesh_;
     atlas::FunctionSpace functionSpace_;
     atlas::FieldSet fields_;
-    int nLevs_;
+    int numLevels_;
     std::string grid_type_;
     int halo_size_;
     std::vector<double> ak_, bk_;

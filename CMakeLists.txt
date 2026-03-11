@@ -48,7 +48,13 @@ add_library(fms ALIAS FMS::fms_r8)
 # Sources
 # ###############################################################################
 add_subdirectory(src)
-add_subdirectory(test)
+
+# ###############################################################################
+# CTest Directory
+# ###############################################################################
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
 
 # Build Doxygen documentation
 if(ENABLE_DOCS)
