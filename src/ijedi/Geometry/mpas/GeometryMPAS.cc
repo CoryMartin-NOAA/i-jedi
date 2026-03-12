@@ -8,19 +8,22 @@
 
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 
-namespace ijedi {
+namespace ijedi
+{
 
-GeometryMPAS::GeometryMPAS(const eckit::Configuration & conf,
-                           const eckit::mpi::Comm & comm) {
-  eckit::mpi::setCommDefault(comm.name().c_str());
-  const eckit::LocalConfiguration atlasConfig = conf.getSubConfiguration("atlas");
-  grid_ = atlas::Grid(atlasConfig);
-}
+  GeometryMPAS::GeometryMPAS(const eckit::Configuration &conf,
+                             const eckit::mpi::Comm &comm)
+  {
+  }
 
-void GeometryMPAS::print(std::ostream & os) const {
-  os << "Geometry type: mpas" << std::endl;
-  os << "  Grid Name: " << grid_.name() << std::endl;
-  os << "  Number of Points: " << grid_.size() << std::endl;
-}
+  void GeometryMPAS::print(std::ostream &os) const
+  {
+  }
 
-}  // namespace ijedi
+  eckit::LocalConfiguration GeometryMPAS::gridSpecific() const
+  {
+    eckit::LocalConfiguration conf;
+    return conf;
+  }
+
+} // namespace ijedi

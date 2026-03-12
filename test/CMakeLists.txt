@@ -29,6 +29,11 @@ foreach(TIER RANGE 1 3)
         string(REPLACE "_" ";" NAME_PARTS ${TEST_NAME})
         list(LENGTH NAME_PARTS NUM_PARTS)
 
+        # Extract executalbe name from third element of NAME_PARTS. Executalb is first element when split by -
+        list(GET NAME_PARTS 2 EXECUTABLE_NAME)
+        string(REPLACE "-" ";" EXECUTABLE_PARTS ${EXECUTABLE_NAME})
+        list(GET EXECUTABLE_PARTS 0 EXECUTABLE_BASE)
+
         # Ensure we have exactly 3 parts (tier, type, name)
         if(${NUM_PARTS} EQUAL 3)
             # Get relative path for ARGS
@@ -37,7 +42,7 @@ foreach(TIER RANGE 1 3)
             # Add the test
             add_test(NAME ijedi_${TEST_NAME}
                 COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-                $<TARGET_FILE:ijedi_test.x> ${YAML_REL_PATH})
+                $<TARGET_FILE:ijedi_test.x> ${EXECUTABLE_BASE} ${YAML_REL_PATH})
 
             message(STATUS "  Added tier ${TIER} test: ijedi_${TEST_NAME}")
         else()

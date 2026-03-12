@@ -42,6 +42,12 @@ implicit none
 private
 public :: ijedi_geom, getVerticalCoord, getVerticalCoordLogP, initialize, pedges2pmidlayer
 
+! Create interface for generic nodes to atlas nodes procedure
+interface fv3_nodes_to_atlas_nodes
+  module procedure fv3_nodes_to_atlas_nodes_r
+  module procedure fv3_nodes_to_atlas_nodes_i
+end interface fv3_nodes_to_atlas_nodes
+
 ! --------------------------------------------------------------------------------------------------
 
 !> Fortran derived type to hold geometry data for the ijedi model
@@ -106,15 +112,15 @@ type :: ijedi_geom
     procedure, public :: get_num_nodes_and_elements
     procedure, public :: get_coords_and_connectivities
 
-    generic, public :: fv3_nodes_to_atlas_nodes => fv3_nodes_to_atlas_nodes_r, &
-                                                   fv3_nodes_to_atlas_nodes_i
+    !generic, public :: fv3_nodes_to_atlas_nodes => fv3_nodes_to_atlas_nodes_r, &
+    !                                               fv3_nodes_to_atlas_nodes_i
 
     procedure, private :: get_num_nodes_and_elements_global
     procedure, private :: get_num_nodes_and_elements_regional
     procedure, private :: get_coords_and_connectivities_global
     procedure, private :: get_coords_and_connectivities_regional
-    procedure, private :: fv3_nodes_to_atlas_nodes_i
-    procedure, private :: fv3_nodes_to_atlas_nodes_r
+    !procedure, private :: fv3_nodes_to_atlas_nodes_i
+    !procedure, private :: fv3_nodes_to_atlas_nodes_r
 
 end type ijedi_geom
 
@@ -1261,12 +1267,18 @@ subroutine get_coords_and_connectivities_global(self, &
   loc_partition(self%isc:self%iec, self%jsc:self%jec) = self%f_comm%rank()
   call mpp_update_domains(loc_partition, self%domain)
 
-  call self%fv3_nodes_to_atlas_nodes(self%grid_lon, lons)
-  call self%fv3_nodes_to_atlas_nodes(self%grid_lat, lats)
-  call self%fv3_nodes_to_atlas_nodes(loc_ghost, ghosts)
-  call self%fv3_nodes_to_atlas_nodes(loc_global_index, global_indices)
-  call self%fv3_nodes_to_atlas_nodes(loc_remote_index, remote_indices)
-  call self%fv3_nodes_to_atlas_nodes(loc_partition, partition)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, self%grid_lon, lons)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, self%grid_lat, lats)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_ghost, ghosts)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_global_index, global_indices)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_remote_index, remote_indices)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_partition, partition)
 
   lons = constant('rad2deg') * lons
   lats = constant('rad2deg') * lats
@@ -1528,12 +1540,18 @@ subroutine get_coords_and_connectivities_regional(self, &
     end if
   end if
 
-  call self%fv3_nodes_to_atlas_nodes(self%grid_lon, lons)
-  call self%fv3_nodes_to_atlas_nodes(self%grid_lat, lats)
-  call self%fv3_nodes_to_atlas_nodes(loc_ghost, ghosts)
-  call self%fv3_nodes_to_atlas_nodes(loc_global_index, global_indices)
-  call self%fv3_nodes_to_atlas_nodes(loc_remote_index, remote_indices)
-  call self%fv3_nodes_to_atlas_nodes(loc_partition, partition)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, self%grid_lon, lons)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, self%grid_lat, lats)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_ghost, ghosts)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_global_index, global_indices)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_remote_index, remote_indices)
+  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
+                                self%ntiles, self%ngrid, loc_partition, partition)
 
   lons = constant('rad2deg') * lons
   lats = constant('rad2deg') * lats
@@ -1563,10 +1581,11 @@ end subroutine get_coords_and_connectivities_regional
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine fv3_nodes_to_atlas_nodes_r(self, fv3_data, atlas_data)
+subroutine fv3_nodes_to_atlas_nodes_r(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                      ntiles, ngrid, fv3_data, atlas_data)
 
-  class(ijedi_geom), intent(in) :: self
-  real(kind_real), intent(in) :: fv3_data(self%isd:self%ied, self%jsd:self%jed)
+  integer, intent(in) :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, ntiles, ngrid
+  real(kind_real), intent(in) :: fv3_data(isd:ied, jsd:jed)
   real(kind_real), intent(inout) :: atlas_data(:)
 
   integer :: a, b, ncopy
@@ -1588,29 +1607,29 @@ subroutine fv3_nodes_to_atlas_nodes_r(self, fv3_data, atlas_data)
   halo_se6 = .false.
 
   ! Edges and corners depend on specifics...
-  if (self%ntiles == 6) then
+  if (ntiles == 6) then
     ! Global grid -- handle corners between cubed-sphere tiles
-    at_lower_left_corner = (self%isc == 1 .and. self%jsc == 1)
-    at_upper_left_corner = (self%isc == 1 .and. self%jec == self%npy-1)
-    at_lower_right_corner = (self%iec == self%npx-1 .and. self%jsc == 1)
+    at_lower_left_corner = (isc == 1 .and. jsc == 1)
+    at_upper_left_corner = (isc == 1 .and. jec == npy-1)
+    at_lower_right_corner = (iec == npx-1 .and. jsc == 1)
 
     ! at lower-left corner of any tile, use a triangle => no diagonal point
     if (at_lower_left_corner) then
       halo_sw = .false.
     end if
     ! at upper-left corner of tile #3, place extra tri => add extra point
-    if (at_upper_left_corner .and. (self%ntile == 3)) then
+    if (at_upper_left_corner .and. (ntile == 3)) then
       halo_nw3 = .true.
     end if
     ! at lower-right corner of tile #6, place extra tri => add extra point
-    if (at_lower_right_corner .and. (self%ntile == 6)) then
+    if (at_lower_right_corner .and. (ntile == 6)) then
       halo_se6 = .true.
     end if
 
-  else if (self%ntiles == 1) then
+  else if (ntiles == 1) then
     ! Regional grid -- handle "boundary condition" points around patch
-    at_right_edge = (self%iec == self%npx-1)
-    at_upper_edge = (self%jec == self%npy-1)
+    at_right_edge = (iec == npx-1)
+    at_upper_edge = (jec == npy-1)
 
     if (at_upper_edge) then
       halo_n = .true.
@@ -1629,73 +1648,73 @@ subroutine fv3_nodes_to_atlas_nodes_r(self, fv3_data, atlas_data)
   end if
 
   ! First, copy owned points
-  ncopy = self%ngrid
+  ncopy = ngrid
   a = 1
   b = ncopy
-  atlas_data(a:b) = reshape(fv3_data(self%isc:self%iec, self%jsc:self%jec), (/ncopy/))
+  atlas_data(a:b) = reshape(fv3_data(isc:iec, jsc:jec), (/ncopy/))
 
   ! Copy west + east edge halos
-  ncopy = (self%jec - self%jsc + 1)
+  ncopy = (jec - jsc + 1)
   if (halo_w) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%isc-1, self%jsc:self%jec), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(isc-1, jsc:jec), (/ncopy/))
   end if
   if (halo_e) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%iec+1, self%jsc:self%jec), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(iec+1, jsc:jec), (/ncopy/))
   end if
 
   ! Copy south + north edge halos
-  ncopy = (self%iec - self%isc + 1)
+  ncopy = (iec - isc + 1)
   if (halo_s) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%isc:self%iec, self%jsc-1), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(isc:iec, jsc-1), (/ncopy/))
   end if
   if (halo_n) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%isc:self%iec, self%jec+1), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(isc:iec, jec+1), (/ncopy/))
   end if
 
   ! Copy corners
   if (halo_sw) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%isc-1, self%jsc-1)
+    atlas_data(a) = fv3_data(isc-1, jsc-1)
   end if
   if (halo_nw) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%isc-1, self%jec+1)
+    atlas_data(a) = fv3_data(isc-1, jec+1)
   end if
   if (halo_ne) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%iec+1, self%jec+1)
+    atlas_data(a) = fv3_data(iec+1, jec+1)
   end if
   if (halo_se) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%iec+1, self%jsc-1)
+    atlas_data(a) = fv3_data(iec+1, jsc-1)
   end if
 
   if (halo_nw3) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%isc, self%jec+1)
+    atlas_data(a) = fv3_data(isc, jec+1)
   end if
   if (halo_se6) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%iec+1, self%jsc)
+    atlas_data(a) = fv3_data(iec+1, jsc)
   end if
 
   ! sanity check on size: b = size(atlas_data)
   if (b /= size(atlas_data)) then
-    call abor1_ftn('ijedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
+    call abor1_ftn('fv3jedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
 end subroutine fv3_nodes_to_atlas_nodes_r
@@ -1704,10 +1723,11 @@ end subroutine fv3_nodes_to_atlas_nodes_r
 
 ! displeasing!
 ! this is a copy of the real interface above with just one replacement real -> integer
-subroutine fv3_nodes_to_atlas_nodes_i(self, fv3_data, atlas_data)
+subroutine fv3_nodes_to_atlas_nodes_i(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                      ntiles, ngrid, fv3_data, atlas_data)
 
-  class(ijedi_geom), intent(in) :: self
-  integer, intent(in) :: fv3_data(self%isd:self%ied, self%jsd:self%jed)
+  integer, intent(in) :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, ntiles, ngrid
+  integer, intent(in) :: fv3_data(isd:ied, jsd:jed)
   integer, intent(inout) :: atlas_data(:)
 
   integer :: a, b, ncopy
@@ -1729,29 +1749,29 @@ subroutine fv3_nodes_to_atlas_nodes_i(self, fv3_data, atlas_data)
   halo_se6 = .false.
 
   ! Edges and corners depend on specifics...
-  if (self%ntiles == 6) then
+  if (ntiles == 6) then
     ! Global grid -- handle corners between cubed-sphere tiles
-    at_lower_left_corner = (self%isc == 1 .and. self%jsc == 1)
-    at_upper_left_corner = (self%isc == 1 .and. self%jec == self%npy-1)
-    at_lower_right_corner = (self%iec == self%npx-1 .and. self%jsc == 1)
+    at_lower_left_corner = (isc == 1 .and. jsc == 1)
+    at_upper_left_corner = (isc == 1 .and. jec == npy-1)
+    at_lower_right_corner = (iec == npx-1 .and. jsc == 1)
 
     ! at lower-left corner of any tile, use a triangle => no diagonal point
     if (at_lower_left_corner) then
       halo_sw = .false.
     end if
     ! at upper-left corner of tile #3, place extra tri => add extra point
-    if (at_upper_left_corner .and. (self%ntile == 3)) then
+    if (at_upper_left_corner .and. (ntile == 3)) then
       halo_nw3 = .true.
     end if
     ! at lower-right corner of tile #6, place extra tri => add extra point
-    if (at_lower_right_corner .and. (self%ntile == 6)) then
+    if (at_lower_right_corner .and. (ntile == 6)) then
       halo_se6 = .true.
     end if
 
-  else if (self%ntiles == 1) then
+  else if (ntiles == 1) then
     ! Regional grid -- handle "boundary condition" points around patch
-    at_right_edge = (self%iec == self%npx-1)
-    at_upper_edge = (self%jec == self%npy-1)
+    at_right_edge = (iec == npx-1)
+    at_upper_edge = (jec == npy-1)
 
     if (at_upper_edge) then
       halo_n = .true.
@@ -1770,68 +1790,68 @@ subroutine fv3_nodes_to_atlas_nodes_i(self, fv3_data, atlas_data)
   end if
 
   ! First, copy owned points
-  ncopy = self%ngrid
+  ncopy = ngrid
   a = 1
   b = ncopy
-  atlas_data(a:b) = reshape(fv3_data(self%isc:self%iec, self%jsc:self%jec), (/ncopy/))
+  atlas_data(a:b) = reshape(fv3_data(isc:iec, jsc:jec), (/ncopy/))
 
   ! Copy west + east edge halos
-  ncopy = (self%jec - self%jsc + 1)
+  ncopy = (jec - jsc + 1)
   if (halo_w) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%isc-1, self%jsc:self%jec), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(isc-1, jsc:jec), (/ncopy/))
   end if
   if (halo_e) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%iec+1, self%jsc:self%jec), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(iec+1, jsc:jec), (/ncopy/))
   end if
 
   ! Copy south + north edge halos
-  ncopy = (self%iec - self%isc + 1)
+  ncopy = (iec - isc + 1)
   if (halo_s) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%isc:self%iec, self%jsc-1), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(isc:iec, jsc-1), (/ncopy/))
   end if
   if (halo_n) then
     a = b + 1
     b = b + ncopy
-    atlas_data(a:b) = reshape(fv3_data(self%isc:self%iec, self%jec+1), (/ncopy/))
+    atlas_data(a:b) = reshape(fv3_data(isc:iec, jec+1), (/ncopy/))
   end if
 
   ! Copy corners
   if (halo_sw) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%isc-1, self%jsc-1)
+    atlas_data(a) = fv3_data(isc-1, jsc-1)
   end if
   if (halo_nw) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%isc-1, self%jec+1)
+    atlas_data(a) = fv3_data(isc-1, jec+1)
   end if
   if (halo_ne) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%iec+1, self%jec+1)
+    atlas_data(a) = fv3_data(iec+1, jec+1)
   end if
   if (halo_se) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%iec+1, self%jsc-1)
+    atlas_data(a) = fv3_data(iec+1, jsc-1)
   end if
 
   if (halo_nw3) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%isc, self%jec+1)
+    atlas_data(a) = fv3_data(isc, jec+1)
   end if
   if (halo_se6) then
     a = b + 1
     b = b + 1
-    atlas_data(a) = fv3_data(self%iec+1, self%jsc)
+    atlas_data(a) = fv3_data(iec+1, jsc)
   end if
 
   ! sanity check on size: b = size(atlas_data)

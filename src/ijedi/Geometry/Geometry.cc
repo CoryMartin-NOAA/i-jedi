@@ -14,40 +14,45 @@
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
 
-// -----------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
 namespace ijedi
 {
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
   const int HALO_SIZE = 1;
-  // -----------------------------------------------------------------------------
-  Geometry::Geometry(const eckit::Configuration &conf,
-                     const eckit::mpi::Comm &comm)
+  // -----------------------------------------------------------------------------------------------
+  Geometry::Geometry(const eckit::Configuration &conf, const eckit::mpi::Comm &comm)
       : comm_(comm)
   {
-    // Construct the fields metadata object
-    numLevels_ = 1;
-    fieldsMeta_.reset(new FieldsMetadata(numLevels_));
+    // Trace
+    oops::Log::trace() << "Geometry constructor starting" << std::endl;
 
+    // Create the geometry implementation (which will set numLevels_)
     geometryImpl_ = GeometryBase::create(conf, comm_);
+
+    // Construct the fields metadata object using numLevels from the base class
+    fieldsMeta_.reset(new FieldsMetadata(geometryImpl_->numLevels()));
+
+    // Trace
+    oops::Log::trace() << "Geometry constructor starting" << std::endl;
   }
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const Geometry &other)
       : comm_(other.comm_),
-        geometryImpl_(other.geometryImpl_),
-        fieldsMeta_(other.fieldsMeta_)
+        fieldsMeta_(other.fieldsMeta_),
+        geometryImpl_(other.geometryImpl_)
   {
   }
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
   Geometry::~Geometry()
   {
   }
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
   void Geometry::print(std::ostream &os) const
   {
     geometryImpl_->print(os);
   }
 
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
   std::vector<double> Geometry::verticalCoord(std::string &vcUnits) const
   {
@@ -56,11 +61,11 @@ namespace ijedi
     errorMsg << "Geometry::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
 
-    std::vector<double> vc(numLevels_);
+    std::vector<double> vc(geometryImpl_->numLevels());
     return vc;
   }
 
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
   std::vector<size_t> Geometry::variableSizes(const oops::Variables &vars) const
   {
@@ -74,6 +79,6 @@ namespace ijedi
     return varSizes;
   }
 
-  // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
 } // namespace ijedi

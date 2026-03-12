@@ -8,19 +8,22 @@
 
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
 
-namespace ijedi {
+namespace ijedi
+{
 
-GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
-                           const eckit::mpi::Comm & comm) {
-  eckit::mpi::setCommDefault(comm.name().c_str());
-  const eckit::LocalConfiguration atlasConfig = conf.getSubConfiguration("atlas");
-  grid_ = atlas::Grid(atlasConfig);
-}
+  GeometryMOM6::GeometryMOM6(const eckit::Configuration &conf,
+                             const eckit::mpi::Comm &comm)
+  {
+  }
 
-void GeometryMOM6::print(std::ostream & os) const {
-  os << "Geometry type: mom6" << std::endl;
-  os << "  Grid Name: " << grid_.name() << std::endl;
-  os << "  Number of Points: " << grid_.size() << std::endl;
-}
+  void GeometryMOM6::print(std::ostream &os) const
+  {
+  }
 
-}  // namespace ijedi
+  eckit::LocalConfiguration GeometryMOM6::gridSpecific() const
+  {
+    eckit::LocalConfiguration conf;
+    return conf;
+  }
+
+} // namespace ijedi
