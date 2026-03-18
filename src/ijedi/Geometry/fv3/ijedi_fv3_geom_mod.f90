@@ -104,9 +104,6 @@ type :: ijedi_geom
 
   contains
     procedure, public :: create
-    procedure, public :: set_and_fill_geometry_fields
-    procedure, public :: get_data
-
 
 end type ijedi_geom
 
@@ -436,37 +433,15 @@ end subroutine create
 
 ! --------------------------------------------------------------------------------------------------
 
-!subroutine is_equal(self, other, equal)
-!
-!class(ijedi_geom), intent(in) :: self
-!class(ijedi_geom), intent(in) :: other
-!logical, intent(out) :: equal
-!
-!equal = .false.
-!
-!! At the moment, equality is based on the fundamental integer-type members; could make more
-!! rigorous by comparing more data
-!if (self%npx == other%npx .and. self%npy == other%npy .and. self%npz == other%npz &
-!    .and. self%ntile == other%ntile .and. self%ntiles == other%ntiles &
-!    .and. self%isc == other%isc .and. self%iec == other%iec &
-!    .and. self%jsc == other%jsc .and. self%jec == other%jec &
-!    .and. self%kec == other%kec &
-!    .and. self%layout(1) == other%layout(1) .and. self%layout(2) == other%layout(2) &
-!    .and. self%layout(1) == other%layout(1) .and. self%layout(2) == other%layout(2) &
-!    .and. self%stretch_fac == other%stretch_fac &
-!    .and. self%target_lon == other%target_lon &
-!    .and. self%target_lat == other%target_lat) then
-!  equal = .true.
-!end if
-!
-!end subroutine is_equal
-
-! --------------------------------------------------------------------------------------------------
-
-subroutine set_and_fill_geometry_fields(self, afieldset, field_masks)
+subroutine set_and_fill_geometry_fields(isc, iec, jsc, jec, npz, ngrid, ak, bk, area, &
+                                        vertcoord_type, afunctionspace, afieldset, field_masks)
 
 !Arguments
-class(ijedi_geom),       intent(inout) :: self
+integer,                   intent(in) :: isc, iec, jsc, jec, npz, ngrid
+real(kind=kind_real),      intent(in) :: ak(npz+1), bk(npz+1)
+real(kind=kind_real),      intent(in) :: area(isc:iec, jsc:jec)
+character(len=10),         intent(in) :: vertcoord_type
+type(atlas_functionspace), intent(inout) :: afunctionspace
 type(atlas_fieldset),      intent(inout) :: afieldset
 type(fckit_configuration), intent(in)    :: field_masks
 
@@ -476,49 +451,43 @@ integer :: jl
 integer, pointer :: int_ptr(:,:)
 real(kind=kind_real), pointer :: real_ptr(:,:), real_ptr2(:,:)
 real(kind=kind_real) :: sigmaup, sigmadn, ps
-real(kind=kind_real) :: logp(self%npz)
-
-! Assign geometry_fields variable
-self%geometry_fields = afieldset
-
-! Save the config containing choice of field masks
-self%field_masks = field_masks
+real(kind=kind_real) :: logp(npz)
 
 ! Add owned vs halo/BC field
-afield = self%afunctionspace%create_field(name='owned', kind=atlas_integer(kind_int), levels=1)
+afield = afunctionspace%create_field(name='owned', kind=atlas_integer(kind_int), levels=1)
 call afield%data(int_ptr)
 int_ptr(1, :) = 0
-int_ptr(1, 1:self%ngrid) = 1
+int_ptr(1, 1:ngrid) = 1
 call afieldset%add(afield)
 
 ! Add area
-afield = self%afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=1)
+afield = afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=1)
 call afield%data(real_ptr)
 real_ptr(1, :) = -1.0_kind_real
-real_ptr(1, 1:self%ngrid) = reshape(self%area(self%isc:self%iec, self%jsc:self%jec), (/self%ngrid/))
+real_ptr(1, 1:ngrid) = reshape(area(isc:iec, jsc:jec), (/ngrid/))
 call afieldset%add(afield)
 
 ! Add vertical unit
 ps = constant('ps')
-if (trim(self%vertcoord_type) == 'sigma') then
-   afield = self%afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=self%npz)
+if (trim(vertcoord_type) == 'sigma') then
+   afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
-   do jl=1,self%npz
-      sigmaup = self%ak(jl+1)/ps+self%bk(jl+1) ! si are now sigmas
-      sigmadn = self%ak(jl  )/ps+self%bk(jl  )
+   do jl=1,npz
+      sigmaup = ak(jl+1)/ps+bk(jl+1) ! si are now sigmas
+      sigmadn = ak(jl  )/ps+bk(jl  )
       real_ptr(jl,:) = 0.5*(sigmaup+sigmadn) ! 'fake' sigma coordinates
    enddo
-else if (trim(self%vertcoord_type) == 'logp') then
-   afield = self%afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=self%npz)
+else if (trim(vertcoord_type) == 'logp') then
+   afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
-   call getVerticalCoordLogP(self,logp,self%npz,ps)
-   do jl=1,self%npz
+   call getVerticalCoordLogP(ak,bk,logp,npz,ps)
+   do jl=1,npz
       real_ptr(jl,:) = logp(jl)
    enddo
-else if (trim(self%vertcoord_type) == 'orography') then
+else if (trim(vertcoord_type) == 'orography') then
    !> The orography vertical coordinate can only be used for 2D fields, so allocation here is
    !> for one level. This option is not compatible with 3D fields.
-   afield = self%afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=1)
+   afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=1)
    call afield%data(real_ptr)
    afield2 = afieldset%field('filtered_orography')
    call afield2%data(real_ptr2)
@@ -811,12 +780,13 @@ subroutine pedges2pmidlayer(npz,ptype,pe1d,kappa,p1d)
 end subroutine pedges2pmidlayer
 
 !--------------------------------------------------------------------------------------------------
-subroutine getVerticalCoord(self, vc, npz, psurf)
+subroutine getVerticalCoord(ak, bk, vc, npz, psurf)
   ! returns log(pressure) at mid level of the vertical column with surface
   ! prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
 
-  type(ijedi_geom),   intent(in) :: self
+  real(kind=kind_real), intent(in) :: ak(npz+1)
+  real(kind=kind_real), intent(in) :: bk(npz+1)
   integer,              intent(in) :: npz
   real(kind=kind_real), intent(in) :: psurf
   real(kind=kind_real), intent(out) :: vc(npz)
@@ -826,7 +796,7 @@ subroutine getVerticalCoord(self, vc, npz, psurf)
 
   ! compute interface pressure
   do k=1,npz+1
-    plevli(k) = self%ak(k) + self%bk(k)*psurf
+    plevli(k) = ak(k) + bk(k)*psurf
   enddo
 
   ! get kappa
@@ -838,38 +808,22 @@ subroutine getVerticalCoord(self, vc, npz, psurf)
 end subroutine getVerticalCoord
 
 !--------------------------------------------------------------------------------------------------
-subroutine getVerticalCoordLogP(self, vc, npz, psurf)
+subroutine getVerticalCoordLogP(ak, bk, vc, npz, psurf)
   ! returns log(pressure) at mid level of the vertical column with surface prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
 
-  type(ijedi_geom),   intent(in) :: self
+  real(kind=kind_real), intent(in) :: ak(npz+1)
+  real(kind=kind_real), intent(in) :: bk(npz+1)
   integer,              intent(in) :: npz
   real(kind=kind_real), intent(in) :: psurf
   real(kind=kind_real), intent(out) :: vc(npz)
 
   real(kind=kind_real) :: p(npz)
 
-  call getVerticalCoord(self, p, npz, psurf)
+  call getVerticalCoord(ak, bk, p, npz, psurf)
   vc = - log(p)
 
 end subroutine getVerticalCoordLogP
-
-! --------------------------------------------------------------------------------------------------
-
-subroutine get_data(self, ak, bk, ptop)
-
-!Arguments
-class(ijedi_geom),  intent(in)  :: self
-real(kind=kind_real), intent(out) :: ak(self%npz+1)
-real(kind=kind_real), intent(out) :: bk(self%npz+1)
-real(kind=kind_real), intent(out) :: ptop
-
-! Set outputs
-ak = self%ak
-bk = self%bk
-ptop = self%ptop
-
-end subroutine get_data
 
 ! --------------------------------------------------------------------------------------------------
 
