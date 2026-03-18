@@ -104,23 +104,9 @@ type :: ijedi_geom
 
   contains
     procedure, public :: create
-    procedure, public :: clone
-    procedure, public :: delete
-    procedure, public :: is_equal
     procedure, public :: set_and_fill_geometry_fields
     procedure, public :: get_data
-    procedure, public :: get_num_nodes_and_elements
-    procedure, public :: get_coords_and_connectivities
 
-    !generic, public :: fv3_nodes_to_atlas_nodes => fv3_nodes_to_atlas_nodes_r, &
-    !                                               fv3_nodes_to_atlas_nodes_i
-
-    procedure, private :: get_num_nodes_and_elements_global
-    procedure, private :: get_num_nodes_and_elements_regional
-    procedure, private :: get_coords_and_connectivities_global
-    procedure, private :: get_coords_and_connectivities_regional
-    !procedure, private :: fv3_nodes_to_atlas_nodes_i
-    !procedure, private :: fv3_nodes_to_atlas_nodes_r
 
 end type ijedi_geom
 
@@ -438,7 +424,8 @@ do_write_geom = .false.
 if (conf%has("write geom")) call conf%get_or_die("write geom",do_write_geom)
 
 if (do_write_geom) then
-  call write_geom(self)
+  !call write_geom(f_comm, isc, iec, jsc, jec, npx, npy, ntile, grid_lon, grid_lat, egrid_lon, &
+  !               egrid_lat)
 endif
 
 ! Revert the fms namelist
@@ -449,218 +436,30 @@ end subroutine create
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine clone(self, other)
-
-class(ijedi_geom),        intent(inout) :: self
-type(ijedi_geom), target, intent(in)    :: other
-
-allocate(self%ak(other%npz+1) )
-allocate(self%bk(other%npz+1) )
-
-allocate(self%grid_lon   (other%isd  :other%ied,  other%jsd  :other%jed  ))
-allocate(self%grid_lat   (other%isd  :other%ied,  other%jsd  :other%jed  ))
-allocate(self%egrid_lon  (other%isd  :other%ied+1,other%jsd  :other%jed+1))
-allocate(self%egrid_lat  (other%isd  :other%ied+1,other%jsd  :other%jed+1))
-allocate(self%area       (other%isd  :other%ied,  other%jsd  :other%jed  ))
-allocate(self%dx         (other%isd  :other%ied  ,other%jsd  :other%jed+1))
-allocate(self%dy         (other%isd  :other%ied+1,other%jsd  :other%jed  ))
-allocate(self%dxc        (other%isd  :other%ied+1,other%jsd  :other%jed  ))
-allocate(self%dyc        (other%isd  :other%ied  ,other%jsd  :other%jed+1))
-
-allocate(self%grid       (other%isd  :other%ied+1,other%jsd  :other%jed+1,2))
-allocate(self%vlon       (other%isc-2:other%iec+2,other%jsc-2:other%jec+2,3))
-allocate(self%vlat       (other%isc-2:other%iec+2,other%jsc-2:other%jec+2,3))
-
-allocate(self%edge_vect_n(other%isd:other%ied))
-allocate(self%edge_vect_e(other%jsd:other%jed))
-allocate(self%edge_vect_s(other%isd:other%ied))
-allocate(self%edge_vect_w(other%jsd:other%jed))
-
-allocate(self%es(3,other%isd:other%ied  ,other%jsd:other%jed+1,2))
-allocate(self%ew(3,other%isd:other%ied+1,other%jsd:other%jed,  2))
-
-allocate(self%a11(other%isc-1:other%iec+1,other%jsc-1:other%jec+1) )
-allocate(self%a12(other%isc-1:other%iec+1,other%jsc-1:other%jec+1) )
-allocate(self%a21(other%isc-1:other%iec+1,other%jsc-1:other%jec+1) )
-allocate(self%a22(other%isc-1:other%iec+1,other%jsc-1:other%jec+1) )
-
-allocate(self%rarea (other%isd:other%ied  ,other%jsd:other%jed  ))
-allocate(self%sin_sg(other%isd:other%ied  ,other%jsd:other%jed  ,9))
-allocate(self%cosa_u(other%isd:other%ied+1,other%jsd:other%jed  ))
-allocate(self%cosa_v(other%isd:other%ied  ,other%jsd:other%jed+1))
-allocate(self%cosa_s(other%isd:other%ied  ,other%jsd:other%jed  ))
-allocate(self%rsin_u(other%isd:other%ied+1,other%jsd:other%jed  ))
-allocate(self%rsin_v(other%isd:other%ied  ,other%jsd:other%jed+1))
-allocate(self%rsin2 (other%isd:other%ied  ,other%jsd:other%jed  ))
-allocate(self%dxa   (other%isd:other%ied  ,other%jsd:other%jed  ))
-allocate(self%dya   (other%isd:other%ied  ,other%jsd:other%jed  ))
-
-allocate(self%lat_us(other%ngrid))
-allocate(self%lon_us(other%ngrid))
-
-self%npx             = other%npx
-self%npy             = other%npy
-self%npz             = other%npz
-self%ngrid           = other%ngrid
-self%layout          = other%layout
-self%io_layout       = other%io_layout
-self%isc             = other%isc
-self%isd             = other%isd
-self%iec             = other%iec
-self%ied             = other%ied
-self%jsc             = other%jsc
-self%jsd             = other%jsd
-self%jec             = other%jec
-self%jed             = other%jed
-self%ntile           = other%ntile
-self%ntiles          = other%ntiles
-self%iterator_dimension = other%iterator_dimension
-
-self%ptop            = other%ptop
-self%ak              = other%ak
-self%bk              = other%bk
-self%grid_lon        = other%grid_lon
-self%grid_lat        = other%grid_lat
-self%egrid_lon       = other%egrid_lon
-self%egrid_lat       = other%egrid_lat
-self%area            = other%area
-self%dx              = other%dx
-self%dy              = other%dy
-self%dxc             = other%dxc
-self%dyc             = other%dyc
-self%grid            = other%grid
-self%vlon            = other%vlon
-self%vlat            = other%vlat
-self%edge_vect_n     = other%edge_vect_n
-self%edge_vect_e     = other%edge_vect_e
-self%edge_vect_s     = other%edge_vect_s
-self%edge_vect_w     = other%edge_vect_w
-self%es              = other%es
-self%ew              = other%ew
-self%a11             = other%a11
-self%a12             = other%a12
-self%a21             = other%a21
-self%a22             = other%a22
-self%f_comm          = other%f_comm
-self%stretch_fac     = other%stretch_fac
-self%target_lon      = other%target_lon
-self%target_lat      = other%target_lat
-
-self%rarea     = other%rarea
-self%sin_sg    = other%sin_sg
-self%cosa_u    = other%cosa_u
-self%cosa_v    = other%cosa_v
-self%cosa_s    = other%cosa_s
-self%rsin_u    = other%rsin_u
-self%rsin_v    = other%rsin_v
-self%rsin2     = other%rsin2
-self%dxa       = other%dxa
-self%dya       = other%dya
-self%ne_corner = other%ne_corner
-self%se_corner = other%se_corner
-self%sw_corner = other%sw_corner
-self%nw_corner = other%nw_corner
-
-self%domain => other%domain
-
-self%afunctionspace = atlas_functionspace(other%afunctionspace%c_ptr())
-
-self%geometry_fields = atlas_fieldset(other%geometry_fields%c_ptr())
-
-self%lat_us = other%lat_us
-self%lon_us = other%lon_us
-
-self%nested = other%nested
-self%bounded_domain = other%bounded_domain
-
-self%vertcoord_type = other%vertcoord_type
-
-self%field_masks = other%field_masks
-
-self%field_interp_methods = other%field_interp_methods
-
-end subroutine clone
-
-! --------------------------------------------------------------------------------------------------
-
-subroutine delete(self)
-
-class(ijedi_geom), intent(inout) :: self
-
-! Deallocate
-deallocate(self%ak)
-deallocate(self%bk)
-deallocate(self%grid_lon)
-deallocate(self%grid_lat)
-deallocate(self%egrid_lon)
-deallocate(self%egrid_lat)
-deallocate(self%area)
-deallocate(self%dx)
-deallocate(self%dy)
-deallocate(self%dxc)
-deallocate(self%dyc)
-deallocate(self%grid)
-deallocate(self%vlon)
-deallocate(self%vlat)
-deallocate(self%edge_vect_n)
-deallocate(self%edge_vect_e)
-deallocate(self%edge_vect_s)
-deallocate(self%edge_vect_w)
-deallocate(self%es)
-deallocate(self%ew)
-deallocate(self%a11)
-deallocate(self%a12)
-deallocate(self%a21)
-deallocate(self%a22)
-
-deallocate(self%rarea)
-deallocate(self%sin_sg)
-deallocate(self%cosa_u)
-deallocate(self%cosa_v)
-deallocate(self%cosa_s)
-deallocate(self%rsin_u)
-deallocate(self%rsin_v)
-deallocate(self%rsin2 )
-deallocate(self%dxa   )
-deallocate(self%dya   )
-
-deallocate(self%lat_us)
-deallocate(self%lon_us)
-
-! Required memory leak, since copying this causes problems
-!call mpp_deallocate_domain(self%domain_fix)
-
-call self%afunctionspace%final()
-call self%geometry_fields%final()
-
-end subroutine delete
-
-! --------------------------------------------------------------------------------------------------
-
-subroutine is_equal(self, other, equal)
-
-class(ijedi_geom), intent(in) :: self
-class(ijedi_geom), intent(in) :: other
-logical, intent(out) :: equal
-
-equal = .false.
-
-! At the moment, equality is based on the fundamental integer-type members; could make more
-! rigorous by comparing more data
-if (self%npx == other%npx .and. self%npy == other%npy .and. self%npz == other%npz &
-    .and. self%ntile == other%ntile .and. self%ntiles == other%ntiles &
-    .and. self%isc == other%isc .and. self%iec == other%iec &
-    .and. self%jsc == other%jsc .and. self%jec == other%jec &
-    .and. self%kec == other%kec &
-    .and. self%layout(1) == other%layout(1) .and. self%layout(2) == other%layout(2) &
-    .and. self%layout(1) == other%layout(1) .and. self%layout(2) == other%layout(2) &
-    .and. self%stretch_fac == other%stretch_fac &
-    .and. self%target_lon == other%target_lon &
-    .and. self%target_lat == other%target_lat) then
-  equal = .true.
-end if
-
-end subroutine is_equal
+!subroutine is_equal(self, other, equal)
+!
+!class(ijedi_geom), intent(in) :: self
+!class(ijedi_geom), intent(in) :: other
+!logical, intent(out) :: equal
+!
+!equal = .false.
+!
+!! At the moment, equality is based on the fundamental integer-type members; could make more
+!! rigorous by comparing more data
+!if (self%npx == other%npx .and. self%npy == other%npy .and. self%npz == other%npz &
+!    .and. self%ntile == other%ntile .and. self%ntiles == other%ntiles &
+!    .and. self%isc == other%isc .and. self%iec == other%iec &
+!    .and. self%jsc == other%jsc .and. self%jec == other%jec &
+!    .and. self%kec == other%kec &
+!    .and. self%layout(1) == other%layout(1) .and. self%layout(2) == other%layout(2) &
+!    .and. self%layout(1) == other%layout(1) .and. self%layout(2) == other%layout(2) &
+!    .and. self%stretch_fac == other%stretch_fac &
+!    .and. self%target_lon == other%target_lon &
+!    .and. self%target_lat == other%target_lat) then
+!  equal = .true.
+!end if
+!
+!end subroutine is_equal
 
 ! --------------------------------------------------------------------------------------------------
 
@@ -879,31 +678,32 @@ end subroutine setup_domain
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine write_geom(self)
+subroutine write_geom(f_comm, isc, iec, jsc, jec, npx, npy, ntile, grid_lon, grid_lat, egrid_lon, &
+                      egrid_lat)
 
-  type(ijedi_geom), intent(in) :: self
+  ! Arguments
+  type(fckit_mpi_comm), intent(in) :: f_comm
+  integer,              intent(in) :: isc, iec, jsc, jec, npx, npy, ntile
+  real(kind=kind_real), intent(in) :: grid_lon(:,:), grid_lat(:,:)
+  real(kind=kind_real), intent(in) :: egrid_lon(:,:), egrid_lat(:,:)
 
-  type(fckit_mpi_comm) :: f_comm
+  ! Locals
   character(len=255) :: filename
   integer :: ncid, xf_dimid, yf_dimid, xv_dimid, yv_dimid, ti_dimid, pe_dimid
   integer :: mydims(3,3), ijdims(1), ijdimf(1), tmpij(1)
   integer :: varid(8)
 
-
-  ! Pointer to ijedi geom communicator
-  f_comm = self%f_comm
-
-  write(filename,"(A9,I0.4,A4)") 'fv3grid_c', self%npx-1, '.nc4'
+  write(filename,"(A9,I0.4,A4)") 'fv3grid_c', npx-1, '.nc4'
 
   ! Create and open the file for parallel write
   call nccheck( nf90_create( trim(filename), ior(NF90_NETCDF4, NF90_MPIIO), ncid, &
                              comm = f_comm%communicator(), info = MPI_INFO_NULL), "nf90_create" )
 
   !Dimensions
-  call nccheck ( nf90_def_dim(ncid, 'fxdim', self%npx-1   , xf_dimid), "nf90_def_dim fxdim" )
-  call nccheck ( nf90_def_dim(ncid, 'fydim', self%npy-1   , yf_dimid), "nf90_def_dim fydim" )
-  call nccheck ( nf90_def_dim(ncid, 'vxdim', self%npx     , xv_dimid), "nf90_def_dim vxdim" )
-  call nccheck ( nf90_def_dim(ncid, 'vydim', self%npy     , yv_dimid), "nf90_def_dim vydim" )
+  call nccheck ( nf90_def_dim(ncid, 'fxdim', npx-1   , xf_dimid), "nf90_def_dim fxdim" )
+  call nccheck ( nf90_def_dim(ncid, 'fydim', npy-1   , yf_dimid), "nf90_def_dim fydim" )
+  call nccheck ( nf90_def_dim(ncid, 'vxdim', npx     , xv_dimid), "nf90_def_dim vxdim" )
+  call nccheck ( nf90_def_dim(ncid, 'vydim', npy     , yv_dimid), "nf90_def_dim vydim" )
   call nccheck ( nf90_def_dim(ncid, 'ntile', 6            , ti_dimid), "nf90_def_dim ntile" )
   call nccheck ( nf90_def_dim(ncid, 'nproc', f_comm%size(), pe_dimid), "nf90_def_dim ntile" )
 
@@ -944,39 +744,39 @@ subroutine write_geom(self)
   call nccheck( nf90_enddef(ncid), "nf90_enddef" )
 
   ! Write variables
-  mydims(1,1) = 1;          mydims(2,1) = self%npx-1
-  mydims(1,2) = 1;          mydims(2,2) = self%npy-1
-  mydims(1,3) = self%ntile; mydims(2,3) = 1
+  mydims(1,1) = 1;          mydims(2,1) = npx-1
+  mydims(1,2) = 1;          mydims(2,2) = npy-1
+  mydims(1,3) = ntile; mydims(2,3) = 1
 
-  call nccheck( nf90_put_var( ncid, varid(1), self%grid_lon(self%isc:self%iec,self%jsc:self%jec), &
+  call nccheck( nf90_put_var( ncid, varid(1), grid_lon(isc:iec,jsc:jec), &
                               start = mydims(1,:), count = mydims(2,:) ), "nf90_put_var flons" )
 
-  call nccheck( nf90_put_var( ncid, varid(2), self%grid_lat(self%isc:self%iec,self%jsc:self%jec), &
+  call nccheck( nf90_put_var( ncid, varid(2), grid_lat(isc:iec,jsc:jec), &
                               start = mydims(1,:), count = mydims(2,:) ), "nf90_put_var flats" )
 
-  mydims(1,1) = 1;          mydims(2,1) = self%npx
-  mydims(1,2) = 1;          mydims(2,2) = self%npy
-  mydims(1,3) = self%ntile; mydims(2,3) = 1
+  mydims(1,1) = 1;          mydims(2,1) = npx
+  mydims(1,2) = 1;          mydims(2,2) = npy
+  mydims(1,3) = ntile; mydims(2,3) = 1
 
-  call nccheck( nf90_put_var( ncid, varid(3), self%egrid_lon(self%isc:self%iec+1,self%jsc:self%jec+1), &
+  call nccheck( nf90_put_var( ncid, varid(3), egrid_lon(isc:iec+1,jsc:jec+1), &
                               start = mydims(1,:), count = mydims(2,:) ), "nf90_put_var vlons" )
 
-  call nccheck( nf90_put_var( ncid, varid(4), self%egrid_lat(self%isc:self%iec+1,self%jsc:self%jec+1), &
+  call nccheck( nf90_put_var( ncid, varid(4), egrid_lat(isc:iec+1,jsc:jec+1), &
                               start = mydims(1,:), count = mydims(2,:) ), "nf90_put_var vlats" )
 
   ijdims(1) = f_comm%rank()+1
   ijdimf(1) = 1
 
-  tmpij = self%isc
+  tmpij = isc
   call nccheck( nf90_put_var( ncid, varid(5), tmpij, start = ijdims, count = ijdimf ), "nf90_put_var isc" )
 
-  tmpij = self%iec
+  tmpij = iec
   call nccheck( nf90_put_var( ncid, varid(6), tmpij, start = ijdims, count = ijdimf ), "nf90_put_var iec" )
 
-  tmpij = self%jsc
+  tmpij = jsc
   call nccheck( nf90_put_var( ncid, varid(7), tmpij, start = ijdims, count = ijdimf ), "nf90_put_var jsc" )
 
-  tmpij = self%jec
+  tmpij = jec
   call nccheck( nf90_put_var( ncid, varid(8), tmpij, start = ijdims, count = ijdimf ), "nf90_put_var jec" )
 
   ! Close the file
@@ -1073,17 +873,22 @@ end subroutine get_data
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_num_nodes_and_elements(self, num_nodes, num_tris, num_quads)
+subroutine get_num_nodes_and_elements(ntiles, ntile, isc, iec, jsc, jec, npx, npy, &
+                                        num_nodes, num_tris, num_quads)
 
-  class(ijedi_geom),  intent(in)  :: self
+  integer, intent(in)  :: ntiles, ntile
+  integer, intent(in)  :: isc, iec, jsc, jec
+  integer, intent(in)  :: npx, npy
   integer, intent(out) :: num_nodes
   integer, intent(out) :: num_tris
   integer, intent(out) :: num_quads
 
-  if (self%ntiles == 6) then
-    call get_num_nodes_and_elements_global(self, num_nodes, num_tris, num_quads)
-  else if (self%ntiles == 1) then
-    call get_num_nodes_and_elements_regional(self, num_nodes, num_tris, num_quads)
+  if (ntiles == 6) then
+    call get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy, &
+                                           num_nodes, num_tris, num_quads)
+  else if (ntiles == 1) then
+    call get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
+                                             num_nodes, num_tris, num_quads)
   else
     call mpp_error(FATAL, "get_num_nodes_and_elements: ntiles != 1 or 6")
   end if
@@ -1092,9 +897,12 @@ end subroutine get_num_nodes_and_elements
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_num_nodes_and_elements_global(self, num_nodes, num_tris, num_quads)
+subroutine get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy, &
+                                               num_nodes, num_tris, num_quads)
 
-  class(ijedi_geom),  intent(in)  :: self
+  integer, intent(in)  :: ntile
+  integer, intent(in)  :: isc, iec, jsc, jec
+  integer, intent(in)  :: npx, npy
   integer, intent(out) :: num_nodes
   integer, intent(out) :: num_tris
   integer, intent(out) :: num_quads
@@ -1103,17 +911,17 @@ subroutine get_num_nodes_and_elements_global(self, num_nodes, num_tris, num_quad
   logical :: lower_left_corner, upper_left_corner, lower_right_corner
 
   ! extra +1 from adding the ghost nodes on the lower side of each dimension
-  nx = self%iec - self%isc + 2
-  ny = self%jec - self%jsc + 2
+  nx = iec - isc + 2
+  ny = jec - jsc + 2
 
   ! default case
   num_nodes = nx * ny
   num_tris = 0
   num_quads = (nx - 1) * (ny - 1)
 
-  lower_left_corner = (self%isc == 1 .and. self%jsc == 1)
-  upper_left_corner = (self%isc == 1 .and. self%jec == self%npy-1)
-  lower_right_corner = (self%iec == self%npx-1 .and. self%jsc == 1)
+  lower_left_corner = (isc == 1 .and. jsc == 1)
+  upper_left_corner = (isc == 1 .and. jec == npy-1)
+  lower_right_corner = (iec == npx-1 .and. jsc == 1)
 
   ! if at lower-left corner of any tile, then lower-left quad is a tri
   if (lower_left_corner) then
@@ -1123,13 +931,13 @@ subroutine get_num_nodes_and_elements_global(self, num_nodes, num_tris, num_quad
   end if
 
   ! if at upper-left corner of tile #3, then add extra tri in upper-left corner
-  if (upper_left_corner .and. self%ntile == 3) then
+  if (upper_left_corner .and. ntile == 3) then
     num_nodes = num_nodes + 1
     num_tris = num_tris + 1
   end if
 
   ! if at lower-right corner of tile #6, then add extra tri in lower-right corner
-  if (lower_right_corner .and. self%ntile == 6) then
+  if (lower_right_corner .and. ntile == 6) then
     num_nodes = num_nodes + 1
     num_tris = num_tris + 1
   end if
@@ -1138,9 +946,11 @@ end subroutine get_num_nodes_and_elements_global
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_num_nodes_and_elements_regional(self, num_nodes, num_tris, num_quads)
+subroutine get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
+                                                 num_nodes, num_tris, num_quads)
 
-  class(ijedi_geom),  intent(in)  :: self
+  integer, intent(in)  :: isc, iec, jsc, jec
+  integer, intent(in)  :: npx, npy
   integer, intent(out) :: num_nodes
   integer, intent(out) :: num_tris
   integer, intent(out) :: num_quads
@@ -1149,11 +959,11 @@ subroutine get_num_nodes_and_elements_regional(self, num_nodes, num_tris, num_qu
   logical :: right_bdry, upper_bdry
 
   ! extra +1 from adding the ghost nodes on the lower side of each dimension
-  nx = self%iec - self%isc + 2
-  ny = self%jec - self%jsc + 2
+  nx = iec - isc + 2
+  ny = jec - jsc + 2
 
-  right_bdry = (self%iec == self%npx-1)
-  upper_bdry = (self%jec == self%npy-1)
+  right_bdry = (iec == npx-1)
+  upper_bdry = (jec == npy-1)
 
   ! if at upper or right edges, need to adjust the nx,ny for a differently-sized rectangle
   if (right_bdry) then
@@ -1171,12 +981,22 @@ end subroutine get_num_nodes_and_elements_regional
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_coords_and_connectivities(self, &
+subroutine get_coords_and_connectivities(ntiles, ntile, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+    npx, npy, ngrid, grid_lon, grid_lat, domain, f_comm, &
     num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
     raw_tri_boundary_nodes, raw_quad_boundary_nodes)
 
-  class(ijedi_geom),  intent(in)  :: self
+  use mpp_domains_mod, only: domain2D
+
+  integer, intent(in) :: ntiles, ntile
+  integer, intent(in) :: isc, iec, jsc, jec
+  integer, intent(in) :: isd, ied, jsd, jed
+  integer, intent(in) :: npx, npy, ngrid
+  real(kind_real), intent(in) :: grid_lon(isd:ied, jsd:jed)
+  real(kind_real), intent(in) :: grid_lat(isd:ied, jsd:jed)
+  type(domain2D), intent(inout) :: domain
+  type(fckit_mpi_comm), intent(in) :: f_comm
   integer, intent(in) :: num_nodes
   integer, intent(in) :: num_tri_boundary_nodes
   integer, intent(in) :: num_quad_boundary_nodes
@@ -1189,13 +1009,15 @@ subroutine get_coords_and_connectivities(self, &
   integer, intent(out) :: raw_tri_boundary_nodes(num_tri_boundary_nodes)
   integer, intent(out) :: raw_quad_boundary_nodes(num_quad_boundary_nodes)
 
-  if (self%ntiles == 6) then
-    call get_coords_and_connectivities_global(self, &
+  if (ntiles == 6) then
+    call get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+        npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
         num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
         lons, lats, ghosts, global_indices, remote_indices, partition, &
         raw_tri_boundary_nodes, raw_quad_boundary_nodes)
-  else if (self%ntiles == 1) then
-    call get_coords_and_connectivities_regional(self, &
+  else if (ntiles == 1) then
+    call get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+        npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
         num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
         lons, lats, ghosts, global_indices, remote_indices, partition, &
         raw_tri_boundary_nodes, raw_quad_boundary_nodes)
@@ -1207,14 +1029,21 @@ end subroutine get_coords_and_connectivities
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_coords_and_connectivities_global(self, &
+subroutine get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+    npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
     num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
     raw_tri_boundary_nodes, raw_quad_boundary_nodes)
 
-  use mpp_domains_mod, only: mpp_update_domains
+  use mpp_domains_mod, only: mpp_update_domains, domain2D
 
-  class(ijedi_geom),  intent(in)  :: self
+  integer, intent(in) :: isc, iec, jsc, jec
+  integer, intent(in) :: isd, ied, jsd, jed
+  integer, intent(in) :: npx, npy, ngrid, ntile, ntiles
+  real(kind_real), intent(in) :: grid_lon(isd:ied, jsd:jed)
+  real(kind_real), intent(in) :: grid_lat(isd:ied, jsd:jed)
+  type(domain2D), intent(inout) :: domain
+  type(fckit_mpi_comm), intent(in) :: f_comm
   integer, intent(in) :: num_nodes
   integer, intent(in) :: num_tri_boundary_nodes
   integer, intent(in) :: num_quad_boundary_nodes
@@ -1230,66 +1059,66 @@ subroutine get_coords_and_connectivities_global(self, &
   integer :: i, j, node_counter, tri_counter, quad_counter
   logical :: lower_left_corner, upper_left_corner, lower_right_corner
 
-  integer :: loc_ghost(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_global_index(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_remote_index(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_partition(self%isd:self%ied, self%jsd:self%jed)
+  integer :: loc_ghost(isd:ied, jsd:jed)
+  integer :: loc_global_index(isd:ied, jsd:jed)
+  integer :: loc_remote_index(isd:ied, jsd:jed)
+  integer :: loc_partition(isd:ied, jsd:jed)
 
-  lower_left_corner = (self%isc == 1 .and. self%jsc == 1)
-  upper_left_corner = (self%isc == 1 .and. self%jec == self%npy-1)
-  lower_right_corner = (self%iec == self%npx-1 .and. self%jsc == 1)
+  lower_left_corner = (isc == 1 .and. jsc == 1)
+  upper_left_corner = (isc == 1 .and. jec == npy-1)
+  lower_right_corner = (iec == npx-1 .and. jsc == 1)
 
   ! local 2d array for ghost, no need to exchange
   loc_ghost = 1
-  loc_ghost(self%isc:self%iec, self%jsc:self%jec) = 0
+  loc_ghost(isc:iec, jsc:jec) = 0
 
   ! local 2d arrays for global_index, remote_index, and partition for exchanging across tasks
   loc_global_index = -1
-  loc_global_index(self%isc:self%iec, self%jsc:self%jec) = (self%npx-1) * (self%npy-1) * (self%ntile-1)
-  do j = self%jsc, self%jec
-    do i = self%isc, self%iec
+  loc_global_index(isc:iec, jsc:jec) = (npx-1) * (npy-1) * (ntile-1)
+  do j = jsc, jec
+    do i = isc, iec
       ! 1-based index for global index
-      loc_global_index(i,j) = loc_global_index(i,j) + (j - 1) * (self%npx-1) + i
+      loc_global_index(i,j) = loc_global_index(i,j) + (j - 1) * (npx-1) + i
     end do
   end do
-  call mpp_update_domains(loc_global_index, self%domain)
+  call mpp_update_domains(loc_global_index, domain)
 
   loc_remote_index = -1
-  do j = self%jsc, self%jec
-    do i = self%isc, self%iec
+  do j = jsc, jec
+    do i = isc, iec
       ! 1-based index
-      loc_remote_index(i,j) = (j - self%jsc) * (self%iec - self%isc + 1) + (i - self%isc) + 1
+      loc_remote_index(i,j) = (j - jsc) * (iec - isc + 1) + (i - isc) + 1
     end do
   end do
-  call mpp_update_domains(loc_remote_index, self%domain)
+  call mpp_update_domains(loc_remote_index, domain)
 
   loc_partition = -1
-  loc_partition(self%isc:self%iec, self%jsc:self%jec) = self%f_comm%rank()
-  call mpp_update_domains(loc_partition, self%domain)
+  loc_partition(isc:iec, jsc:jec) = f_comm%rank()
+  call mpp_update_domains(loc_partition, domain)
 
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, self%grid_lon, lons)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, self%grid_lat, lats)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_ghost, ghosts)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_global_index, global_indices)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_remote_index, remote_indices)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_partition, partition)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, grid_lon, lons)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, grid_lat, lats)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_ghost, ghosts)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_global_index, global_indices)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_remote_index, remote_indices)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_partition, partition)
 
   lons = constant('rad2deg') * lons
   lats = constant('rad2deg') * lats
 
   tri_counter = 1
   quad_counter = 1
-  do j = self%jsc-1, self%jec
-    do i = self%isc-1, self%iec
+  do j = jsc-1, jec
+    do i = isc-1, iec
 
       ! if at lower-left corner of any tile, then lower-left quad is a tri => skip a point
-      if (lower_left_corner .and. (j == self%jsc-1) .and. (i == self%isc-1)) then
+      if (lower_left_corner .and. (j == jsc-1) .and. (i == isc-1)) then
         raw_tri_boundary_nodes(tri_counter)   = loc_global_index(i+1, j)
         raw_tri_boundary_nodes(tri_counter+1) = loc_global_index(i+1, j+1)
         raw_tri_boundary_nodes(tri_counter+2) = loc_global_index(i, j+1)
@@ -1297,7 +1126,7 @@ subroutine get_coords_and_connectivities_global(self, &
         cycle
       end if
 
-      if ((j /= self%jec) .and. (i /= self%iec)) then
+      if ((j /= jec) .and. (i /= iec)) then
         raw_quad_boundary_nodes(quad_counter)   = loc_global_index(i, j)
         raw_quad_boundary_nodes(quad_counter+1) = loc_global_index(i+1, j)
         raw_quad_boundary_nodes(quad_counter+2) = loc_global_index(i+1, j+1)
@@ -1308,18 +1137,18 @@ subroutine get_coords_and_connectivities_global(self, &
   end do
 
   ! at upper-left corner of tile #3, then add extra tri => add extra point
-  if (upper_left_corner .and. (self%ntile == 3)) then
-    raw_tri_boundary_nodes(tri_counter)   = loc_global_index(self%isc-1, self%jec)
-    raw_tri_boundary_nodes(tri_counter+1) = loc_global_index(self%isc, self%jec)
-    raw_tri_boundary_nodes(tri_counter+2) = loc_global_index(self%isc, self%jec+1)
+  if (upper_left_corner .and. (ntile == 3)) then
+    raw_tri_boundary_nodes(tri_counter)   = loc_global_index(isc-1, jec)
+    raw_tri_boundary_nodes(tri_counter+1) = loc_global_index(isc, jec)
+    raw_tri_boundary_nodes(tri_counter+2) = loc_global_index(isc, jec+1)
     tri_counter = tri_counter + 3
   end if
 
   ! if at lower-right corner of tile #6, then add extra tri => add extra point
-  if (lower_right_corner .and. (self%ntile == 6)) then
-    raw_tri_boundary_nodes(tri_counter)   = loc_global_index(self%iec, self%jsc-1)
-    raw_tri_boundary_nodes(tri_counter+1) = loc_global_index(self%iec+1, self%jsc)
-    raw_tri_boundary_nodes(tri_counter+2) = loc_global_index(self%iec, self%jsc)
+  if (lower_right_corner .and. (ntile == 6)) then
+    raw_tri_boundary_nodes(tri_counter)   = loc_global_index(iec, jsc-1)
+    raw_tri_boundary_nodes(tri_counter+1) = loc_global_index(iec+1, jsc)
+    raw_tri_boundary_nodes(tri_counter+2) = loc_global_index(iec, jsc)
     tri_counter = tri_counter + 3
   end if
 
@@ -1336,14 +1165,21 @@ end subroutine get_coords_and_connectivities_global
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_coords_and_connectivities_regional(self, &
+subroutine get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+    npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
     num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
     raw_tri_boundary_nodes, raw_quad_boundary_nodes)
 
-  use mpp_domains_mod, only: mpp_update_domains
+  use mpp_domains_mod, only: mpp_update_domains, domain2D
 
-  class(ijedi_geom),  intent(in)  :: self
+  integer, intent(in) :: isc, iec, jsc, jec
+  integer, intent(in) :: isd, ied, jsd, jed
+  integer, intent(in) :: npx, npy, ngrid, ntile, ntiles
+  real(kind_real), intent(in) :: grid_lon(isd:ied, jsd:jed)
+  real(kind_real), intent(in) :: grid_lat(isd:ied, jsd:jed)
+  type(domain2D), intent(inout) :: domain
+  type(fckit_mpi_comm), intent(in) :: f_comm
   integer, intent(in) :: num_nodes
   integer, intent(in) :: num_tri_boundary_nodes
   integer, intent(in) :: num_quad_boundary_nodes
@@ -1361,68 +1197,68 @@ subroutine get_coords_and_connectivities_regional(self, &
   integer :: counter_local_idx
   logical :: left_bdry, right_bdry, lower_bdry, upper_bdry
 
-  logical :: loc_bc(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_ghost(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_global_index(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_remote_index(self%isd:self%ied, self%jsd:self%jed)
-  integer :: exchange_remote_index(self%isd:self%ied, self%jsd:self%jed)
-  integer :: loc_partition(self%isd:self%ied, self%jsd:self%jed)
+  logical :: loc_bc(isd:ied, jsd:jed)
+  integer :: loc_ghost(isd:ied, jsd:jed)
+  integer :: loc_global_index(isd:ied, jsd:jed)
+  integer :: loc_remote_index(isd:ied, jsd:jed)
+  integer :: exchange_remote_index(isd:ied, jsd:jed)
+  integer :: loc_partition(isd:ied, jsd:jed)
 
-  left_bdry = (self%isc == 1)
-  right_bdry = (self%iec == self%npx-1)
-  lower_bdry = (self%jsc == 1)
-  upper_bdry = (self%jec == self%npy-1)
+  left_bdry = (isc == 1)
+  right_bdry = (iec == npx-1)
+  lower_bdry = (jsc == 1)
+  upper_bdry = (jec == npy-1)
 
-  imax = self%iec
+  imax = iec
   if (right_bdry) then
     imax = imax + 1
   end if
 
-  jmax = self%jec
+  jmax = jec
   if (upper_bdry) then
     jmax = jmax + 1
   end if
 
   ! identify which points in first halo layer are this tasks's BC points
   loc_bc = .false.
-  if (left_bdry) loc_bc(self%isc-1, self%jsc:self%jec) = .true.
-  if (right_bdry) loc_bc(self%iec+1, self%jsc:self%jec) = .true.
-  if (lower_bdry) loc_bc(self%isc:self%iec, self%jsc-1) = .true.
-  if (upper_bdry) loc_bc(self%isc:self%iec, self%jec+1) = .true.
-  if (left_bdry .and. lower_bdry) loc_bc(self%isc-1, self%jsc-1) = .true.
-  if (left_bdry .and. upper_bdry) loc_bc(self%isc-1, self%jec+1) = .true.
-  if (right_bdry .and. lower_bdry) loc_bc(self%iec+1, self%jsc-1) = .true.
-  if (right_bdry .and. upper_bdry) loc_bc(self%iec+1, self%jec+1) = .true.
+  if (left_bdry) loc_bc(isc-1, jsc:jec) = .true.
+  if (right_bdry) loc_bc(iec+1, jsc:jec) = .true.
+  if (lower_bdry) loc_bc(isc:iec, jsc-1) = .true.
+  if (upper_bdry) loc_bc(isc:iec, jec+1) = .true.
+  if (left_bdry .and. lower_bdry) loc_bc(isc-1, jsc-1) = .true.
+  if (left_bdry .and. upper_bdry) loc_bc(isc-1, jec+1) = .true.
+  if (right_bdry .and. lower_bdry) loc_bc(iec+1, jsc-1) = .true.
+  if (right_bdry .and. upper_bdry) loc_bc(iec+1, jec+1) = .true.
 
   ! local 2d array for ghost, no need to exchange
   loc_ghost = 1
-  loc_ghost(self%isc:self%iec, self%jsc:self%jec) = 0
+  loc_ghost(isc:iec, jsc:jec) = 0
   where (loc_bc) loc_ghost = 0
 
   ! local 2d arrays for global_index, remote_index, and partition for exchanging across tasks
 
   ! global_index runs over the entire regional "compute" domain +/- 1 point
   loc_global_index = -1
-  do j = self%jsc-1, self%jec+1
-    do i = self%isc-1, self%iec+1
+  do j = jsc-1, jec+1
+    do i = isc-1, iec+1
       ! 1-based index
-      loc_global_index(i,j) = j * (self%npx + 1) + i + 1
+      loc_global_index(i,j) = j * (npx + 1) + i + 1
     end do
   end do
 
   loc_remote_index = -1
-  do j = self%jsc, self%jec
-    do i = self%isc, self%iec
+  do j = jsc, jec
+    do i = isc, iec
       ! 1-based index
-      loc_remote_index(i,j) = (j - self%jsc) * (self%iec - self%isc + 1) + (i - self%isc) + 1
+      loc_remote_index(i,j) = (j - jsc) * (iec - isc + 1) + (i - isc) + 1
     end do
   end do
   counter_local_idx = maxval(loc_remote_index)
   ! use exchange to fill halo points with neighboring task's index
-  call mpp_update_domains(loc_remote_index, self%domain)
+  call mpp_update_domains(loc_remote_index, domain)
   ! for halo points that are actually a BC, generate new local indices
-  do j = self%jsc-1, self%jec+1
-    do i = self%isc-1, self%iec+1
+  do j = jsc-1, jec+1
+    do i = isc-1, iec+1
       if (loc_bc(i, j)) then
         counter_local_idx = counter_local_idx + 1
         loc_remote_index(i,j) = counter_local_idx
@@ -1431,9 +1267,9 @@ subroutine get_coords_and_connectivities_regional(self, &
   end do
 
   loc_partition = -1
-  loc_partition(self%isc:self%iec, self%jsc:self%jec) = self%f_comm%rank()
-  call mpp_update_domains(loc_partition, self%domain)
-  where (loc_bc) loc_partition = self%f_comm%rank()
+  loc_partition(isc:iec, jsc:jec) = f_comm%rank()
+  call mpp_update_domains(loc_partition, domain)
+  where (loc_bc) loc_partition = f_comm%rank()
 
   ! special case handling of halo points within the BC region:
   !
@@ -1466,99 +1302,99 @@ subroutine get_coords_and_connectivities_regional(self, &
   if (left_bdry) then
     if (.not.upper_bdry) then
       ! fill upper-left OWNED point with generated index of corresponding BC point
-      exchange_remote_index(self%isc, self%jec) = loc_remote_index(self%isc-1, self%jec)
+      exchange_remote_index(isc, jec) = loc_remote_index(isc-1, jec)
     end if
     if (.not.lower_bdry) then
-      exchange_remote_index(self%isc, self%jsc) = loc_remote_index(self%isc-1, self%jsc)
+      exchange_remote_index(isc, jsc) = loc_remote_index(isc-1, jsc)
     end if
   end if
   if (right_bdry) then
     if (.not.upper_bdry) then
-      exchange_remote_index(self%iec, self%jec) = loc_remote_index(self%iec+1, self%jec)
+      exchange_remote_index(iec, jec) = loc_remote_index(iec+1, jec)
     end if
     if (.not.lower_bdry) then
-      exchange_remote_index(self%iec, self%jsc) = loc_remote_index(self%iec+1, self%jsc)
+      exchange_remote_index(iec, jsc) = loc_remote_index(iec+1, jsc)
     end if
   end if
   if (lower_bdry) then
     if (.not.left_bdry) then
-      exchange_remote_index(self%isc, self%jsc) = loc_remote_index(self%isc, self%jsc-1)
+      exchange_remote_index(isc, jsc) = loc_remote_index(isc, jsc-1)
     end if
     if (.not.right_bdry) then
-      exchange_remote_index(self%iec, self%jsc) = loc_remote_index(self%iec, self%jsc-1)
+      exchange_remote_index(iec, jsc) = loc_remote_index(iec, jsc-1)
     end if
   end if
   if (upper_bdry) then
     if (.not.left_bdry) then
-      exchange_remote_index(self%isc, self%jec) = loc_remote_index(self%isc, self%jec+1)
+      exchange_remote_index(isc, jec) = loc_remote_index(isc, jec+1)
     end if
     if (.not.right_bdry) then
-      exchange_remote_index(self%iec, self%jec) = loc_remote_index(self%iec, self%jec+1)
+      exchange_remote_index(iec, jec) = loc_remote_index(iec, jec+1)
     end if
   end if
   ! halo-exchange the dummy array
-  call mpp_update_domains(exchange_remote_index, self%domain)
+  call mpp_update_domains(exchange_remote_index, domain)
   if (left_bdry) then
     if (.not.upper_bdry) then
       ! fill upper-left BC from neighbor's lower-right OWNED point, using the index already in halo
-      loc_remote_index(self%isc-1, self%jec+1) = exchange_remote_index(self%isc, self%jec+1)
-      loc_partition(self%isc-1, self%jec+1) = loc_partition(self%isc, self%jec+1)
+      loc_remote_index(isc-1, jec+1) = exchange_remote_index(isc, jec+1)
+      loc_partition(isc-1, jec+1) = loc_partition(isc, jec+1)
     end if
     if (.not.lower_bdry) then
-      loc_remote_index(self%isc-1, self%jsc-1) = exchange_remote_index(self%isc, self%jsc-1)
-      loc_partition(self%isc-1, self%jsc-1) = loc_partition(self%isc, self%jsc-1)
+      loc_remote_index(isc-1, jsc-1) = exchange_remote_index(isc, jsc-1)
+      loc_partition(isc-1, jsc-1) = loc_partition(isc, jsc-1)
     end if
   end if
   if (right_bdry) then
     if (.not.upper_bdry) then
-      loc_remote_index(self%iec+1, self%jec+1) = exchange_remote_index(self%iec, self%jec+1)
-      loc_partition(self%iec+1, self%jec+1) = loc_partition(self%iec, self%jec+1)
+      loc_remote_index(iec+1, jec+1) = exchange_remote_index(iec, jec+1)
+      loc_partition(iec+1, jec+1) = loc_partition(iec, jec+1)
     end if
     if (.not.lower_bdry) then
-      loc_remote_index(self%iec+1, self%jsc-1) = exchange_remote_index(self%iec, self%jsc-1)
-      loc_partition(self%iec+1, self%jsc-1) = loc_partition(self%iec, self%jsc-1)
+      loc_remote_index(iec+1, jsc-1) = exchange_remote_index(iec, jsc-1)
+      loc_partition(iec+1, jsc-1) = loc_partition(iec, jsc-1)
     end if
   end if
   if (lower_bdry) then
     if (.not.left_bdry) then
-      loc_remote_index(self%isc-1, self%jsc-1) = exchange_remote_index(self%isc-1, self%jsc)
-      loc_partition(self%isc-1, self%jsc-1) = loc_partition(self%isc-1, self%jsc)
+      loc_remote_index(isc-1, jsc-1) = exchange_remote_index(isc-1, jsc)
+      loc_partition(isc-1, jsc-1) = loc_partition(isc-1, jsc)
     end if
     if (.not.right_bdry) then
-      loc_remote_index(self%iec+1, self%jsc-1) = exchange_remote_index(self%iec+1, self%jsc)
-      loc_partition(self%iec+1, self%jsc-1) = loc_partition(self%iec+1, self%jsc)
+      loc_remote_index(iec+1, jsc-1) = exchange_remote_index(iec+1, jsc)
+      loc_partition(iec+1, jsc-1) = loc_partition(iec+1, jsc)
     end if
   end if
   if (upper_bdry) then
     if (.not.left_bdry) then
-      loc_remote_index(self%isc-1, self%jec+1) = exchange_remote_index(self%isc-1, self%jec)
-      loc_partition(self%isc-1, self%jec+1) = loc_partition(self%isc-1, self%jec)
+      loc_remote_index(isc-1, jec+1) = exchange_remote_index(isc-1, jec)
+      loc_partition(isc-1, jec+1) = loc_partition(isc-1, jec)
     end if
     if (.not.right_bdry) then
-      loc_remote_index(self%iec+1, self%jec+1) = exchange_remote_index(self%iec+1, self%jec)
-      loc_partition(self%iec+1, self%jec+1) = loc_partition(self%iec+1, self%jec)
+      loc_remote_index(iec+1, jec+1) = exchange_remote_index(iec+1, jec)
+      loc_partition(iec+1, jec+1) = loc_partition(iec+1, jec)
     end if
   end if
 
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, self%grid_lon, lons)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, self%grid_lat, lats)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_ghost, ghosts)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_global_index, global_indices)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_remote_index, remote_indices)
-  call fv3_nodes_to_atlas_nodes(self%npx, self%npy, self%isc, self%iec, self%jsc, self%jec, self%isd, self%ied, self%jsd, self%jed, self%ntile, &
-                                self%ntiles, self%ngrid, loc_partition, partition)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, grid_lon, lons)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, grid_lat, lats)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_ghost, ghosts)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_global_index, global_indices)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_remote_index, remote_indices)
+  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                ntiles, ngrid, loc_partition, partition)
 
   lons = constant('rad2deg') * lons
   lats = constant('rad2deg') * lats
 
   quad_counter = 1
-  do j = self%jsc-1, jmax
-    do i = self%isc-1, imax
+  do j = jsc-1, jmax
+    do i = isc-1, imax
       if ((j /= jmax) .and. (i /= imax)) then
         raw_quad_boundary_nodes(quad_counter)   = loc_global_index(i, j)
         raw_quad_boundary_nodes(quad_counter+1) = loc_global_index(i+1, j)
