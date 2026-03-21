@@ -29,7 +29,8 @@ namespace ijedi
     virtual ~GeometryBase() = default;
 
     static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
-                                                const eckit::mpi::Comm &);
+                                                const eckit::mpi::Comm &,
+                                                const eckit::Configuration &);
     virtual void print(std::ostream &) const = 0;
 
     // Accessors for geometry data

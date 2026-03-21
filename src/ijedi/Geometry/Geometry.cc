@@ -21,13 +21,13 @@ namespace ijedi
   const int HALO_SIZE = 1;
   // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &conf, const eckit::mpi::Comm &comm)
-      : comm_(comm)
+      : comm_(comm), geomVariables_()
   {
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
 
     // Create the geometry implementation (which will set numLevels_)
-    geometryImpl_ = GeometryBase::create(conf, comm_);
+    geometryImpl_ = GeometryBase::create(conf, comm_, *geomVariables_);
 
     // Construct the fields metadata object using numLevels from the base class
     fieldsMeta_.reset(new FieldsMetadata(geometryImpl_->numLevels()));

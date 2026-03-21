@@ -5,7 +5,7 @@
 
 !> Fortran module handling geometry for the FV3 model
 
-module ijedi_geom_mod
+module ijedi_fv3_geom_mod
 
 use netcdf
 use mpi
@@ -40,72 +40,24 @@ use ijedi_fv3_namelist_mod,   only: ijedi_fmsnamelist
 
 implicit none
 private
-public :: ijedi_geom, getVerticalCoord, getVerticalCoordLogP, initialize, pedges2pmidlayer
+public :: fv3_geom_initialize
+public :: fv3_geom_create
+public :: fv3_geom_set_and_fill_geometry_fields
+public :: fv3_geom_setup_domain
+public :: fv3_geom_write_geom
+public :: fv3_geom_getVerticalCoord
+public :: fv3_geom_getVerticalCoordLogP
+public :: fv3_geom_pedges2pmidlayer
+public :: fv3_geom_nodes_to_atlas_nodes
 
 ! Create interface for generic nodes to atlas nodes procedure
-interface fv3_nodes_to_atlas_nodes
-  module procedure fv3_nodes_to_atlas_nodes_r
-  module procedure fv3_nodes_to_atlas_nodes_i
-end interface fv3_nodes_to_atlas_nodes
+interface fv3_geom_nodes_to_atlas_nodes
+  module procedure fv3_geom_nodes_to_atlas_nodes_r
+  module procedure fv3_geom_nodes_to_atlas_nodes_i
+end interface fv3_geom_nodes_to_atlas_nodes
 
 ! --------------------------------------------------------------------------------------------------
 
-!> Fortran derived type to hold geometry data for the ijedi model
-type :: ijedi_geom
-  integer :: isd, ied, jsd, jed                                                     !data domain
-  integer :: isc, iec, jsc, jec, kec                                                !compute domain
-  integer :: npx,npy,npz,ngrid                                                      !x/y/z-dir grid edge points per tile
-  integer :: layout(2), io_layout(2)                                                !Processor layouts
-  integer :: ntile, ntiles                                                          !Tile number and total
-  integer :: iterator_dimension                                                     !iterator dimension
-  real(kind=kind_real) :: ptop                                                      !Pressure at top of domain
-  type(domain2D) :: domain_fix                                                      !MPP domain
-  type(domain2D), pointer :: domain                                                 !MPP domain
-  real(kind=kind_real) :: stretch_fac, target_lon, target_lat
-  real(kind=kind_real), allocatable, dimension(:)       :: ak, bk                   !Model level coefficients
-  real(kind=kind_real), allocatable, dimension(:,:)     :: grid_lon, grid_lat       !Lat/lon centers
-  real(kind=kind_real), allocatable, dimension(:,:)     :: egrid_lon, egrid_lat     !Lat/lon edges
-  real(kind=kind_real), allocatable, dimension(:)       :: lon_us, lat_us           !Lat/lon centers unstructured
-  real(kind=kind_real), allocatable, dimension(:,:)     :: area                     !Grid area
-  real(kind=kind_real), allocatable, dimension(:,:)     :: dx, dy                   !dx/dy at edges
-  real(kind=kind_real), allocatable, dimension(:,:)     :: dxc, dyc                 !dx/dy c grid
-  real(kind=kind_real), allocatable, dimension(:,:,:)   :: grid, vlon, vlat
-  real(kind=kind_real), allocatable, dimension(:)       :: edge_vect_n, edge_vect_e
-  real(kind=kind_real), allocatable, dimension(:)       :: edge_vect_s, edge_vect_w
-  real(kind=kind_real), allocatable, dimension(:,:,:,:) :: es, ew
-  real(kind=kind_real), allocatable, dimension(:,:)     :: a11, a12, a21, a22
-  type(fckit_mpi_comm) :: f_comm
-  type(atlas_fieldset) :: geometry_fields
-  ! Vertical Coordinate
-  real(kind=kind_real), allocatable, dimension(:)       :: vCoord                   !Model vertical coordinate
-  ! For D to (A to) C grid
-  real(kind=kind_real), allocatable, dimension(:,:)     :: rarea
-  real(kind=kind_real), allocatable, dimension(:,:,:)   :: sin_sg
-  real(kind=kind_real), allocatable, dimension(:,:)     :: cosa_u
-  real(kind=kind_real), allocatable, dimension(:,:)     :: cosa_v
-  real(kind=kind_real), allocatable, dimension(:,:)     :: cosa_s
-  real(kind=kind_real), allocatable, dimension(:,:)     :: rsin_u
-  real(kind=kind_real), allocatable, dimension(:,:)     :: rsin_v
-  real(kind=kind_real), allocatable, dimension(:,:)     :: rsin2
-  real(kind=kind_real), allocatable, dimension(:,:)     :: dxa, dya
-  logical :: ne_corner, se_corner, sw_corner, nw_corner
-  logical :: nested = .false.
-  logical :: bounded_domain = .false.
-  character(len=10) :: vertcoord_type
-
-  integer :: ensNum
-  integer :: grid_type = 0
-  logical :: dord4 = .true.
-  type(atlas_functionspace) :: afunctionspace
-
-  ! Configuration that holds the masks to be applied to each field
-  type(fckit_configuration) :: field_masks
-  type(fckit_configuration) :: field_interp_methods
-
-  contains
-    procedure, public :: create
-
-end type ijedi_geom
 
 ! --------------------------------------------------------------------------------------------------
 
@@ -113,7 +65,7 @@ contains
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine initialize(conf, comm)
+subroutine fv3_geom_initialize(conf, comm)
 
 type(fckit_configuration), intent(in) :: conf
 type(fckit_mpi_comm),      intent(in) :: comm
@@ -144,19 +96,15 @@ call mpp_domains_set_stack_size(stackmax)
 ! Initialize the tracers
 call field_manager_init(table_name = field_table_filename)
 
-end subroutine initialize
+end subroutine fv3_geom_initialize
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine create(self, conf, comm, npx, npy, npz)
+subroutine fv3_geom_create(geom_conf, geom_vars)
 
 !Arguments
-class(ijedi_geom), target, intent(inout) :: self
-type(fckit_configuration),   intent(in)    :: conf
-type(fckit_mpi_comm),        intent(in)    :: comm
-integer,                     intent(out)   :: npx
-integer,                     intent(out)   :: npy
-integer,                     intent(out)   :: npz
+type(fckit_configuration), intent(in)    :: geom_conf
+type(fckit_configuration), intent(inout) :: geom_vars
 
 !Locals
 character(len=256)                    :: file_akbk
@@ -172,45 +120,30 @@ real(kind=kind_real) :: sf, t_lon, t_lat
 logical :: do_write_geom = .false.
 integer :: iterator_dimension = 2
 
+real(kind=kind_real), allocatable :: ak(:), bk(:)
+
 type(ijedi_fmsnamelist) :: fmsnamelist
 
-! Add the communicator to the geometry
-! ------------------------------------
-self%f_comm = comm
+integer              :: ensNum
+integer, allocatable :: Atm_pelist(:)
+integer, allocatable :: Ocean_pelist(:)
+integer, allocatable :: Land_pelist(:)
+integer, allocatable :: Ice_fast_pelist(:)
+integer              :: atmos_npes
+integer              :: ocean_npes
+integer              :: land_npes
+integer              :: ice_npes
+integer              :: ensemble_id
+integer              :: ens_siz(6), ensemble_size, npes
+integer, allocatable :: ensemble_pelist(:, :)
 
-! Initialize field_masks config
-! -----------------------------
-self%field_masks = fckit_configuration()
 
-! User specified interpolation methods for fields
-! -----------------------------------------------
-self%field_interp_methods = fckit_configuration()
-if (conf%has("field interpolation methods")) then
-  call conf%get_or_die("field interpolation methods", self%field_interp_methods)
-endif
+! Update the fms name list with this Geometry
+! -------------------------------------------
+call fmsnamelist%replace_namelist(geom_conf)
 
-! Stretch factor, target_lon, and target_lat
-! ------------------------------------------
-sf = 0
-t_lon = 0.0
-t_lat = 0.0
-if (conf%has("stretch_fac")) call conf%get_or_die("stretch_fac",sf)
-if (conf%has("target_lon"))  call conf%get_or_die("target_lon",t_lon)
-if (conf%has("target_lat"))  call conf%get_or_die("target_lat",t_lat)
-self%stretch_fac = sf
-self%target_lon = t_lon
-self%target_lat = t_lat
-
-iterator_dimension = 2
-if (conf%has("iterator dimension")) call conf%get_or_die("iterator dimension", iterator_dimension)
-self%iterator_dimension = iterator_dimension
-
-! Update the fms namelist with this Geometry
-! ------------------------------------------
-call fmsnamelist%replace_namelist(conf)
-
-!Intialize using the model setup routine
-! --------------------------------------
+! Initialize using the model setup routine
+! ----------------------------------------
 call fv_control_init(Atm, 300.0_kind_real, this_grid, grids_on_this_pe, p_split, &
                      skip_nml_read_in=.true.)
 
@@ -219,81 +152,31 @@ if (this_grid .ne. 1) call abor1_ftn("Geometry not ready for ngrid > 1")
 
 ! Copy relevant contents of Atm
 ! -----------------------------
-self%isd = Atm(1)%bd%isd
-self%ied = Atm(1)%bd%ied
-self%jsd = Atm(1)%bd%jsd
-self%jed = Atm(1)%bd%jed
+call geom_vars%set("npx", Atm(1)%npx)
+call geom_vars%set("npy", Atm(1)%npy)
+call geom_vars%set("npz", Atm(1)%npz)
+call geom_vars%set("isc", Atm(1)%bd%isc)
+call geom_vars%set("iec", Atm(1)%bd%iec)
+call geom_vars%set("jsc", Atm(1)%bd%jsc)
+call geom_vars%set("jec", Atm(1)%bd%jec)
+call geom_vars%set("isd", Atm(1)%bd%isd)
+call geom_vars%set("ied", Atm(1)%bd%ied)
+call geom_vars%set("jsd", Atm(1)%bd%jsd)
+call geom_vars%set("jed", Atm(1)%bd%jed)
+call geom_vars%set("ntile", Atm(1)%global_tile)
+call geom_vars%set("ntiles", Atm(1)%flagstruct%ntiles)
 
-self%isc = Atm(1)%bd%isc
-self%iec = Atm(1)%bd%iec
-self%jsc = Atm(1)%bd%jsc
-self%jec = Atm(1)%bd%jec
-self%kec = Atm(1)%npz
-
-self%ntile  = Atm(1)%global_tile
-self%ntiles = Atm(1)%flagstruct%ntiles
-
-self%npx = Atm(1)%npx
-self%npy = Atm(1)%npy
-self%npz = Atm(1)%npz
-
-npx = self%npx
-npy = self%npy
-npz = self%npz
-
-self%layout(1) = Atm(1)%layout(1)
-self%layout(2) = Atm(1)%layout(2)
-self%io_layout(1) = Atm(1)%io_layout(1)
-self%io_layout(2) = Atm(1)%io_layout(2)
 
 !Allocatable arrays
-allocate(self%ak(self%npz+1) )
-allocate(self%bk(self%npz+1) )
-
-allocate(self%grid_lon   (self%isd  :self%ied,  self%jsd  :self%jed  ))
-allocate(self%grid_lat   (self%isd  :self%ied,  self%jsd  :self%jed  ))
-allocate(self%egrid_lon  (self%isd  :self%ied+1,self%jsd  :self%jed+1))
-allocate(self%egrid_lat  (self%isd  :self%ied+1,self%jsd  :self%jed+1))
-allocate(self%area       (self%isd  :self%ied,  self%jsd  :self%jed  ))
-allocate(self%dx         (self%isd  :self%ied  ,self%jsd  :self%jed+1))
-allocate(self%dy         (self%isd  :self%ied+1,self%jsd  :self%jed  ))
-allocate(self%dxc        (self%isd  :self%ied+1,self%jsd  :self%jed  ))
-allocate(self%dyc        (self%isd  :self%ied  ,self%jsd  :self%jed+1))
-
-allocate(self%grid       (self%isd  :self%ied+1,self%jsd  :self%jed+1,2))
-allocate(self%vlon       (self%isc-2:self%iec+2,self%jsc-2:self%jec+2,3))
-allocate(self%vlat       (self%isc-2:self%iec+2,self%jsc-2:self%jec+2,3))
-
-allocate(self%edge_vect_n(self%isd:self%ied))
-allocate(self%edge_vect_e(self%jsd:self%jed))
-allocate(self%edge_vect_s(self%isd:self%ied))
-allocate(self%edge_vect_w(self%jsd:self%jed))
-
-allocate(self%es(3,self%isd:self%ied  ,self%jsd:self%jed+1,2))
-allocate(self%ew(3,self%isd:self%ied+1,self%jsd:self%jed,  2))
-
-allocate(self%a11(self%isc-1:self%iec+1,self%jsc-1:self%jec+1) )
-allocate(self%a12(self%isc-1:self%iec+1,self%jsc-1:self%jec+1) )
-allocate(self%a21(self%isc-1:self%iec+1,self%jsc-1:self%jec+1) )
-allocate(self%a22(self%isc-1:self%iec+1,self%jsc-1:self%jec+1) )
-
-allocate(self%rarea (self%isd:self%ied  ,self%jsd:self%jed  ))
-allocate(self%sin_sg(self%isd:self%ied  ,self%jsd:self%jed  ,9))
-allocate(self%cosa_u(self%isd:self%ied+1,self%jsd:self%jed  ))
-allocate(self%cosa_v(self%isd:self%ied  ,self%jsd:self%jed+1))
-allocate(self%cosa_s(self%isd:self%ied  ,self%jsd:self%jed  ))
-allocate(self%rsin_u(self%isd:self%ied+1,self%jsd:self%jed  ))
-allocate(self%rsin_v(self%isd:self%ied  ,self%jsd:self%jed+1))
-allocate(self%rsin2 (self%isd:self%ied  ,self%jsd:self%jed  ))
-allocate(self%dxa   (self%isd:self%ied  ,self%jsd:self%jed  ))
-allocate(self%dya   (self%isd:self%ied  ,self%jsd:self%jed  ))
+allocate(ak(Atm(1)%npz+1))
+allocate(bk(Atm(1)%npz+1))
 
 ! ak and bk hybrid coordinate coefficients
 ! ----------------------------------------
-if (self%npz > 1) then
+if (Atm(1)%npz > 1) then
 
   ! Set path/filename for ak and bk file
-  call conf%get_or_die("akbk",str)
+  call geom_conf%get_or_die("akbk", str)
   file_akbk = str
 
   !Open file
@@ -316,7 +199,7 @@ if (self%npz > 1) then
     if (dimids(i) > 0) then
        call nccheck( nf90_inquire_dimension(ncid, dimids(i), len = dimlens(i)), &
                      "nf90_inquire_dimension" )
-       if (dimlens(i) == self%npz+1) then
+       if (dimlens(i) == Atm(1)%npz+1) then
           readdim = i
        endif
        dcount = dcount + 1
@@ -325,115 +208,83 @@ if (self%npz > 1) then
   if (readdim == -1) call abor1_ftn("ak/bk in file does not match dimension of npz from input.nml")
 
   !Read ak and bk from the file
-  call nccheck( nf90_get_var(ncid, akvarid, self%ak), "ijedi_geom, nf90_get_var ak" )
-  call nccheck( nf90_get_var(ncid, bkvarid, self%bk), "ijedi_geom, nf90_get_var bk" )
+  call nccheck( nf90_get_var(ncid, akvarid, ak), "ijedi_fv3_geom, nf90_get_var ak" )
+  call nccheck( nf90_get_var(ncid, bkvarid, bk), "ijedi_fv3_geom, nf90_get_var bk" )
 else
-  self%ak = 0.0_kind_real
-  self%bk = 0.0_kind_real
+  ak = 0.0_kind_real
+  bk = 0.0_kind_real
 endif
+
+! Put ak/bk into the configuration for use in other places
+call geom_vars%set("ak", ak)
+call geom_vars%set("bk", bk)
+call geom_vars%set("ptop", ak(1))
 
 ! Arrays from the Atm Structure
 ! -----------------------------
-self%grid_lon  = real(Atm(1)%gridstruct%agrid_64(:,:,1),kind_real)
-self%grid_lat  = real(Atm(1)%gridstruct%agrid_64(:,:,2),kind_real)
-self%egrid_lon = real(Atm(1)%gridstruct%grid_64(:,:,1),kind_real)
-self%egrid_lat = real(Atm(1)%gridstruct%grid_64(:,:,2),kind_real)
-self%area      = real(Atm(1)%gridstruct%area_64,kind_real)
-self%dx        = real(Atm(1)%gridstruct%dx ,kind_real)
-self%dy        = real(Atm(1)%gridstruct%dy ,kind_real)
-self%dxc       = real(Atm(1)%gridstruct%dxc,kind_real)
-self%dyc       = real(Atm(1)%gridstruct%dyc,kind_real)
+call geom_vars%set("grid_lon", reshape(real(Atm(1)%gridstruct%agrid_64(:,:,1),kind_real), &
+                   [size(Atm(1)%gridstruct%agrid_64,1)*size(Atm(1)%gridstruct%agrid_64,2)]))
+call geom_vars%set("grid_lat", reshape(real(Atm(1)%gridstruct%agrid_64(:,:,2),kind_real), &
+                   [size(Atm(1)%gridstruct%agrid_64,1)*size(Atm(1)%gridstruct%agrid_64,2)]))
+call geom_vars%set("egrid_lon", reshape(real(Atm(1)%gridstruct%grid_64(:,:,1),kind_real), &
+                   [size(Atm(1)%gridstruct%grid_64,1)*size(Atm(1)%gridstruct%grid_64,2)]))
+call geom_vars%set("egrid_lat", reshape(real(Atm(1)%gridstruct%grid_64(:,:,2),kind_real), &
+                   [size(Atm(1)%gridstruct%grid_64,1)*size(Atm(1)%gridstruct%grid_64,2)]))
+call geom_vars%set("area", reshape(real(Atm(1)%gridstruct%area_64,kind_real), &
+                   [size(Atm(1)%gridstruct%area_64,1)*size(Atm(1)%gridstruct%area_64,2)]))
 
-self%grid      = real(Atm(1)%gridstruct%grid,kind_real)
-self%vlon      = real(Atm(1)%gridstruct%vlon,kind_real)
-self%vlat      = real(Atm(1)%gridstruct%vlat,kind_real)
-
-self%edge_vect_n = real(Atm(1)%gridstruct%edge_vect_n,kind_real)
-self%edge_vect_e = real(Atm(1)%gridstruct%edge_vect_e,kind_real)
-self%edge_vect_s = real(Atm(1)%gridstruct%edge_vect_s,kind_real)
-self%edge_vect_w = real(Atm(1)%gridstruct%edge_vect_w,kind_real)
-
-self%es = real(Atm(1)%gridstruct%es,kind_real)
-self%ew = real(Atm(1)%gridstruct%ew,kind_real)
-
-self%a11 = real(Atm(1)%gridstruct%a11,kind_real)
-self%a12 = real(Atm(1)%gridstruct%a12,kind_real)
-self%a21 = real(Atm(1)%gridstruct%a21,kind_real)
-self%a22 = real(Atm(1)%gridstruct%a22,kind_real)
-
-self%rarea     = real(Atm(1)%gridstruct%rarea ,kind_real)
-self%sin_sg    = real(Atm(1)%gridstruct%sin_sg,kind_real)
-self%cosa_u    = real(Atm(1)%gridstruct%cosa_u,kind_real)
-self%cosa_v    = real(Atm(1)%gridstruct%cosa_v,kind_real)
-self%cosa_s    = real(Atm(1)%gridstruct%cosa_s,kind_real)
-self%rsin_u    = real(Atm(1)%gridstruct%rsin_u,kind_real)
-self%rsin_v    = real(Atm(1)%gridstruct%rsin_v,kind_real)
-self%rsin2     = real(Atm(1)%gridstruct%rsin2 ,kind_real)
-self%dxa       = real(Atm(1)%gridstruct%dxa   ,kind_real)
-self%dya       = real(Atm(1)%gridstruct%dya   ,kind_real)
-self%ne_corner = Atm(1)%gridstruct%ne_corner
-self%se_corner = Atm(1)%gridstruct%se_corner
-self%sw_corner = Atm(1)%gridstruct%sw_corner
-self%nw_corner = Atm(1)%gridstruct%nw_corner
-self%nested    = Atm(1)%gridstruct%nested
-self%bounded_domain =  Atm(1)%gridstruct%bounded_domain
-
-allocate(self%vCoord(self%npz))
-
-self%vertcoord_type = 'sigma'
-if (conf%has("vert coordinate")) then
-  call conf%get_or_die("vert coordinate", str)
-  self%vertcoord_type = str
-  deallocate(str)
-endif
-
-!Unstructured lat/lon
-self%ngrid = (self%iec-self%isc+1)*(self%jec-self%jsc+1)
-allocate(self%lat_us(self%ngrid))
-allocate(self%lon_us(self%ngrid))
-
-jj = 0
-do j = self%jsc,self%jec
-  do i = self%isc,self%iec
-     jj = jj + 1
-     self%lat_us(jj) = self%grid_lat(i,j)
-     self%lon_us(jj) = self%grid_lon(i,j)
-  enddo
-enddo
-
-!Set Ptop
-self%ptop = self%ak(1)
-
-!Done with the Atm stucture here
+! Safe deallocate of the grid structure
+! -------------------------------------
 call deallocate_fv_atmos_type(Atm(1))
 deallocate(Atm)
 deallocate(grids_on_this_pe)
-
-!Resetup domain to avoid risk of copied pointers
-call setup_domain( self%domain_fix, self%npx-1, self%npy-1, &
-                   self%ntiles, self%layout, self%io_layout, 3)
-
-self%domain => self%domain_fix
-
-! Optionally write the geometry to file
-! -------------------------------------
-do_write_geom = .false.
-if (conf%has("write geom")) call conf%get_or_die("write geom",do_write_geom)
-
-if (do_write_geom) then
-  !call write_geom(f_comm, isc, iec, jsc, jec, npx, npy, ntile, grid_lon, grid_lat, egrid_lon, &
-  !               egrid_lat)
-endif
 
 ! Revert the fms namelist
 ! -----------------------
 call fmsnamelist%revert_namelist
 
-end subroutine create
+! Ensemble manager
+! ----------------
+if (.not. geom_conf%get("member_number", ensNum)) then
+  ensNum = 0
+endif
+
+if( ensNum > 0 ) then
+  call ensemble_manager_init()
+  ens_siz = get_ensemble_size()
+  ensemble_size = ens_siz(1)
+  npes = ens_siz(2)
+
+  atmos_npes = npes
+  ocean_npes = 0
+  land_npes = 0
+  ice_npes = 0
+
+  allocate( Atm_pelist  (atmos_npes) )
+  allocate( Ocean_pelist(ocean_npes) )
+  allocate( Land_pelist (land_npes) )
+  allocate( Ice_fast_pelist(ice_npes) )
+
+  call ensemble_pelist_setup(.true., atmos_npes, ocean_npes, land_npes, ice_npes, &
+                               Atm_pelist, Ocean_pelist, Land_pelist, Ice_fast_pelist)
+  ensemble_id = get_ensemble_id()
+  allocate(ensemble_pelist(1:ensemble_size,1:npes))
+  call get_ensemble_pelist(ensemble_pelist)
+  call mpp_set_current_pelist(ensemble_pelist(ensemble_id,:))
+  deallocate( Atm_pelist )
+  deallocate( Ocean_pelist )
+  deallocate( Land_pelist )
+  deallocate( Ice_fast_pelist )
+endif
+
+! Place ensemble num in geom_vars
+call geom_vars%set("ensNum", ensNum)
+
+end subroutine fv3_geom_create
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine set_and_fill_geometry_fields(isc, iec, jsc, jec, npz, ngrid, ak, bk, area, &
+subroutine fv3_geom_set_and_fill_geometry_fields(isc, iec, jsc, jec, npz, ngrid, ak, bk, area, &
                                         vertcoord_type, afunctionspace, afieldset, field_masks)
 
 !Arguments
@@ -480,7 +331,7 @@ if (trim(vertcoord_type) == 'sigma') then
 else if (trim(vertcoord_type) == 'logp') then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
-   call getVerticalCoordLogP(ak,bk,logp,npz,ps)
+   call fv3_geom_getVerticalCoordLogP(ak,bk,logp,npz,ps)
    do jl=1,npz
       real_ptr(jl,:) = logp(jl)
    enddo
@@ -493,17 +344,17 @@ else if (trim(vertcoord_type) == 'orography') then
    call afield2%data(real_ptr2)
    real_ptr(1,:) = real_ptr2(1,:)
 else
-   call abor1_ftn('ijedi_geom_mod%set_and_fill_geometry_fields: unknown vertical coordinate type')
+   call abor1_ftn('ijedi_fv3_geom_mod%set_and_fill_geometry_fields: unknown vertical coordinate type')
 endif
 call afieldset%add(afield)
 call afield%final()
 call afield2%final()
 
-end subroutine set_and_fill_geometry_fields
+end subroutine fv3_geom_set_and_fill_geometry_fields
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine setup_domain(domain, nx, ny, ntiles, layout_in, io_layout, halo)
+subroutine fv3_geom_setup_domain(domain, nx, ny, ntiles, layout_in, io_layout, halo)
 
  type(domain2D),   intent(inout) :: domain
  integer,          intent(in)    :: nx, ny, ntiles
@@ -643,11 +494,11 @@ subroutine setup_domain(domain, nx, ny, ntiles, layout_in, io_layout, halo)
   deallocate(istart1, iend1, jstart1, jend1)
   deallocate(istart2, iend2, jstart2, jend2)
 
-end subroutine setup_domain
+end subroutine fv3_geom_setup_domain
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine write_geom(f_comm, isc, iec, jsc, jec, npx, npy, ntile, grid_lon, grid_lat, egrid_lon, &
+subroutine fv3_geom_write_geom(f_comm, isc, iec, jsc, jec, npx, npy, ntile, grid_lon, grid_lat, egrid_lon, &
                       egrid_lat)
 
   ! Arguments
@@ -751,13 +602,13 @@ subroutine write_geom(f_comm, isc, iec, jsc, jec, npx, npy, ntile, grid_lon, gri
   ! Close the file
   call nccheck ( nf90_close(ncid), "nf90_close" )
 
-end subroutine write_geom
+end subroutine fv3_geom_write_geom
 
 !----------------------------------------------------------------------------
 ! 1d pressure_edge to pressure_mid
 !----------------------------------------------------------------------------
 
-subroutine pedges2pmidlayer(npz,ptype,pe1d,kappa,p1d)
+subroutine fv3_geom_pedges2pmidlayer(npz,ptype,pe1d,kappa,p1d)
  integer,              intent(in)  :: npz       !number of model layers
  character(len=*),     intent(in)  :: ptype     !midlayer pressure definition: 'average' or 'Philips'
  real(kind=kind_real), intent(in)  :: pe1d(npz+1) !pressure edge
@@ -777,10 +628,10 @@ subroutine pedges2pmidlayer(npz,ptype,pe1d,kappa,p1d)
      p1d = 0.5*(pe1d(2:npz+1) + pe1d(1:npz))
  end select
 
-end subroutine pedges2pmidlayer
+end subroutine fv3_geom_pedges2pmidlayer
 
 !--------------------------------------------------------------------------------------------------
-subroutine getVerticalCoord(ak, bk, vc, npz, psurf)
+subroutine fv3_geom_getVerticalCoord(ak, bk, vc, npz, psurf)
   ! returns log(pressure) at mid level of the vertical column with surface
   ! prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
@@ -803,12 +654,12 @@ subroutine getVerticalCoord(ak, bk, vc, npz, psurf)
   kappa = constant('kappa')
 
   ! compute presure at mid level and convert it to logp
-  call pedges2pmidlayer(npz,'Philips',plevli,kappa,vc)
+  call fv3_geom_pedges2pmidlayer(npz,'Philips',plevli,kappa,vc)
 
-end subroutine getVerticalCoord
+end subroutine fv3_geom_getVerticalCoord
 
 !--------------------------------------------------------------------------------------------------
-subroutine getVerticalCoordLogP(ak, bk, vc, npz, psurf)
+subroutine fv3_geom_getVerticalCoordLogP(ak, bk, vc, npz, psurf)
   ! returns log(pressure) at mid level of the vertical column with surface prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
 
@@ -820,14 +671,14 @@ subroutine getVerticalCoordLogP(ak, bk, vc, npz, psurf)
 
   real(kind=kind_real) :: p(npz)
 
-  call getVerticalCoord(ak, bk, p, npz, psurf)
+  call fv3_geom_getVerticalCoord(ak, bk, p, npz, psurf)
   vc = - log(p)
 
-end subroutine getVerticalCoordLogP
+end subroutine fv3_geom_getVerticalCoordLogP
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_num_nodes_and_elements(ntiles, ntile, isc, iec, jsc, jec, npx, npy, &
+subroutine fv3_geom_get_num_nodes_and_elements(ntiles, ntile, isc, iec, jsc, jec, npx, npy, &
                                         num_nodes, num_tris, num_quads)
 
   integer, intent(in)  :: ntiles, ntile
@@ -838,20 +689,20 @@ subroutine get_num_nodes_and_elements(ntiles, ntile, isc, iec, jsc, jec, npx, np
   integer, intent(out) :: num_quads
 
   if (ntiles == 6) then
-    call get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy, &
+    call fv3_geom_get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy, &
                                            num_nodes, num_tris, num_quads)
   else if (ntiles == 1) then
-    call get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
+    call fv3_geom_get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
                                              num_nodes, num_tris, num_quads)
   else
     call mpp_error(FATAL, "get_num_nodes_and_elements: ntiles != 1 or 6")
   end if
 
-end subroutine get_num_nodes_and_elements
+end subroutine fv3_geom_get_num_nodes_and_elements
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy, &
+subroutine fv3_geom_get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy, &
                                                num_nodes, num_tris, num_quads)
 
   integer, intent(in)  :: ntile
@@ -896,11 +747,11 @@ subroutine get_num_nodes_and_elements_global(ntile, isc, iec, jsc, jec, npx, npy
     num_tris = num_tris + 1
   end if
 
-end subroutine get_num_nodes_and_elements_global
+end subroutine fv3_geom_get_num_nodes_and_elements_global
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
+subroutine fv3_geom_get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
                                                  num_nodes, num_tris, num_quads)
 
   integer, intent(in)  :: isc, iec, jsc, jec
@@ -931,11 +782,11 @@ subroutine get_num_nodes_and_elements_regional(isc, iec, jsc, jec, npx, npy, &
   num_tris = 0
   num_quads = (nx - 1) * (ny - 1)
 
-end subroutine get_num_nodes_and_elements_regional
+end subroutine fv3_geom_get_num_nodes_and_elements_regional
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_coords_and_connectivities(ntiles, ntile, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+subroutine fv3_geom_get_coords_and_connectivities(ntiles, ntile, isc, iec, jsc, jec, isd, ied, jsd, jed, &
     npx, npy, ngrid, grid_lon, grid_lat, domain, f_comm, &
     num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
@@ -964,26 +815,26 @@ subroutine get_coords_and_connectivities(ntiles, ntile, isc, iec, jsc, jec, isd,
   integer, intent(out) :: raw_quad_boundary_nodes(num_quad_boundary_nodes)
 
   if (ntiles == 6) then
-    call get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+    call fv3_geom_get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, jsd, jed, &
         npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
         num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
         lons, lats, ghosts, global_indices, remote_indices, partition, &
         raw_tri_boundary_nodes, raw_quad_boundary_nodes)
   else if (ntiles == 1) then
-    call get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+    call fv3_geom_get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, jsd, jed, &
         npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
         num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
         lons, lats, ghosts, global_indices, remote_indices, partition, &
         raw_tri_boundary_nodes, raw_quad_boundary_nodes)
   else
-    call mpp_error(FATAL, "get_coords_and_connectivities: ntiles != 1 or 6")
+    call mpp_error(FATAL, "fv3_geom_get_coords_and_connectivities: ntiles != 1 or 6")
   end if
 
-end subroutine get_coords_and_connectivities
+end subroutine fv3_geom_get_coords_and_connectivities
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+subroutine fv3_geom_get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, jsd, jed, &
     npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
     num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
@@ -1050,17 +901,17 @@ subroutine get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, js
   loc_partition(isc:iec, jsc:jec) = f_comm%rank()
   call mpp_update_domains(loc_partition, domain)
 
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, grid_lon, lons)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, grid_lat, lats)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_ghost, ghosts)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_global_index, global_indices)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_remote_index, remote_indices)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_partition, partition)
 
   lons = constant('rad2deg') * lons
@@ -1108,18 +959,18 @@ subroutine get_coords_and_connectivities_global(isc, iec, jsc, jec, isd, ied, js
 
   ! sanity checks: tri_counter-1 == num_tri_boundary_nodes
   if (tri_counter-1 /= num_tri_boundary_nodes) then
-    call abor1_ftn('ijedi_geom_mod: inconsistent tri counter when getting connectivities')
+    call abor1_ftn('ijedi_fv3_geom_mod: inconsistent tri counter when getting connectivities')
   end if
   ! quad_counter-1 == num_quad_boundary_nodes
   if (quad_counter-1 /= num_quad_boundary_nodes) then
-    call abor1_ftn('ijedi_geom_mod: inconsistent quad counter when getting connectivities')
+    call abor1_ftn('ijedi_fv3_geom_mod: inconsistent quad counter when getting connectivities')
   end if
 
-end subroutine get_coords_and_connectivities_global
+end subroutine fv3_geom_get_coords_and_connectivities_global
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, jsd, jed, &
+subroutine fv3_geom_get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, jsd, jed, &
     npx, npy, ngrid, ntile, ntiles, grid_lon, grid_lat, domain, f_comm, &
     num_nodes, num_tri_boundary_nodes, num_quad_boundary_nodes, &
     lons, lats, ghosts, global_indices, remote_indices, partition, &
@@ -1330,17 +1181,17 @@ subroutine get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, 
     end if
   end if
 
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, grid_lon, lons)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, grid_lat, lats)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_ghost, ghosts)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_global_index, global_indices)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_remote_index, remote_indices)
-  call fv3_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+  call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                 ntiles, ngrid, loc_partition, partition)
 
   lons = constant('rad2deg') * lons
@@ -1361,17 +1212,17 @@ subroutine get_coords_and_connectivities_regional(isc, iec, jsc, jec, isd, ied, 
 
   ! quad_counter-1 == num_quad_boundary_nodes
   if (quad_counter-1 /= num_quad_boundary_nodes) then
-    call abor1_ftn('ijedi_geom_mod: inconsistent quad counter when getting connectivities')
+    call abor1_ftn('ijedi_fv3_geom_mod: inconsistent quad counter when getting connectivities')
   end if
 
   ! Avoid compilation warning
   raw_tri_boundary_nodes = 0
 
-end subroutine get_coords_and_connectivities_regional
+end subroutine fv3_geom_get_coords_and_connectivities_regional
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine fv3_nodes_to_atlas_nodes_r(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+subroutine fv3_geom_nodes_to_atlas_nodes_r(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                       ntiles, ngrid, fv3_data, atlas_data)
 
   integer, intent(in) :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, ntiles, ngrid
@@ -1507,13 +1358,13 @@ subroutine fv3_nodes_to_atlas_nodes_r(npx, npy, isc, iec, jsc, jec, isd, ied, js
     call abor1_ftn('fv3jedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
-end subroutine fv3_nodes_to_atlas_nodes_r
+end subroutine fv3_geom_nodes_to_atlas_nodes_r
 
 ! --------------------------------------------------------------------------------------------------
 
 ! displeasing!
 ! this is a copy of the real interface above with just one replacement real -> integer
-subroutine fv3_nodes_to_atlas_nodes_i(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+subroutine fv3_geom_nodes_to_atlas_nodes_i(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                       ntiles, ngrid, fv3_data, atlas_data)
 
   integer, intent(in) :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, ntiles, ngrid
@@ -1646,11 +1497,11 @@ subroutine fv3_nodes_to_atlas_nodes_i(npx, npy, isc, iec, jsc, jec, isd, ied, js
 
   ! sanity check on size: b = size(atlas_data)
   if (b /= size(atlas_data)) then
-    call abor1_ftn('ijedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
+    call abor1_ftn('ijedi_fv3_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
-end subroutine fv3_nodes_to_atlas_nodes_i
+end subroutine fv3_geom_nodes_to_atlas_nodes_i
 
 ! --------------------------------------------------------------------------------------------------
 
-end module ijedi_geom_mod
+end module ijedi_fv3_geom_mod

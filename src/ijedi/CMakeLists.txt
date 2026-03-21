@@ -47,9 +47,12 @@ if(FMS_FOUND)
   list(APPEND ijedi_fv3_src_files
     Geometry/fv3/GeometryFV3.cc
     Geometry/fv3/GeometryFV3.h
+    Geometry/fv3/GeometryFV3Parameters.h
+    Geometry/fv3/GeometryFV3.interface.h
     Geometry/fv3/ijedi_fv3_arrays.F90
     Geometry/fv3/ijedi_fv3_control.F90
     Geometry/fv3/ijedi_fv3_eta.F90
+    Geometry/fv3/ijedi_fv3_geom_interface_mod.f90
     Geometry/fv3/ijedi_fv3_geom_mod.f90
     Geometry/fv3/ijedi_fv3_grid_tools.F90
     Geometry/fv3/ijedi_fv3_grid_utils.F90

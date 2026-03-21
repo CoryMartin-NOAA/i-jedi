@@ -72,6 +72,7 @@ namespace ijedi
     const eckit::mpi::Comm &comm_;
     std::shared_ptr<FieldsMetadata> fieldsMeta_;
     std::shared_ptr<GeometryBase> geometryImpl_;
+    std::shared_ptr<eckit::Configuration> geomVariables_;
   };
   // -----------------------------------------------------------------------------
 
