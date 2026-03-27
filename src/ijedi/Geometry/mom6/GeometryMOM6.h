@@ -19,11 +19,10 @@ namespace eckit
 namespace ijedi
 {
 
-  class GeometryMOM6 : public GeometryBase
-  {
-  public:
+  class GeometryMOM6 : public GeometryBase {
+   public:
     GeometryMOM6(const eckit::Configuration &, const eckit::mpi::Comm &, eckit::Configuration &);
     void print(std::ostream &) const override;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

@@ -24,7 +24,7 @@ namespace ijedi
     std::string longName;
     std::string units;
     std::string kind;
-    std::string tracer; // Turned into bool but input as string to allow checking
+    std::string tracer;  // Turned into bool but input as string to allow checking
     std::string levels;
     std::string space;
     std::string mask;
@@ -32,8 +32,7 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  void setMetadataStruct(struct metadataStruct &md)
-  {
+  void setMetadataStruct(struct metadataStruct md) {
     md.longName = "long name";
     md.units = "units";
     md.kind = "kind";
@@ -45,8 +44,7 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  void assertStructIsSet(struct metadataStruct &md)
-  {
+  void assertStructIsSet(struct metadataStruct md) {
     // Check that structure contains something
     // ---------------------------------------
     ASSERT_MSG(md.longName != "long name", "long name was not set");
@@ -60,9 +58,8 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  void addFieldMetadata(std::map<std::string, FieldMetadata> &fieldsmetadata, const int &nlev,
-                        struct metadataStruct &md)
-  {
+  void addFieldMetadata(std::map<std::string, FieldMetadata> & fieldsmetadata, const int &nlev,
+                        struct metadataStruct md) {
     // Check that structure is set
     assertStructIsSet(md);
 
@@ -82,7 +79,7 @@ namespace ijedi
 
     // Check key not already in the map
     ASSERT_MSG(fieldsmetadata.find(md.longName) == fieldsmetadata.end(),
-               "FieldMetadataDefault::addFieldMetadata: Long name " + md.longName + " already used.");
+            "FieldMetadataDefault::addFieldMetadata: Long name " + md.longName + " already used.");
 
     // Insert the object into the map
     fieldsmetadata.insert(std::pair<std::string, FieldMetadata>(md.longName, fieldmetadata));
@@ -93,7 +90,7 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  void setMetadata(std::map<std::string, FieldMetadata> &fieldsmetadata, const int nlev)
+  void setMetadata(std::map<std::string, FieldMetadata> & fieldsmetadata, const int nlev)
   {
     // Create structure and set to nothing
     struct metadataStruct md;
@@ -2076,4 +2073,4 @@ namespace ijedi
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
   }
-} // namespace ijedi
+}  // namespace ijedi

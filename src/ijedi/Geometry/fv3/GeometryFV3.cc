@@ -19,23 +19,24 @@ namespace ijedi
 {
 
   GeometryFV3::GeometryFV3(const eckit::Configuration &geomConfig, const eckit::mpi::Comm &comm,
-                           eckit::Configuration &geomVariables)
-  {
+                           eckit::Configuration &geomVariables) {
     // Deserialize the parameters
     GeometryParameters params;
     params.deserialize(geomConfig);
 
     // Call the initialize phase, done only once.
     static bool initialized = false;
-    if (!initialized)
-    {
+    if (!initialized) {
       f_fv3_geom_initialize((*params.fmsInit.value()).toConfiguration(), &comm);
       initialized = true;
     }
+
+    // Call the setup routine
+    f_fv3_geom_create(geomConfig, geomVariables);
   }
 
   void GeometryFV3::print(std::ostream &os) const
   {
   }
 
-} // namespace ijedi
+}  // namespace ijedi

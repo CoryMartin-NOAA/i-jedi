@@ -16,4 +16,4 @@ namespace ijedi
                              eckit::Configuration &geomVariables) {}
 
   void GeometryMOM6::print(std::ostream &os) const {}
-} // namespace ijedi
+}  // namespace ijedi

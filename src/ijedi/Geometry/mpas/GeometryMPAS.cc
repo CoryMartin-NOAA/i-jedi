@@ -17,4 +17,4 @@ namespace ijedi
 
   void GeometryMPAS::print(std::ostream &os) const {}
 
-} // namespace ijedi
+}  // namespace ijedi

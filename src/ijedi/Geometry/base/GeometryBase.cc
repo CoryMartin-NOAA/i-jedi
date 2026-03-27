@@ -16,36 +16,28 @@
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
 
-namespace ijedi
-{
+namespace ijedi {
   std::shared_ptr<GeometryBase> GeometryBase::create(const eckit::Configuration &geomConf,
                                                      const eckit::mpi::Comm &comm,
-                                                     eckit::Configuration &geomVars)
-  {
-
+                                                     eckit::Configuration &geomVars) {
+    // Get the type
     std::string type;
-    if (geomConf.has("geometry_type"))
-    {
+    if (geomConf.has("geometry_type")) {
       type = geomConf.getString("geometry_type");
-    }
-    else
-    {
+    } else {
       // Abort
       std::stringstream errorMsg;
       errorMsg << "Geometry type (geometry_type) not specified in configuration.";
       throw eckit::BadValue(errorMsg.str(), Here());
     }
 
-    if (type == "fv3")
-    {
+    if (type == "fv3") {
       return std::make_shared<GeometryFV3>(geomConf, comm, geomVars);
     }
-    if (type == "mpas")
-    {
+    if (type == "mpas") {
       return std::make_shared<GeometryMPAS>(geomConf, comm, geomVars);
     }
-    if (type == "mom6")
-    {
+    if (type == "mom6") {
       return std::make_shared<GeometryMOM6>(geomConf, comm, geomVars);
     }
 
@@ -53,4 +45,4 @@ namespace ijedi
                           Here());
   }
 
-} // namespace ijedi
+}  // namespace ijedi

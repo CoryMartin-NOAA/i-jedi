@@ -13,20 +13,18 @@
 
 #include "ijedi/Geometry/base/GeometryBase.h"
 
-namespace eckit
-{
+namespace eckit {
   class Configuration;
 }
 
 namespace ijedi
 {
 
-  class GeometryFV3 : public GeometryBase
-  {
-  public:
+  class GeometryFV3 : public GeometryBase {
+   public:
     GeometryFV3(const eckit::Configuration &, const eckit::mpi::Comm &,
                 eckit::Configuration &);
     void print(std::ostream &) const override;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

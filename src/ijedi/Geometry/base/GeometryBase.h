@@ -25,7 +25,7 @@ namespace ijedi
 
   class GeometryBase
   {
-  public:
+   public:
     virtual ~GeometryBase() = default;
 
     static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
@@ -40,10 +40,10 @@ namespace ijedi
     atlas::FieldSet &fields() { return fields_; }
     const int &numLevels() const { return numLevels_; }
 
-  protected:
+   protected:
     atlas::FunctionSpace functionSpace_;
     atlas::FieldSet fields_;
     int numLevels_;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

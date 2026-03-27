@@ -1,3 +1,8 @@
+// (C) Copyright 2026- NOAA.
+// This software is licensed under the terms of the Creative Commons
+// Attribution-NonCommercial-ShareAlike Licence.
+// See LICENSE file in the top-level directory for details.
+
 #pragma once
 
 #include <string>
@@ -23,34 +28,31 @@ namespace ijedi
 
     // -------------------------------------------------------------------------------------------------
 
-    class FMSinitParameters : public oops::Parameters
-    {
-        OOPS_CONCRETE_PARAMETERS(FMSinitParameters, Parameters)
+    class FMSinitParameters : public oops::Parameters {
+      OOPS_CONCRETE_PARAMETERS(FMSinitParameters, Parameters)
 
-    public:
-        oops::Parameter<std::string> fieldTableFilename{"field table filename", "field_table", this};
-        oops::Parameter<std::string> namelistFilename{"namelist filename", "input.nml", this};
-        oops::Parameter<int> stackmax{"stackmax", 4000000, this};
+     public:
+      oops::Parameter<std::string> fieldTableFilename{"field table filename", "field_table", this};
+      oops::Parameter<std::string> namelistFilename{"namelist filename", "input.nml", this};
+      oops::Parameter<int> stackmax{"stackmax", 4000000, this};
     };
 
     // -------------------------------------------------------------------------------------------------
 
-    class TimeInvariantFieldsParameters : public oops::Parameters
-    {
-        OOPS_CONCRETE_PARAMETERS(TimeInvariantFieldsParameters, Parameters)
+    class TimeInvariantFieldsParameters : public oops::Parameters {
+      OOPS_CONCRETE_PARAMETERS(TimeInvariantFieldsParameters, Parameters)
 
-    public:
-        oops::OptionalParameter<oops::Variables> derivedFields{"derived fields", this};
-        oops::OptionalParameter<eckit::LocalConfiguration> fieldMasks{"field masks", this};
+     public:
+      oops::OptionalParameter<oops::Variables> derivedFields{"derived fields", this};
+      oops::OptionalParameter<eckit::LocalConfiguration> fieldMasks{"field masks", this};
     };
 
     // -------------------------------------------------------------------------------------------------
 
-    class GeometryParameters : public oops::Parameters
-    {
-        OOPS_CONCRETE_PARAMETERS(GeometryParameters, Parameters)
+    class GeometryParameters : public oops::Parameters {
+      OOPS_CONCRETE_PARAMETERS(GeometryParameters, Parameters)
 
-    public:
+     public:
         oops::OptionalParameter<std::string> akbk{"akbk", this};
         oops::OptionalParameter<std::string> ensMember{"member_number", this};
         oops::Parameter<bool> doSchmidt{"do_schmidt", false, this};
@@ -84,4 +86,4 @@ namespace ijedi
 
     // -------------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

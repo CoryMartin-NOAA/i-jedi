@@ -6,7 +6,7 @@ add_subdirectory(mains)
 # -------------------------------------------------------
 # All tests are built; use ctest -R tier<N> to run specific tiers
 # Note: CONFIGURE_DEPENDS tells CMake to recheck for new/removed test files
-# Set IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE" to allow MPI oversubscription (useful for CI/local testing)
+# `export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"` to allow MPI oversubscription (useful for CI/local testing)
 set(IJEDI_MPI_ARGS $ENV{IJEDI_MPI_ARGS})
 
 if(IJEDI_MPI_ARGS)
@@ -51,3 +51,11 @@ foreach(TIER RANGE 1 3)
         endif()
     endforeach()
 endforeach()
+
+# Link the directory 'data' to the test directory of the build
+# ------------------------------------------------------------
+file(CREATE_LINK
+    "${CMAKE_CURRENT_SOURCE_DIR}/data"
+    "${CMAKE_CURRENT_BINARY_DIR}/data"
+    SYMBOLIC
+)

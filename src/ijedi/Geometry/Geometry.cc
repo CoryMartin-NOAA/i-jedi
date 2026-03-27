@@ -15,14 +15,12 @@
 #include "ijedi/Geometry/base/GeometryBase.h"
 
 // -------------------------------------------------------------------------------------------------
-namespace ijedi
-{
+namespace ijedi {
   // -----------------------------------------------------------------------------------------------
   const int HALO_SIZE = 1;
   // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &conf, const eckit::mpi::Comm &comm)
-      : comm_(comm), geomVariables_()
-  {
+      : comm_(comm), geomVariables_() {
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
 
@@ -39,23 +37,19 @@ namespace ijedi
   Geometry::Geometry(const Geometry &other)
       : comm_(other.comm_),
         fieldsMeta_(other.fieldsMeta_),
-        geometryImpl_(other.geometryImpl_)
-  {
+        geometryImpl_(other.geometryImpl_) {
   }
   // -----------------------------------------------------------------------------------------------
-  Geometry::~Geometry()
-  {
+  Geometry::~Geometry() {
   }
   // -----------------------------------------------------------------------------------------------
-  void Geometry::print(std::ostream &os) const
-  {
+  void Geometry::print(std::ostream &os) const {
     geometryImpl_->print(os);
   }
 
   // -----------------------------------------------------------------------------------------------
 
-  std::vector<double> Geometry::verticalCoord(std::string &vcUnits) const
-  {
+  std::vector<double> Geometry::verticalCoord(std::string &vcUnits) const {
     // Not implemented, abort
     std::stringstream errorMsg;
     errorMsg << "Geometry::verticalCoord is not implemented" << std::endl;
@@ -67,8 +61,7 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  std::vector<size_t> Geometry::variableSizes(const oops::Variables &vars) const
-  {
+  std::vector<size_t> Geometry::variableSizes(const oops::Variables &vars) const {
     // Array of level heights
     std::vector<size_t> varSizes;
     // Loop through arrays and search metadata map for the levels
@@ -81,4 +74,4 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

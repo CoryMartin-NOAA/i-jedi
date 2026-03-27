@@ -42,9 +42,8 @@ namespace ijedi
   // Geometry handles geometry.
 
   class Geometry : public util::Printable,
-                   private util::ObjectCounter<Geometry>
-  {
-  public:
+                   private util::ObjectCounter<Geometry> {
+   public:
     static const std::string classname() { return "ijedi::Geometry"; }
 
     explicit Geometry(const eckit::Configuration &, const eckit::mpi::Comm &);
@@ -63,7 +62,7 @@ namespace ijedi
     atlas::FieldSet &fields() { return geometryImpl_->fields(); }
     const int &numLevels() const { return geometryImpl_->numLevels(); }
 
-  private:
+   private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;
     const eckit::mpi::Comm &comm_;
@@ -73,4 +72,4 @@ namespace ijedi
   };
   // -----------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

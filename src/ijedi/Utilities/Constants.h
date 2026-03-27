@@ -26,6 +26,6 @@ namespace ijedi
     {
         void getConstantF(const char constNameC[], double &constValueC);
     }
-} // namespace ijedi
+}  // namespace ijedi
 
 // -------------------------------------------------------------------------------------------------
