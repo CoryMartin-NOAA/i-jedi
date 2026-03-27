@@ -40,7 +40,6 @@ namespace ijedi
         OOPS_CONCRETE_PARAMETERS(TimeInvariantFieldsParameters, Parameters)
 
     public:
-        oops::RequiredParameter<StateParameters> stateFields{"state fields", this};
         oops::OptionalParameter<oops::Variables> derivedFields{"derived fields", this};
         oops::OptionalParameter<eckit::LocalConfiguration> fieldMasks{"field masks", this};
     };

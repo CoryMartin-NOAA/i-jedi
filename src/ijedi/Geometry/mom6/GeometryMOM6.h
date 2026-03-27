@@ -22,11 +22,8 @@ namespace ijedi
   class GeometryMOM6 : public GeometryBase
   {
   public:
-    GeometryMOM6(const eckit::Configuration &, const eckit::mpi::Comm &);
+    GeometryMOM6(const eckit::Configuration &, const eckit::mpi::Comm &, eckit::Configuration &);
     void print(std::ostream &) const override;
-
-    // Unified access to grid-specific parameters
-    eckit::LocalConfiguration gridSpecific() const override;
   };
 
 } // namespace ijedi

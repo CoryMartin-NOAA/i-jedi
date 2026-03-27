@@ -18,15 +18,15 @@
 
 namespace ijedi
 {
-  std::shared_ptr<GeometryBase> GeometryBase::create(const eckit::Configuration &conf,
+  std::shared_ptr<GeometryBase> GeometryBase::create(const eckit::Configuration &geomConf,
                                                      const eckit::mpi::Comm &comm,
-                                                     const eckit::Configuration &geomVariables)
+                                                     eckit::Configuration &geomVars)
   {
 
     std::string type;
-    if (conf.has("geometry_type"))
+    if (geomConf.has("geometry_type"))
     {
-      type = conf.getString("geometry_type");
+      type = geomConf.getString("geometry_type");
     }
     else
     {
@@ -38,15 +38,15 @@ namespace ijedi
 
     if (type == "fv3")
     {
-      return std::make_shared<GeometryFV3>(conf, comm, geomVariables);
+      return std::make_shared<GeometryFV3>(geomConf, comm, geomVars);
     }
     if (type == "mpas")
     {
-      return std::make_shared<GeometryMPAS>(conf, comm, geomVariables);
+      return std::make_shared<GeometryMPAS>(geomConf, comm, geomVars);
     }
     if (type == "mom6")
     {
-      return std::make_shared<GeometryMOM6>(conf, comm, geomVariables);
+      return std::make_shared<GeometryMOM6>(geomConf, comm, geomVars);
     }
 
     throw eckit::BadValue("Unsupported geometry type: " + type,

@@ -30,7 +30,7 @@ namespace ijedi
 
     static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
                                                 const eckit::mpi::Comm &,
-                                                const eckit::Configuration &);
+                                                eckit::Configuration &);
     virtual void print(std::ostream &) const = 0;
 
     // Accessors for geometry data
@@ -39,11 +39,6 @@ namespace ijedi
     atlas::FunctionSpace &functionSpace() { return functionSpace_; }
     atlas::FieldSet &fields() { return fields_; }
     const int &numLevels() const { return numLevels_; }
-
-    // Access to model-specific grid parameters
-    // Returns a configuration object containing model-specific parameters
-    // Example usage: int npx = geom.gridSpecific().getInt("npx");
-    virtual eckit::LocalConfiguration gridSpecific() const = 0;
 
   protected:
     atlas::FunctionSpace functionSpace_;

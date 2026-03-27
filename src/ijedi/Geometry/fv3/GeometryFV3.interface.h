@@ -22,6 +22,6 @@ namespace ijedi
     extern "C"
     {
         void f_fv3_geom_initialize(const eckit::LocalConfiguration &, const eckit::mpi::Comm *);
-        void f_fv3_geom_setup(const eckit::Configuration &, const eckit::Configuration &);
+        void f_fv3_geom_create(const eckit::Configuration &, const eckit::Configuration &);
     } // extern "C"
 } // namespace ijedi

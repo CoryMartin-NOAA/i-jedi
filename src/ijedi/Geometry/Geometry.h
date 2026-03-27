@@ -63,9 +63,6 @@ namespace ijedi
     atlas::FieldSet &fields() { return geometryImpl_->fields(); }
     const int &numLevels() const { return geometryImpl_->numLevels(); }
 
-    // Access to grid-specific parameters
-    eckit::LocalConfiguration gridSpecific() const { return geometryImpl_->gridSpecific(); }
-
   private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;

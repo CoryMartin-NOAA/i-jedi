@@ -11,19 +11,10 @@
 namespace ijedi
 {
 
-  GeometryMPAS::GeometryMPAS(const eckit::Configuration &conf,
-                             const eckit::mpi::Comm &comm)
-  {
-  }
+  GeometryMPAS::GeometryMPAS(const eckit::Configuration &geomConfig,
+                             const eckit::mpi::Comm &comm,
+                             eckit::Configuration &geomVariables) {}
 
-  void GeometryMPAS::print(std::ostream &os) const
-  {
-  }
-
-  eckit::LocalConfiguration GeometryMPAS::gridSpecific() const
-  {
-    eckit::LocalConfiguration conf;
-    return conf;
-  }
+  void GeometryMPAS::print(std::ostream &os) const {}
 
 } // namespace ijedi

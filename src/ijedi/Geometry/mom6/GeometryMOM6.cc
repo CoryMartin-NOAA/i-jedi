@@ -11,19 +11,9 @@
 namespace ijedi
 {
 
-  GeometryMOM6::GeometryMOM6(const eckit::Configuration &conf,
-                             const eckit::mpi::Comm &comm)
-  {
-  }
+  GeometryMOM6::GeometryMOM6(const eckit::Configuration &geomConfig,
+                             const eckit::mpi::Comm &comm,
+                             eckit::Configuration &geomVariables) {}
 
-  void GeometryMOM6::print(std::ostream &os) const
-  {
-  }
-
-  eckit::LocalConfiguration GeometryMOM6::gridSpecific() const
-  {
-    eckit::LocalConfiguration conf;
-    return conf;
-  }
-
+  void GeometryMOM6::print(std::ostream &os) const {}
 } // namespace ijedi

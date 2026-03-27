@@ -21,12 +21,15 @@ use fckit_configuration_module, only: fckit_configuration
 
 ! fms uses
 use fms_mod,                    only: fms_init
-use mpp_mod,                    only: mpp_exit, mpp_pe, mpp_npes, mpp_error, FATAL, NOTE
+use mpp_mod,                    only: mpp_exit, mpp_pe, mpp_npes, mpp_error, FATAL, NOTE, &
+                                      mpp_set_current_pelist
 use mpp_domains_mod,            only: domain2D, mpp_deallocate_domain, mpp_define_layout, &
                                       mpp_define_mosaic, mpp_define_io_domain, mpp_domains_exit, &
                                       mpp_domains_set_stack_size
-use ensemble_manager_mod,       only: get_ensemble_id,get_ensemble_size
+use ensemble_manager_mod,       only: get_ensemble_id, get_ensemble_size
 use field_manager_mod,          only: fm_string_len, field_manager_init
+use ensemble_manager_mod,       only: ensemble_manager_init, ensemble_pelist_setup
+use ensemble_manager_mod,       only: get_ensemble_pelist
 
 ! fv3 uses
 use ijedi_fv3_arrays_mod,     only: fv_atmos_type, deallocate_fv_atmos_type
