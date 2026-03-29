@@ -13,7 +13,10 @@ namespace ijedi
 
   GeometryMOM6::GeometryMOM6(const eckit::Configuration &geomConfig,
                              const eckit::mpi::Comm &comm,
-                             eckit::Configuration &geomVariables) {}
+                             eckit::Configuration &geomVariables,
+                             atlas::FunctionSpace &functionSpace,
+                             atlas::FieldSet &fieldSet,
+                             int &numberLevels) {}
 
   void GeometryMOM6::print(std::ostream &os) const {}
-}  // namespace ijedi
+} // namespace ijedi

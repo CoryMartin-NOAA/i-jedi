@@ -13,8 +13,11 @@ namespace ijedi
 
   GeometryMPAS::GeometryMPAS(const eckit::Configuration &geomConfig,
                              const eckit::mpi::Comm &comm,
-                             eckit::Configuration &geomVariables) {}
+                             eckit::Configuration &geomVariables,
+                             atlas::FunctionSpace &functionSpace,
+                             atlas::FieldSet &fieldSet,
+                             int &numberLevels) {}
 
   void GeometryMPAS::print(std::ostream &os) const {}
 
-}  // namespace ijedi
+} // namespace ijedi

@@ -32,6 +32,7 @@ use ensemble_manager_mod,       only: ensemble_manager_init, ensemble_pelist_set
 use ensemble_manager_mod,       only: get_ensemble_pelist
 
 ! fv3 uses
+use ijedi_fv3_akbk_mod,       only: akbk_gfs_127
 use ijedi_fv3_arrays_mod,     only: fv_atmos_type, deallocate_fv_atmos_type
 use ijedi_fv3_control_mod,    only: fv_control_init
 
@@ -103,11 +104,12 @@ end subroutine fv3_geom_initialize
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine fv3_geom_create(geom_conf, geom_vars)
+subroutine fv3_geom_create(geom_conf, geom_vars, comm)
 
 !Arguments
 type(fckit_configuration), intent(in)    :: geom_conf
 type(fckit_configuration), intent(inout) :: geom_vars
+type(fckit_mpi_comm),      intent(in)    :: comm
 
 !Locals
 character(len=256)                    :: file_akbk
@@ -117,6 +119,8 @@ integer                               :: i, j, jj, this_grid
 integer                               :: p_split = 1
 integer                               :: ncstat, ncid, akvarid, bkvarid, readdim, dcount
 integer, dimension(nf90_max_var_dims) :: dimids, dimlens
+
+integer :: npx, npy, npz, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, ntiles
 
 character(len=:), allocatable :: str
 real(kind=kind_real) :: sf, t_lon, t_lat
@@ -140,6 +144,21 @@ integer              :: ensemble_id
 integer              :: ens_siz(6), ensemble_size, npes
 integer, allocatable :: ensemble_pelist(:, :)
 
+type(domain2D) :: domain
+
+! Things for Atlas connections
+integer :: ngrid, num_nodes, num_tri_elements, num_quad_elements
+integer :: num_tri_boundary_nodes, num_quad_boundary_nodes
+
+real(kind_real), allocatable :: lons(:)
+real(kind_real), allocatable :: lats(:)
+integer, allocatable :: ghosts(:)
+integer, allocatable :: global_indices(:)
+integer, allocatable :: remote_indices(:)
+integer, allocatable :: partition(:)
+integer, allocatable :: raw_tri_boundary_nodes(:)
+integer, allocatable :: raw_quad_boundary_nodes(:)
+
 
 ! Update the fms name list with this Geometry
 ! -------------------------------------------
@@ -150,69 +169,94 @@ call fmsnamelist%replace_namelist(geom_conf)
 call fv_control_init(Atm, 300.0_kind_real, this_grid, grids_on_this_pe, p_split, &
                      skip_nml_read_in=.true.)
 
+! For convenience copy grid integer things
+npx = Atm(1)%npx
+npy = Atm(1)%npy
+npz = Atm(1)%npz
+isc = Atm(1)%bd%isc
+iec = Atm(1)%bd%iec
+jsc = Atm(1)%bd%jsc
+jec = Atm(1)%bd%jec
+isd = Atm(1)%bd%isd
+ied = Atm(1)%bd%ied
+jsd = Atm(1)%bd%jsd
+jed = Atm(1)%bd%jed
+ntile = Atm(1)%global_tile
+ntiles = Atm(1)%flagstruct%ntiles
+ngrid = (Atm(1)%bd%iec-Atm(1)%bd%isc+1)*(Atm(1)%bd%jec-Atm(1)%bd%jsc+1)
+
 ! Sanity check
-if (this_grid .ne. 1) call abor1_ftn("Geometry not ready for ngrid > 1")
+if (this_grid .ne. 1) call abor1_ftn("Geometry not ready for this_grid > 1")
 
 ! Copy relevant contents of Atm
 ! -----------------------------
-call geom_vars%set("npx", Atm(1)%npx)
-call geom_vars%set("npy", Atm(1)%npy)
-call geom_vars%set("npz", Atm(1)%npz)
-call geom_vars%set("isc", Atm(1)%bd%isc)
-call geom_vars%set("iec", Atm(1)%bd%iec)
-call geom_vars%set("jsc", Atm(1)%bd%jsc)
-call geom_vars%set("jec", Atm(1)%bd%jec)
-call geom_vars%set("isd", Atm(1)%bd%isd)
-call geom_vars%set("ied", Atm(1)%bd%ied)
-call geom_vars%set("jsd", Atm(1)%bd%jsd)
-call geom_vars%set("jed", Atm(1)%bd%jed)
-call geom_vars%set("ntile", Atm(1)%global_tile)
-call geom_vars%set("ntiles", Atm(1)%flagstruct%ntiles)
-
+call geom_vars%set("npx", npx)
+call geom_vars%set("npy", npy)
+call geom_vars%set("npz", npz)
+call geom_vars%set("isc", isc)
+call geom_vars%set("iec", iec)
+call geom_vars%set("jsc", jsc)
+call geom_vars%set("jec", jec)
+call geom_vars%set("isd", isd)
+call geom_vars%set("ied", ied)
+call geom_vars%set("jsd", jsd)
+call geom_vars%set("jed", jed)
+call geom_vars%set("ntile", ntile)
+call geom_vars%set("ntiles", ntiles)
+call geom_vars%set("ngrid", ngrid)
 
 !Allocatable arrays
-allocate(ak(Atm(1)%npz+1))
-allocate(bk(Atm(1)%npz+1))
+allocate(ak(npz+1))
+allocate(bk(npz+1))
 
 ! ak and bk hybrid coordinate coefficients
 ! ----------------------------------------
-if (Atm(1)%npz > 1) then
+if (npz > 1) then
 
   ! Set path/filename for ak and bk file
   call geom_conf%get_or_die("akbk", str)
   file_akbk = str
 
-  !Open file
-  call nccheck ( nf90_open(file_akbk, nf90_nowrite, ncid), "nf90_open "//file_akbk )
+  if (trim(file_akbk) == "gfs_127") then
 
-  !Search for ak in the file
-  ncstat = nf90_inq_varid(ncid, "ak", akvarid)
-  if(ncstat /= nf90_noerr) call abor1_ftn("Failed to find ak in file "//file_akbk)
+    call akbk_gfs_127(npz, ak, bk)
 
-  !Search for bk in the file
-  ncstat = nf90_inq_varid(ncid, "bk", bkvarid)
-  if(ncstat /= nf90_noerr) call abor1_ftn("Failed to find bk in file "//file_akbk)
+  else
 
-  ! Check that dimension of ak/bk in the file match vertical levels of model
-  dimids = 0
-  call nccheck ( nf90_inquire_variable(ncid, akvarid, dimids = dimids), "nf90_inq_var ak" )
-  readdim = -1
-  dcount = 0
-  do i = 1,nf90_max_var_dims
-    if (dimids(i) > 0) then
-       call nccheck( nf90_inquire_dimension(ncid, dimids(i), len = dimlens(i)), &
-                     "nf90_inquire_dimension" )
-       if (dimlens(i) == Atm(1)%npz+1) then
-          readdim = i
-       endif
-       dcount = dcount + 1
-    endif
-  enddo
-  if (readdim == -1) call abor1_ftn("ak/bk in file does not match dimension of npz from input.nml")
+    !Open file
+    call nccheck ( nf90_open(file_akbk, nf90_nowrite, ncid), "nf90_open "//file_akbk )
 
-  !Read ak and bk from the file
-  call nccheck( nf90_get_var(ncid, akvarid, ak), "ijedi_fv3_geom, nf90_get_var ak" )
-  call nccheck( nf90_get_var(ncid, bkvarid, bk), "ijedi_fv3_geom, nf90_get_var bk" )
+    !Search for ak in the file
+    ncstat = nf90_inq_varid(ncid, "ak", akvarid)
+    if(ncstat /= nf90_noerr) call abor1_ftn("Failed to find ak in file "//file_akbk)
+
+    !Search for bk in the file
+    ncstat = nf90_inq_varid(ncid, "bk", bkvarid)
+    if(ncstat /= nf90_noerr) call abor1_ftn("Failed to find bk in file "//file_akbk)
+
+    ! Check that dimension of ak/bk in the file match vertical levels of model
+    dimids = 0
+    call nccheck ( nf90_inquire_variable(ncid, akvarid, dimids = dimids), "nf90_inq_var ak" )
+    readdim = -1
+    dcount = 0
+    do i = 1,nf90_max_var_dims
+      if (dimids(i) > 0) then
+         call nccheck( nf90_inquire_dimension(ncid, dimids(i), len = dimlens(i)), &
+                       "nf90_inquire_dimension" )
+         if (dimlens(i) == npz+1) then
+            readdim = i
+         endif
+         dcount = dcount + 1
+      endif
+    enddo
+    if (readdim == -1) call abor1_ftn("ak/bk in file does not match dimension of npz from input.nml")
+
+    !Read ak and bk from the file
+    call nccheck( nf90_get_var(ncid, akvarid, ak), "ijedi_fv3_geom, nf90_get_var ak" )
+    call nccheck( nf90_get_var(ncid, bkvarid, bk), "ijedi_fv3_geom, nf90_get_var bk" )
+
+  endif
+
 else
   ak = 0.0_kind_real
   bk = 0.0_kind_real
@@ -223,28 +267,9 @@ call geom_vars%set("ak", ak)
 call geom_vars%set("bk", bk)
 call geom_vars%set("ptop", ak(1))
 
-! Arrays from the Atm Structure
-! -----------------------------
-call geom_vars%set("grid_lon", reshape(real(Atm(1)%gridstruct%agrid_64(:,:,1),kind_real), &
-                   [size(Atm(1)%gridstruct%agrid_64,1)*size(Atm(1)%gridstruct%agrid_64,2)]))
-call geom_vars%set("grid_lat", reshape(real(Atm(1)%gridstruct%agrid_64(:,:,2),kind_real), &
-                   [size(Atm(1)%gridstruct%agrid_64,1)*size(Atm(1)%gridstruct%agrid_64,2)]))
-call geom_vars%set("egrid_lon", reshape(real(Atm(1)%gridstruct%grid_64(:,:,1),kind_real), &
-                   [size(Atm(1)%gridstruct%grid_64,1)*size(Atm(1)%gridstruct%grid_64,2)]))
-call geom_vars%set("egrid_lat", reshape(real(Atm(1)%gridstruct%grid_64(:,:,2),kind_real), &
-                   [size(Atm(1)%gridstruct%grid_64,1)*size(Atm(1)%gridstruct%grid_64,2)]))
-call geom_vars%set("area", reshape(real(Atm(1)%gridstruct%area_64,kind_real), &
-                   [size(Atm(1)%gridstruct%area_64,1)*size(Atm(1)%gridstruct%area_64,2)]))
-
-! Safe deallocate of the grid structure
-! -------------------------------------
-call deallocate_fv_atmos_type(Atm(1))
-deallocate(Atm)
-deallocate(grids_on_this_pe)
-
-! Revert the fms namelist
-! -----------------------
-call fmsnamelist%revert_namelist
+! Save some things later needed in Atlas-based Geometry Fields
+! ------------------------------------------------------------
+call geom_vars%set("area", reshape(Atm(1)%gridstruct%area_64(isc:iec, jsc:jec), (/ngrid/)))
 
 ! Ensemble manager
 ! ----------------
@@ -282,6 +307,111 @@ endif
 
 ! Place ensemble num in geom_vars
 call geom_vars%set("ensNum", ensNum)
+
+! Assert that ntiles is 1 or 6
+if ((ntiles /= 6) .and. (ntiles /= 1)) then
+  call mpp_error(FATAL, "get_num_nodes_and_elements: ntiles != 1 or 6")
+endif
+
+! Create fms domain for communication prior to creating atlas structures
+call fv3_geom_setup_domain( domain, npx-1, npy-1, &
+                            ntiles, Atm(1)%layout, Atm(1)%io_layout, 3 )
+
+! Atlas connection requirements
+! -----------------------------
+
+
+
+
+! Get number of nodes and elements
+if (ntiles == 6) then
+  call fv3_geom_get_num_nodes_and_elements_global(Atm(1)%global_tile, &
+                                                  Atm(1)%bd%isc, Atm(1)%bd%iec, &
+                                                  Atm(1)%bd%jsc, Atm(1)%bd%jec, &
+                                                  Atm(1)%npx, Atm(1)%npy, &
+                                                  num_nodes, num_tri_elements, num_quad_elements)
+else if (ntiles == 1) then
+  call fv3_geom_get_num_nodes_and_elements_regional(Atm(1)%bd%isc, Atm(1)%bd%iec, &
+                                                    Atm(1)%bd%jsc, Atm(1)%bd%jec, &
+                                                    Atm(1)%npx, Atm(1)%npy, &
+                                                    num_nodes, num_tri_elements, num_quad_elements)
+end if
+
+num_tri_boundary_nodes = 3 * num_tri_elements;
+num_quad_boundary_nodes = 4 * num_quad_elements;
+
+! Allocate arrays in Atlas form
+allocate(lons(num_nodes))
+allocate(lats(num_nodes))
+allocate(ghosts(num_nodes))
+allocate(global_indices(num_nodes))
+allocate(remote_indices(num_nodes))
+allocate(partition(num_nodes))
+allocate(raw_tri_boundary_nodes(num_tri_boundary_nodes))
+allocate(raw_quad_boundary_nodes(num_quad_boundary_nodes))
+
+! Get arrays needed for atlas
+if (ntiles == 6) then
+  call fv3_geom_get_coords_and_connectivities_global(Atm(1)%bd%isc, Atm(1)%bd%iec, &
+                                                     Atm(1)%bd%jsc, Atm(1)%bd%jec, &
+                                                     Atm(1)%bd%isd, Atm(1)%bd%ied, &
+                                                     Atm(1)%bd%jsd, Atm(1)%bd%jed, &
+                                                     Atm(1)%npx, Atm(1)%npy, ngrid, &
+                                                     Atm(1)%global_tile, &
+                                                     Atm(1)%flagstruct%ntiles, &
+                                                     Atm(1)%gridstruct%agrid_64(:,:,1), &
+                                                     Atm(1)%gridstruct%agrid_64(:,:,2), &
+                                                     domain, comm, &
+                                                     num_nodes, &
+                                                     num_tri_boundary_nodes, &
+                                                     num_quad_boundary_nodes, &
+                                                     lons, lats, ghosts, global_indices, &
+                                                     remote_indices, partition, &
+                                                     raw_tri_boundary_nodes, &
+                                                     raw_quad_boundary_nodes)
+
+else if (ntiles == 1) then
+  call fv3_geom_get_coords_and_connectivities_regional(Atm(1)%bd%isc, Atm(1)%bd%iec, &
+                                                       Atm(1)%bd%jsc, Atm(1)%bd%jec, &
+                                                       Atm(1)%bd%isd, Atm(1)%bd%ied, &
+                                                       Atm(1)%bd%jsd, Atm(1)%bd%jed, &
+                                                       Atm(1)%npx, Atm(1)%npy, ngrid, &
+                                                       Atm(1)%global_tile, &
+                                                       Atm(1)%flagstruct%ntiles, &
+                                                       Atm(1)%gridstruct%agrid_64(:,:,1), &
+                                                       Atm(1)%gridstruct%agrid_64(:,:,2), &
+                                                       domain, comm, &
+                                                       num_nodes, &
+                                                       num_tri_boundary_nodes, &
+                                                       num_quad_boundary_nodes, &
+                                                       lons, lats, ghosts, global_indices, &
+                                                       remote_indices, partition, &
+                                                       raw_tri_boundary_nodes, &
+                                                       raw_quad_boundary_nodes)
+end if
+
+! Add everything to the geometry variables
+call geom_vars%set("num_nodes", num_nodes)
+call geom_vars%set("num_tri_elements",  num_tri_elements)
+call geom_vars%set("num_quad_elements", num_quad_elements)
+call geom_vars%set("lons", lons)
+call geom_vars%set("lats", lats)
+call geom_vars%set("ghosts", ghosts)
+call geom_vars%set("global_indices", global_indices)
+call geom_vars%set("remote_indices", remote_indices)
+call geom_vars%set("partition", partition)
+call geom_vars%set("raw_tri_boundary_nodes", raw_tri_boundary_nodes)
+call geom_vars%set("raw_quad_boundary_nodes", raw_quad_boundary_nodes)
+
+! Safe deallocate of the grid structure
+! -------------------------------------
+call deallocate_fv_atmos_type(Atm(1))
+deallocate(Atm)
+deallocate(grids_on_this_pe)
+
+! Revert the fms namelist
+! -----------------------
+call fmsnamelist%revert_namelist
 
 end subroutine fv3_geom_create
 

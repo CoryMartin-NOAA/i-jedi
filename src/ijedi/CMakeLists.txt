@@ -49,6 +49,7 @@ if(FMS_FOUND)
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/GeometryFV3Parameters.h
     Geometry/fv3/GeometryFV3.interface.h
+    Geometry/fv3/ijedi_fv3_akbk_mod.f90
     Geometry/fv3/ijedi_fv3_arrays.F90
     Geometry/fv3/ijedi_fv3_control.F90
     Geometry/fv3/ijedi_fv3_eta.F90

@@ -25,25 +25,16 @@ namespace ijedi
 
   class GeometryBase
   {
-   public:
+  public:
     virtual ~GeometryBase() = default;
 
     static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
                                                 const eckit::mpi::Comm &,
-                                                eckit::Configuration &);
+                                                eckit::Configuration &,
+                                                atlas::FunctionSpace &,
+                                                atlas::FieldSet &,
+                                                int &);
     virtual void print(std::ostream &) const = 0;
-
-    // Accessors for geometry data
-    const atlas::FunctionSpace &functionSpace() const { return functionSpace_; }
-    const atlas::FieldSet &fields() const { return fields_; }
-    atlas::FunctionSpace &functionSpace() { return functionSpace_; }
-    atlas::FieldSet &fields() { return fields_; }
-    const int &numLevels() const { return numLevels_; }
-
-   protected:
-    atlas::FunctionSpace functionSpace_;
-    atlas::FieldSet fields_;
-    int numLevels_;
   };
 
-}  // namespace ijedi
+} // namespace ijedi
