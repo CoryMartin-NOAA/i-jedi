@@ -21,7 +21,10 @@ namespace ijedi
   const int HALO_SIZE = 1;
   // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &geomConf, const eckit::mpi::Comm &comm)
-      : comm_(comm), geomVariables_(std::make_shared<eckit::LocalConfiguration>())
+      : comm_(comm),
+        geomVariables_(std::make_shared<eckit::LocalConfiguration>()),
+        functionSpace_(std::make_shared<atlas::FunctionSpace>()),
+        fieldSet_(std::make_shared<atlas::FieldSet>())
   {
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;

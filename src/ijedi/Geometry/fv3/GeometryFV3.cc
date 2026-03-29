@@ -40,6 +40,10 @@ namespace ijedi
     // Call the setup routine
     f_fv3_geom_create(geomConfig, geomVariables, &comm);
 
+    // Extract things from GeomVariables
+    int ngrid;
+    ngrid = geomVariables.getInt("ngrid");
+
     // Extract variables from geomVariables that were set in Fortran
     int num_nodes;
     size_t num_tri_elements;
@@ -48,6 +52,7 @@ namespace ijedi
     geomVariables.get("num_tri_elements", num_tri_elements);
     geomVariables.get("num_quad_elements", num_quad_elements);
 
+    std::vector<double> area_owned;
     std::vector<double> lons;
     std::vector<double> lats;
     std::vector<int> ghosts;
@@ -57,6 +62,7 @@ namespace ijedi
     std::vector<int> raw_tri_boundary_nodes;
     std::vector<int> raw_quad_boundary_nodes;
 
+    geomVariables.get("area", area_owned);
     geomVariables.get("lons", lons);
     geomVariables.get("lats", lats);
     geomVariables.get("ghosts", ghosts);
@@ -147,6 +153,36 @@ namespace ijedi
         gmsh.write(mesh);
       }
     }
+
+    // Atlas fields for geometry variables
+    geomFields = atlas::FieldSet();
+
+    // Create fields needed in geomFields
+    atlas::Field area = functionSpace.createField<double>(atlas::option::name("area") |
+                                                          atlas::option::levels(1));
+    atlas::Field owned = functionSpace.createField<int>(atlas::option::name("owned") |
+                                                        atlas::option::levels(1));
+
+    // Start with area being -1 everywhere
+    auto areaView = atlas::array::make_view<double, 2>(area);
+    auto ownedView = atlas::array::make_view<int, 2>(owned);
+
+    // 1. initialize all local entries, including halo, to -1
+    for (atlas::idx_t j = 0; j < functionSpace.size(); ++j)
+    {
+      areaView(j, 0) = -1.0;
+      ownedView(j, 0) = 0;
+    }
+    // 2. overwrite owned points with your data
+    for (atlas::idx_t j = 0; j < ngrid; ++j)
+    {
+      areaView(j, 0) = area_owned[j];
+      ownedView(j, 0) = 1;
+    }
+
+    // Add area to geomFields
+    geomFields.add(area);
+    geomFields.add(owned);
   }
 
   void GeometryFV3::print(std::ostream &os) const
