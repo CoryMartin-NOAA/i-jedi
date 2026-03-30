@@ -15,21 +15,30 @@
 #include "atlas/mesh/MeshBuilder.h"
 #include "atlas/output/Gmsh.h"
 
+#include "oops/util/Logger.h"
+
 #include "ijedi/Geometry/fv3/GeometryFV3.h"
 #include "ijedi/Geometry/fv3/GeometryFV3.interface.h"
 #include "ijedi/Geometry/fv3/GeometryFV3Parameters.h"
 
 namespace ijedi
 {
+
+  // -----------------------------------------------------------------------------------------------
+
   GeometryFV3::GeometryFV3(const eckit::Configuration &geomConfig, const eckit::mpi::Comm &comm,
                            eckit::Configuration &geomVariables, atlas::FunctionSpace &functionSpace,
                            atlas::FieldSet &geomFields, int &numberLevels)
   {
+    oops::Log::trace() << "GeometryFV3 constructor starting" << std::endl;
+
     // Deserialize the parameters
+    // --------------------------
     GeometryParameters params;
     params.deserialize(geomConfig);
 
-    // Call the fms initialize, done only once.
+    // Call the fms initialize, done only once
+    // ---------------------------------------
     static bool initialized = false;
     if (!initialized)
     {
@@ -43,6 +52,35 @@ namespace ijedi
     // Extract things from GeomVariables
     int ngrid;
     ngrid = geomVariables.getInt("ngrid");
+
+    int npx = geomVariables.getInt("npx");
+    int npy = geomVariables.getInt("npy");
+    int npz = geomVariables.getInt("npz");
+    int ntiles = geomVariables.getInt("ntiles");
+
+    int nprocx = geomVariables.getInt("nprocx");
+    int nprocy = geomVariables.getInt("nprocy");
+
+    // Set number of levels
+    numberLevels = npz;
+
+    std::string globalOrRegional = ntiles == 6 ? "Global" : "Regional";
+
+    // Message:
+    // Cubed sphere geometry on <global/regional> grid.
+    //
+    // Number of (full) model levels: <npz>
+    // Number of grids: <ntiles>
+    // Grid dimensions: npx x npy: C<npx=1> x C<npy=1>
+
+    // Create print message
+    printMessage_ = " Cubed Sphere Geometry for " + globalOrRegional + " Grid.\n" +
+                    " Number of tiles (cube faces): " + std::to_string(ntiles) + "\n" +
+                    " Grid dimensions (per tile): c" + std::to_string(npx) + " x c" +
+                    std::to_string(npy) + "\n" +
+                    " Number of (full) model levels: " + std::to_string(npz) + "\n" +
+                    " Processor layout per tile: " +
+                    std::to_string(nprocx) + " x " + std::to_string(nprocy);
 
     // Extract variables from geomVariables that were set in Fortran
     int num_nodes;
@@ -183,10 +221,17 @@ namespace ijedi
     // Add area to geomFields
     geomFields.add(area);
     geomFields.add(owned);
+
+    oops::Log::trace() << "GeometryFV3 constructor done" << std::endl;
   }
+
+  // -----------------------------------------------------------------------------------------------
 
   void GeometryFV3::print(std::ostream &os) const
   {
+    os << printMessage_ << std::endl;
   }
+
+  // -----------------------------------------------------------------------------------------------
 
 } // namespace ijedi

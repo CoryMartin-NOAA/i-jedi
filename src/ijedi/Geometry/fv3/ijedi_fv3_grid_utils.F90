@@ -250,13 +250,13 @@ use ijedi_kinds_mod,          only: kind_real
               if (.not. Atm%flagstruct%external_eta) then
                  call set_eta(npz, Atm%ks, Atm%ptop, Atm%ak, Atm%bk, Atm%flagstruct%npz_type, Atm%flagstruct%fv_eta_file)
                  if ( is_master() ) then
-                    write(*,*) 'Grid_init', npz, Atm%ks, Atm%ptop
+                    !                    write(*,*) 'Grid_init', npz, Atm%ks, Atm%ptop
                     tmp1 = Atm%ak(Atm%ks+1)
                     do k=Atm%ks+1,npz
                        tmp1 = max(tmp1, (Atm%ak(k)-Atm%ak(k+1))/max(1.E-9, (Atm%bk(k+1)-Atm%bk(k))) )
                     enddo
-                    write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hpa)=', tmp1/100.
-                    if ( tmp1 > 420.E2 ) write(*,*) 'Warning: the chosen setting in set_eta can cause instability'
+                    !                    write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hpa)=', tmp1/100.
+                    !if ( tmp1 > 420.E2 ) write(*,*) 'Warning: the chosen setting in set_eta can cause instability'
                  endif
               endif
          endif
@@ -286,7 +286,7 @@ use ijedi_kinds_mod,          only: kind_real
      if ( sw_corner ) then
           tmp1 = great_circle_dist(grid(1,1,1:2), agrid(1,1,1:2))
           tmp2 = great_circle_dist(grid(1,1,1:2), agrid(2,2,1:2))
-          write(*,*) 'Corner interpolation coefficient=', tmp2/(tmp2-tmp1)
+          !          write(*,*) 'Corner interpolation coefficient=', tmp2/(tmp2-tmp1)
      endif
 
      if (grid_type < 3) then
@@ -822,11 +822,11 @@ use ijedi_kinds_mod,          only: kind_real
         call init_cubed_to_latlon( Atm%gridstruct, Atm%flagstruct%hydrostatic, agrid, grid_type, c2l_order, Atm%bd )
 
         call global_mx(area, Atm%ng, Atm%gridstruct%da_min, Atm%gridstruct%da_max, Atm%bd)
-        if( is_master() ) write(*,*) 'da_max/da_min=', Atm%gridstruct%da_max/Atm%gridstruct%da_min
+        !if( is_master() ) write(*,*) 'da_max/da_min=', Atm%gridstruct%da_max/Atm%gridstruct%da_min
 
         call global_mx_c(area_c(is:ie,js:je), is, ie, js, je, Atm%gridstruct%da_min_c, Atm%gridstruct%da_max_c)
 
-        if( is_master() ) write(*,*) 'da_max_c/da_min_c=', Atm%gridstruct%da_max_c/Atm%gridstruct%da_min_c
+        !if( is_master() ) write(*,*) 'da_max_c/da_min_c=', Atm%gridstruct%da_max_c/Atm%gridstruct%da_min_c
 
    !------------------------------------------------
    ! Initialization for interpolation at face edges
@@ -998,7 +998,7 @@ use ijedi_kinds_mod,          only: kind_real
        two_pi = 2.d0*pi
 
        if( is_master() .and. n==1 ) then
-           write(*,*) n, 'Schmidt transformation: stretching factor=', c, ' center=', lon_p, lat_p
+           !           write(*,*) n, 'Schmidt transformation: stretching factor=', c, ' center=', lon_p, lat_p
        endif
 
        c2p1 = 1.d0 + c*c
@@ -1059,7 +1059,7 @@ use ijedi_kinds_mod,          only: kind_real
        two_pi = 2.d0*pi
 
        if( is_master() .and. n==1 ) then
-           write(*,*) n, 'Cube transformation (revised Schmidt): stretching factor=', c, ' center=', lon_p, lat_p
+           !           write(*,*) n, 'Cube transformation (revised Schmidt): stretching factor=', c, ' center=', lon_p, lat_p
        endif
 
        c2p1 = 1.d0 + c*c
@@ -1519,7 +1519,7 @@ use ijedi_kinds_mod,          only: kind_real
     if ( is_master() ) then
          p1(1) = lamda(1,1);    p1(2) = theta(1,1)
          p2(1) = lamda(2,1);    p2(2) = theta(2,1)
-         write(*,*) 'Grid distance at face edge (m)=',great_circle_dist( p1, p2, radius )   ! earth radius is assumed
+         !         write(*,*) 'Grid distance at face edge (m)=',great_circle_dist( p1, p2, radius )   ! earth radius is assumed
     endif
 
     end subroutine gnomonic_ed
@@ -1631,9 +1631,9 @@ use ijedi_kinds_mod,          only: kind_real
       if ( is_master() ) then
          p1(1) = lamda(1,1);    p1(2) = theta(1,1)
          p2(1) = lamda(2,1);    p2(2) = theta(2,1)
-         write(*,*) 'Grid x-distance at face edge (km)=',great_circle_dist( p1, p2, radius )   ! earth radius is assumed
+         !         write(*,*) 'Grid x-distance at face edge (km)=',great_circle_dist( p1, p2, radius )   ! earth radius is assumed
          p2(1) = lamda(1,2);    p2(2) = theta(1,2)
-         write(*,*) 'Grid y-distance at face edge (km)=',great_circle_dist( p1, p2, radius )   ! earth radius is assumed
+         !         write(*,*) 'Grid y-distance at face edge (km)=',great_circle_dist( p1, p2, radius )   ! earth radius is assumed
          !print*, 'dtheta = ', dely
          !print*, 'dlambda = ', lamda(2,1) - lamda(1,1)
       endif
@@ -2069,7 +2069,7 @@ use ijedi_kinds_mod,          only: kind_real
     omg = acos( e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3) )
 
     if ( abs(omg) < 1.d-5 ) then
-       print*, 'spherical_linear_interpolation: ', omg, p1, p2
+       !print*, 'spherical_linear_interpolation: ', omg, p1, p2
        call mpp_error(FATAL, 'spherical_linear_interpolation: interpolation not well defined between antipodal points')
     end if
 
@@ -3049,7 +3049,7 @@ use ijedi_kinds_mod,          only: kind_real
 
          if ( .not. g_sum_initialized ) then
             global_area = mpp_global_sum(domain, area, flags=BITWISE_EFP_SUM)
-            if ( is_master() ) write(*,*) 'Global Area=',global_area
+            !if ( is_master() ) write(*,*) 'Global Area=',global_area
             g_sum_initialized = .true.
          end if
 
@@ -3293,10 +3293,10 @@ use ijedi_kinds_mod,          only: kind_real
         enddo
 
        if ( is_master() ) then
-            write(*,*) 'Make_eta_level ...., ptop=', ptop
+            !            write(*,*) 'Make_eta_level ...., ptop=', ptop
 #ifdef PRINT_GRID
             do k=1,km+1
-               write(*,*) ph(k), ak(k), bk(k)
+               !               write(*,*) ph(k), ak(k), bk(k)
             enddo
 #endif
        endif

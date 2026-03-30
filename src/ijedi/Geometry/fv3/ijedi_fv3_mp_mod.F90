@@ -284,8 +284,8 @@ use ijedi_kinds_mod,          only: kind_real
                   if ( mpp_pe()==mpp_root_pe() ) then
                      master = .true.
                     unit = stdout()
-                    write(unit,*) 'Starting PEs : ', mpp_npes() !Should be for current pelist
-                    write(unit,*) 'Starting Threads : ', numthreads
+                    !write(unit,*) 'Starting PEs : ', mpp_npes() !Should be for current pelist
+                    !write(unit,*) 'Starting Threads : ', numthreads
                   else
                     master = .false.
                   endif
@@ -408,7 +408,7 @@ use ijedi_kinds_mod,          only: kind_real
                         if ( npes_x==npes_y .and. (npx-1)==((npx-1)/npes_x)*npes_x )  square_domain = .true.
 
                         if ( (npx/npes_x < ng) .or. (npy/npes_y < ng) ) then
-                           write(*,310) npes_x, npes_y, npx/npes_x, npy/npes_y
+                           !                           write(*,310) npes_x, npes_y, npx/npes_x, npy/npes_y
                           call mp_stop
                           call exit(1)
                        endif
@@ -471,7 +471,7 @@ use ijedi_kinds_mod,          only: kind_real
                      if ( npes_x==npes_y .and. (npx-1)==((npx-1)/npes_x)*npes_x )  square_domain = .true.
 
                      if ( (npx/npes_x < ng) .or. (npy/npes_y < ng) ) then
-                        write(*,310) npes_x, npes_y, npx/npes_x, npy/npes_y
+                        !                        write(*,310) npes_x, npes_y, npx/npes_x, npy/npes_y
           310           format('Invalid layout, NPES_X:',i4.4,'NPES_Y:',i4.4,'ncells_X:',i4.4,'ncells_Y:',i4.4)
                         call mp_stop
                         call exit(1)
@@ -681,7 +681,7 @@ use ijedi_kinds_mod,          only: kind_real
 
                    if (debug .and. nregions==1) then
                       tile=1
-                      write(*,200) tile, is, ie, js, je
+                      !                      write(*,200) tile, is, ie, js, je
                       !   call mp_stop
                       !   stop
                    endif

@@ -27,6 +27,9 @@ namespace ijedi
     GeometryFV3(const eckit::Configuration &, const eckit::mpi::Comm &,
                 eckit::Configuration &, atlas::FunctionSpace &, atlas::FieldSet &, int &);
     void print(std::ostream &) const override;
+
+  private:
+    std::string printMessage_;
   };
 
 } // namespace ijedi

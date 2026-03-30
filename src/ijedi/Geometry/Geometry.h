@@ -79,6 +79,7 @@ namespace ijedi
     std::shared_ptr<atlas::FunctionSpace> functionSpace_;
     std::shared_ptr<atlas::FieldSet> fieldSet_;
     int numberLevels_;
+    std::string type_;
   };
   // -----------------------------------------------------------------------------
 

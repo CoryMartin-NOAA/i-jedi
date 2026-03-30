@@ -295,7 +295,7 @@ use ijedi_kinds_mod,          only: kind_real
              enddo
           enddo
        else
-          print*, 'units is ' , trim(units), len_trim(units), mpp_pe()
+          !print*, 'units is ' , trim(units), len_trim(units), mpp_pe()
           call mpp_error(FATAL, 'fv_grid_tools_mod(read_grid): units must start with degree or radian')
        endif
 
@@ -1373,14 +1373,14 @@ use ijedi_kinds_mod,          only: kind_real
              angAV = angAV / ( (ceiling(npy/2.0))*(ceiling(npx/2.0)) - 1 )
              dxAV  = dxAV  / ( (ceiling(npy/2.0))*(ceiling(npx/2.0)) )
              aspAV = aspAV / ( (ceiling(npy/2.0))*(ceiling(npx/2.0)) )
-             write(*,*  ) ''
-             write(*,*) ' Radius is ', radius, ', omega is ', omega, ' small_fac = ', small_fac
-             write(*,*  ) ' Cubed-Sphere Grid Stats : ', npx,'x',npy,'x',nregions
-             print*, dxN, dxM, dxAV, dxN, dxM
-             write(*,'(A,f11.2,A,f11.2,A,f11.2,A,f11.2)') '      Grid Length               : min: ', dxN,' max: ', dxM,' avg: ', dxAV, ' min/max: ',dxN/dxM
-             write(*,'(A,e21.14,A,e21.14,A,e21.14)') '      Deviation from Orthogonal : min: ',angN,' max: ',angM,' avg: ',angAV
-             write(*,'(A,e21.14,A,e21.14,A,e21.14)') '      Aspect Ratio              : min: ',aspN,' max: ',aspM,' avg: ',aspAV
-             write(*,*  ) ''
+             !             write(*,*  ) ''
+             !             write(*,*) ' Radius is ', radius, ', omega is ', omega, ' small_fac = ', small_fac
+             !             write(*,*  ) ' Cubed-Sphere Grid Stats : ', npx,'x',npy,'x',nregions
+             !print*, dxN, dxM, dxAV, dxN, dxM
+             !             write(*,'(A,f11.2,A,f11.2,A,f11.2,A,f11.2)') '      Grid Length               : min: ', dxN,' max: ', dxM,' avg: ', dxAV, ' min/max: ',dxN/dxM
+             !             write(*,'(A,e21.14,A,e21.14,A,e21.14)') '      Deviation from Orthogonal : min: ',angN,' max: ',angM,' avg: ',angAV
+             !             write(*,'(A,e21.14,A,e21.14,A,e21.14)') '      Aspect Ratio              : min: ',aspN,' max: ',aspM,' avg: ',aspAV
+             !             write(*,*  ) ''
 
           endif
        endif!if gridtype > 3
@@ -1568,10 +1568,10 @@ use ijedi_kinds_mod,          only: kind_real
                if (imod < 0) imod = imod + refinement
 
                if (ic+1 > ieg+1 .or. ic < isg .or. jc+1 > jeg+1 .or. jc < jsg) then
-                  print*, 'p_grid:',  i, j,  ' OUT OF BOUNDS'
-                  print*, ic, jc
-                  print*, isg, ieg, jsg, jeg
-                  print*, imod, jmod
+                  !print*, 'p_grid:',  i, j,  ' OUT OF BOUNDS'
+                  !print*, ic, jc
+                  !print*, isg, ieg, jsg, jeg
+                  !print*, imod, jmod
                end if
 
                if (jmod == 0) then
@@ -1901,13 +1901,13 @@ use ijedi_kinds_mod,          only: kind_real
 
            dxAV  = dxAV  / ( (ceiling(npy/2.0))*(ceiling(npx/2.0)) )
 
-           write(*,*  ) ''
-           write(*,*  ) ' Lambert Grid Stats : ', npx,'x',npy,'x 1'
-           write(*,201) '      Grid Length   : min: ', dxN,' max: ', dxM,' avg: ', dxAV, ' min/max: ',dxN/dxM
-           write(*,*  ) ''
-           write(*,209) '   MAX    AREA (m*m):', maxarea,            '          MIN AREA (m*m):', minarea
-           write(*,210) '   GLOBAL AREA (m*m):', globalarea
-           write(*,*  ) ''
+           !           write(*,*  ) ''
+           !           write(*,*  ) ' Lambert Grid Stats : ', npx,'x',npy,'x 1'
+           !           write(*,201) '      Grid Length   : min: ', dxN,' max: ', dxM,' avg: ', dxAV, ' min/max: ',dxN/dxM
+           !           write(*,*  ) ''
+           !           write(*,209) '   MAX    AREA (m*m):', maxarea,            '          MIN AREA (m*m):', minarea
+           !           write(*,210) '   GLOBAL AREA (m*m):', globalarea
+           !           write(*,*  ) ''
 
    201  format(A,f11.2,A,f11.2,A,f11.2,A,f11.2)
    209  format(A,e21.14,A,e21.14)
@@ -2171,10 +2171,10 @@ use ijedi_kinds_mod,          only: kind_real
                   if (imod < 0) imod = imod + refinement
 
                   if (ic+1 > ieg+1 .or. ic < isg .or. jc+1 > jeg+1 .or. jc < jsg) then
-                     print*, 'p_grid:',  i, j,  ' OUT OF BOUNDS'
-                     print*, ic, jc
-                     print*, isg, ieg, jsg, jeg
-                     print*, imod, jmod
+                     !print*, 'p_grid:',  i, j,  ' OUT OF BOUNDS'
+                     !print*, ic, jc
+                     !print*, isg, ieg, jsg, jeg
+                     !print*, imod, jmod
                   end if
 
                   if (jmod == 0) then
@@ -2228,8 +2228,8 @@ use ijedi_kinds_mod,          only: kind_real
                   do j=1-ng,npy+ng
                      do k=1,4
                         if (p_ind(i,j,k) .ne. shift_p_ind(i,j,k)) then
-                           print '("[ERROR] WDR setup_nest_grid MISMATCH p_ind(",I0,",",I0,",",I0,")=",I0," shift_p_ind(",I0,",",I0,",",I0,")=",I0," npe=",I0, " move_step=",I0," ")', &
-                                i, j, k, p_ind(i,j,k), i, j, k, shift_p_ind(i,j,k), this_pe, move_step
+                           !print '("[ERROR] WDR setup_nest_grid MISMATCH p_ind(",I0,",",I0,",",I0,")=",I0," shift_p_ind(",I0,",",I0,",",I0,")=",I0," npe=",I0, " move_step=",I0," ")', &
+                           !     i, j, k, p_ind(i,j,k), i, j, k, shift_p_ind(i,j,k), this_pe, move_step
                         end if
                      end do
                   end do
@@ -2238,12 +2238,12 @@ use ijedi_kinds_mod,          only: kind_real
                do i=1-ng,npx+ng
                   do j=1-ng,npy+ng
                      if (abs(grid_global(i,j,1,1) -  out_grid(i,j,1,1)) .gt. 0.01) then
-                        print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(",I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",",I0,",1)=",F18.12," npe=",I0," move_step=",I0," ")', &
-                             i, j, 1, grid_global(i,j,1,1)*180.0/pi, i, j, 1, out_grid(i,j,1,1)*180.0/pi, this_pe, move_step
+                        !print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(",I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",",I0,",1)=",F18.12," npe=",I0," move_step=",I0," ")', &
+                         !    i, j, 1, grid_global(i,j,1,1)*180.0/pi, i, j, 1, out_grid(i,j,1,1)*180.0/pi, this_pe, move_step
                      end if
                      if (abs(grid_global(i,j,2,1) -  out_grid(i,j,2,1)) .gt. 0.01) then
-                        print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(",I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",",I0,",1)=",F18.12," npe=",I0, " move_step=",I0," ")', &
-                             i, j, 2, grid_global(i,j,2,1)*180.0/pi, i, j, 2, out_grid(i,j,2,1)*180.0/pi, this_pe, move_step
+                        !print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(",I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",",I0,",1)=",F18.12," npe=",I0, " move_step=",I0," ")', &
+                         !    i, j, 2, grid_global(i,j,2,1)*180.0/pi, i, j, 2, out_grid(i,j,2,1)*180.0/pi, this_pe, move_step
                      end if
                   end do
                end do
@@ -2552,9 +2552,9 @@ use ijedi_kinds_mod,          only: kind_real
                jc = ind_u(i,j,2)
 
                if (ic+1 > ieg .or. ic < isg .or. jc+1 > jeg+1 .or. jc < jsg) then
-                  print*, 'IND_U ', i, j, ' OUT OF BOUNDS'
-                  print*, ic, jc
-                  print*, isg, ieg, jsg, jeg
+                  !print*, 'IND_U ', i, j, ' OUT OF BOUNDS'
+                  !print*, ic, jc
+                  !print*, isg, ieg, jsg, jeg
                end if
 
 
@@ -2602,9 +2602,9 @@ use ijedi_kinds_mod,          only: kind_real
                jc = ind_v(i,j,2)
 
                if (ic+1 > ieg .or. ic < isg .or. jc+1 > jeg+1 .or. jc < jsg) then
-                  print*, 'IND_V ', i, j, ' OUT OF BOUNDS'
-                  print*, ic, jc
-                  print*, isg, ieg, jsg, jeg
+                  !print*, 'IND_V ', i, j, ' OUT OF BOUNDS'
+                  !print*, ic, jc
+                  !print*, isg, ieg, jsg, jeg
                end if
 
 #ifdef NEW_BC
@@ -2649,25 +2649,25 @@ use ijedi_kinds_mod,          only: kind_real
             if (Atm%neststruct%nested) then
                !Nesting position information
                !BUG multiply by 180 not 90....
-               write(*,*) 'NESTED GRID ', Atm%grid_number
+               !               write(*,*) 'NESTED GRID ', Atm%grid_number
                ic = p_ind(1,1,1) ; jc = p_ind(1,1,2)
-               write(*,'(A, 2I5, 4F10.4)') 'SW CORNER: ', ic, jc, grid_global(1,1,:,1)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'SW CORNER: ', ic, jc, grid_global(1,1,:,1)*90./pi
                ic = p_ind(1,npy,1) ; jc = p_ind(1,npy,2)
-               write(*,'(A, 2I5, 4F10.4)') 'NW CORNER: ', ic, jc, grid_global(1,npy,:,1)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'NW CORNER: ', ic, jc, grid_global(1,npy,:,1)*90./pi
                ic = p_ind(npx,npy,1) ; jc = p_ind(npx,npy,2)
-               write(*,'(A, 2I5, 4F10.4)') 'NE CORNER: ', ic, jc, grid_global(npx,npy,:,1)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'NE CORNER: ', ic, jc, grid_global(npx,npy,:,1)*90./pi
                ic = p_ind(npx,1,1) ; jc = p_ind(npx,1,2)
-               write(*,'(A, 2I5, 4F10.4)') 'SE CORNER: ', ic, jc, grid_global(npx,1,:,1)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'SE CORNER: ', ic, jc, grid_global(npx,1,:,1)*90./pi
             else
-               write(*,*) 'PARENT GRID ', Atm%parent_grid%grid_number, Atm%parent_grid%global_tile
+               !               write(*,*) 'PARENT GRID ', Atm%parent_grid%grid_number, Atm%parent_grid%global_tile
                ic = p_ind(1,1,1) ; jc = p_ind(1,1,2)
-               write(*,'(A, 2I5, 4F10.4)') 'SW CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'SW CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
                ic = p_ind(1,npy,1) ; jc = p_ind(1,npy,2)
-               write(*,'(A, 2I5, 4F10.4)') 'NW CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'NW CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
                ic = p_ind(npx,npy,1) ; jc = p_ind(npx,npy,2)
-               write(*,'(A, 2I5, 4F10.4)') 'NE CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'NE CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
                ic = p_ind(npx,1,1) ; jc = p_ind(npx,1,2)
-               write(*,'(A, 2I5, 4F10.4)') 'SE CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'SE CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
             endif
          end if
 
@@ -2878,7 +2878,7 @@ use ijedi_kinds_mod,          only: kind_real
                   y2 = -s*x1 + c*y1
                   z2 = z1
                CASE DEFAULT
-                 write(*,*) "Invalid axis: must be 1 for X, 2 for Y, 3 for Z."
+                 !                 write(*,*) "Invalid axis: must be 1 for X, 2 for Y, 3 for Z."
 
             END SELECT
 
@@ -3007,8 +3007,8 @@ use ijedi_kinds_mod,          only: kind_real
             maxarea = mpp_global_max(domain, area)
             minarea = mpp_global_min(domain, area)
 
-           if (is_master()) write(*,209) 'MAX    AREA (m*m):', maxarea,            '          MIN AREA (m*m):', minarea
-           if (is_master()) write(*,209) 'GLOBAL AREA (m*m):', globalarea, ' IDEAL GLOBAL AREA (m*m):', 4.0*pi*radius**2
+           !if (is_master()) write(*,209) 'MAX    AREA (m*m):', maxarea,            '          MIN AREA (m*m):', minarea
+           !if (is_master()) write(*,209) 'GLOBAL AREA (m*m):', globalarea, ' IDEAL GLOBAL AREA (m*m):', 4.0*pi*radius**2
     209  format(A,e21.14,A,e21.14)
 
            if (bounded_domain) then

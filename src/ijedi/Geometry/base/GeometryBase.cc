@@ -16,33 +16,31 @@
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
 
-namespace ijedi {
+namespace ijedi
+{
   std::shared_ptr<GeometryBase> GeometryBase::create(const eckit::Configuration &geomConf,
                                                      const eckit::mpi::Comm &comm,
                                                      eckit::Configuration &geomVars,
                                                      atlas::FunctionSpace &functionSpace,
                                                      atlas::FieldSet &fieldSet,
-                                                     int &numLevels) {
+                                                     int &numLevels)
+  {
     // Get the type
     std::string type;
-    if (geomConf.has("geometry_type")) {
-      type = geomConf.getString("geometry_type");
-    } else {
-      // Abort
-      std::stringstream errorMsg;
-      errorMsg << "Geometry type (geometry_type) not specified in configuration.";
-      throw eckit::BadValue(errorMsg.str(), Here());
-    }
+    type = geomConf.getString("geometry_type");
 
-    if (type == "fv3") {
+    if (type == "fv3")
+    {
       return std::make_shared<GeometryFV3>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                            numLevels);
     }
-    if (type == "mpas") {
+    if (type == "mpas")
+    {
       return std::make_shared<GeometryMPAS>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                             numLevels);
     }
-    if (type == "mom6") {
+    if (type == "mom6")
+    {
       return std::make_shared<GeometryMOM6>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                             numLevels);
     }
@@ -51,4 +49,4 @@ namespace ijedi {
                           Here());
   }
 
-}  // namespace ijedi
+} // namespace ijedi

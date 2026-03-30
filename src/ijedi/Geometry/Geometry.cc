@@ -29,6 +29,19 @@ namespace ijedi
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
 
+    // Get the type
+    if (geomConf.has("geometry_type"))
+    {
+      type_ = geomConf.getString("geometry_type");
+    }
+    else
+    {
+      // Abort
+      std::stringstream errorMsg;
+      errorMsg << "Geometry type (geometry_type) not specified in configuration.";
+      throw eckit::BadValue(errorMsg.str(), Here());
+    }
+
     // Create the geometry implementation (which will set numLevels_)
     geometryImpl_ = GeometryBase::create(geomConf, comm_, *geomVariables_, *functionSpace_,
                                          *fieldSet_, numberLevels_);
@@ -51,7 +64,8 @@ namespace ijedi
     functionSpace_ = std::make_shared<atlas::FunctionSpace>(*other.functionSpace_);
     // Copy field set
     fieldSet_ = std::make_shared<atlas::FieldSet>(*other.fieldSet_);
-    // Create the geometry implementation (which will set numLevels_)
+    // Copy the geometry implementation
+    geometryImpl_ = other.geometryImpl_;
   }
   // -----------------------------------------------------------------------------------------------
   Geometry::~Geometry()
@@ -60,7 +74,16 @@ namespace ijedi
   // -----------------------------------------------------------------------------------------------
   void Geometry::print(std::ostream &os) const
   {
+    // Write a general message about the geometry and the implementation provider
+    os << std::endl
+       << "--------------------------------------------------"
+          "--------------------------------------------------";
+    os << std::endl
+       << "Geometry Information (from type: " + type_ + "):" << std::endl;
     geometryImpl_->print(os);
+    os << std::endl
+       << "--------------------------------------------------"
+          "--------------------------------------------------";
   }
 
   // -----------------------------------------------------------------------------------------------

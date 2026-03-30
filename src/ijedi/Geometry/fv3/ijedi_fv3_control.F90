@@ -460,7 +460,7 @@ use ijedi_kinds_mod,          only: kind_real
            do i=1,grid_pes(n)
               if (pecounter >= npes) then
                  if (mpp_pe() == 0) then
-                    print*, 'ngrids = ', ngrids, ', grid_pes = ', grid_pes(1:ngrids)
+                    !print*, 'ngrids = ', ngrids, ', grid_pes = ', grid_pes(1:ngrids)
                  endif
                  call mpp_error(FATAL, 'grid_pes assigns more PEs than are available.')
               endif
@@ -494,7 +494,7 @@ use ijedi_kinds_mod,          only: kind_real
            !ONE grid per pe
            if (ANY(mpp_pe() == Atm(n)%pelist)) then
               if (this_grid > 0) then
-                 print*, mpp_pe(), this_grid, n
+                 !print*, mpp_pe(), this_grid, n
                  call mpp_error(FATAL, " Grid assigned to multiple pes")
               endif
               call mpp_set_current_pelist(Atm(n)%pelist)
@@ -525,7 +525,7 @@ use ijedi_kinds_mod,          only: kind_real
 
         if (pecounter /= npes) then
            if (mpp_pe() == 0) then
-              print*, 'npes = ', npes, ', grid_pes = ', grid_pes(1:ngrids)
+              !print*, 'npes = ', npes, ', grid_pes = ', grid_pes(1:ngrids)
               call mpp_error(FATAL, 'grid_pes in fv_nest_Nml does not assign all of the available PEs')
            endif
         endif
@@ -637,13 +637,13 @@ use ijedi_kinds_mod,          only: kind_real
         enddo
 
         if (mpp_pe() == 0 .and. ngrids > 1) then
-           print*, ' NESTING TREE'
+           !print*, ' NESTING TREE'
            do n=1,ngrids
-              write(*,'(12i4)') n, nest_level(n), nest_ioffsets(n), nest_joffsets(n), icount_coarse(n), jcount_coarse(n), tile_fine(n), tile_coarse(n), nest_refine(n), all_ntiles(n), all_npx(n), all_npy(n)
-              write(*,*)
+              !              write(*,'(12i4)') n, nest_level(n), nest_ioffsets(n), nest_joffsets(n), icount_coarse(n), jcount_coarse(n), tile_fine(n), tile_coarse(n), nest_refine(n), all_ntiles(n), all_npx(n), all_npy(n)
+              !              write(*,*)
            enddo
-           print*, npes_nest_tile(1:ntiles_nest_all)
-           print*, ''
+           !print*, npes_nest_tile(1:ntiles_nest_all)
+           !print*, ''
         endif
 
         ! 5. domain_decomp()
@@ -664,8 +664,8 @@ use ijedi_kinds_mod,          only: kind_real
         call tm_register_tracers (MODEL_ATMOS, Atm(this_grid)%flagstruct%ncnst, Atm(this_grid)%flagstruct%nt_prog, &
              Atm(this_grid)%flagstruct%pnats, num_family)
         if(is_master()) then
-           write(*,*) 'ncnst=', ncnst,' num_prog=',Atm(this_grid)%flagstruct%nt_prog,' pnats=',Atm(this_grid)%flagstruct%pnats,' dnats=',dnats,&
-                ' num_family=',num_family
+           !           write(*,*) 'ncnst=', ncnst,' num_prog=',Atm(this_grid)%flagstruct%nt_prog,' pnats=',Atm(this_grid)%flagstruct%pnats,' dnats=',dnats,&
+            !    ' num_family=',num_family
            print*, ''
         endif
         if (dnrts < 0) dnrts = dnats
@@ -683,7 +683,7 @@ use ijedi_kinds_mod,          only: kind_real
                 n/=this_grid, n==this_grid, ngrids) !TODO don't need both of the last arguments
         enddo
         if ( (Atm(this_grid)%bd%iec-Atm(this_grid)%bd%isc+1).lt.4 .or. (Atm(this_grid)%bd%jec-Atm(this_grid)%bd%jsc+1).lt.4 ) then
-           if (is_master()) write(*,'(6I6)') Atm(this_grid)%bd%isc, Atm(this_grid)%bd%iec, Atm(this_grid)%bd%jsc, Atm(this_grid)%bd%jec, this_grid
+           !if (is_master()) write(*,'(6I6)') Atm(this_grid)%bd%isc, Atm(this_grid)%bd%iec, Atm(this_grid)%bd%jsc, Atm(this_grid)%bd%jec, this_grid
            call mpp_error(FATAL,'Domain Decomposition:  Cubed Sphere compute domain has a &
                 &minium requirement of 4 points in X and Y, respectively')
         end if
@@ -761,24 +761,24 @@ use ijedi_kinds_mod,          only: kind_real
 
         if ( is_master() ) then
            sdt =  dt_atmos/real(Atm(this_grid)%flagstruct%n_split*Atm(this_grid)%flagstruct%k_split*abs(p_split), kind=kind_real)
-           write(*,*) ' '
-           write(*,*) 'Divergence damping Coefficients'
-           write(*,*) 'For small dt=', sdt
-           write(*,*) 'External mode del-2 (m**2/s)=',  Atm(this_grid)%flagstruct%d_ext*Atm(this_grid)%gridstruct%da_min_c/sdt
-           write(*,*) 'Internal mode del-2 SMAG dimensionless coeff=',  Atm(this_grid)%flagstruct%dddmp
-           write(*,*) 'Internal mode del-2 background diff=', Atm(this_grid)%flagstruct%d2_bg*Atm(this_grid)%gridstruct%da_min_c/sdt
+           !           write(*,*) ' '
+           !           write(*,*) 'Divergence damping Coefficients'
+           !           write(*,*) 'For small dt=', sdt
+           !           write(*,*) 'External mode del-2 (m**2/s)=',  Atm(this_grid)%flagstruct%d_ext*Atm(this_grid)%gridstruct%da_min_c/sdt
+           !           write(*,*) 'Internal mode del-2 SMAG dimensionless coeff=',  Atm(this_grid)%flagstruct%dddmp
+           !           write(*,*) 'Internal mode del-2 background diff=', Atm(this_grid)%flagstruct%d2_bg*Atm(this_grid)%gridstruct%da_min_c/sdt
 
            if (nord==1) then
-              write(*,*) 'Internal mode del-4 background diff=', Atm(this_grid)%flagstruct%d4_bg
-              write(*,*) 'Vorticity del-4 (m**4/s)=', (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2/sdt*1.E-6
+              !              write(*,*) 'Internal mode del-4 background diff=', Atm(this_grid)%flagstruct%d4_bg
+              !              write(*,*) 'Vorticity del-4 (m**4/s)=', (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2/sdt*1.E-6
            endif
-           if (Atm(this_grid)%flagstruct%nord==2) write(*,*) 'Internal mode del-6 background diff=', Atm(this_grid)%flagstruct%d4_bg
-           if (Atm(this_grid)%flagstruct%nord==3) write(*,*) 'Internal mode del-8 background diff=', Atm(this_grid)%flagstruct%d4_bg
-           write(*,*) 'tracer del-2 diff=', Atm(this_grid)%flagstruct%trdm2
+           !if (Atm(this_grid)%flagstruct%nord==2) write(*,*) 'Internal mode del-6 background diff=', Atm(this_grid)%flagstruct%d4_bg
+           !if (Atm(this_grid)%flagstruct%nord==3) write(*,*) 'Internal mode del-8 background diff=', Atm(this_grid)%flagstruct%d4_bg
+           !           write(*,*) 'tracer del-2 diff=', Atm(this_grid)%flagstruct%trdm2
 
-           write(*,*) 'Vorticity del-4 (m**4/s)=', (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2/sdt*1.E-6
-           write(*,*) 'beta=', Atm(this_grid)%flagstruct%beta
-           write(*,*) ' '
+           !           write(*,*) 'Vorticity del-4 (m**4/s)=', (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2/sdt*1.E-6
+           !           write(*,*) 'beta=', Atm(this_grid)%flagstruct%beta
+           !           write(*,*) ' '
         endif
 
         !Initialize restart
@@ -1140,17 +1140,17 @@ use ijedi_kinds_mod,          only: kind_real
 
           if ( n_split == 0 ) then
              n_split = nint( real(n0split)/real(k_split*abs(p_split)) * stretch_fac + 0.5 )
-             if(is_master()) write(*,*) 'For k_split (remapping)=', k_split
-             if(is_master()) write(*,198) 'n_split is set to ', n_split, ' for resolution-dt=',npx,npy,ntiles,dt_atmos
+             !if(is_master()) write(*,*) 'For k_split (remapping)=', k_split
+             !if(is_master()) write(*,198) 'n_split is set to ', n_split, ' for resolution-dt=',npx,npy,ntiles,dt_atmos
           else
-             if(is_master()) write(*,199) 'Using n_split from the namelist: ', n_split
+             !if(is_master()) write(*,199) 'Using n_split from the namelist: ', n_split
           endif
           if (is_master() .and. n == 1 .and. abs(p_split) > 1) then
-             write(*,199) 'Using p_split = ', p_split
+             !             write(*,199) 'Using p_split = ', p_split
           endif
 
           if (old_divg_damp) then
-             if (is_master()) write(*,*) " fv_control: using AM2/AM3 damping methods "
+             !if (is_master()) write(*,*) " fv_control: using AM2/AM3 damping methods "
              d2_bg_k1 = 6.         ! factor for d2_bg (k=1)  - default(4.)
              d2_bg_k2 = 4.         ! factor for d2_bg (k=2)  - default(2.)
              d2_divg_max_k1 = 0.02 ! d2_divg max value (k=1) - default(0.05)
@@ -1166,18 +1166,18 @@ use ijedi_kinds_mod,          only: kind_real
              if ( m_split==0 ) then
                 m_split = 1. + abs(dt_atmos)/real(k_split*n_split*abs(p_split), kind=kind_real)
                 if (abs(a_imp) < 0.5) then
-                   if(is_master()) write(*,199) 'm_split is set to ', m_split
+                   !if(is_master()) write(*,199) 'm_split is set to ', m_split
                 endif
              endif
              if(is_master()) then
-                write(*,*) 'Off center implicit scheme param=', a_imp
-                write(*,*) ' p_fac=', p_fac
+                !                write(*,*) 'Off center implicit scheme param=', a_imp
+                !                write(*,*) ' p_fac=', p_fac
              endif
           endif
 
           if(is_master()) then
-             if (n_sponge >= 0) write(*,199) 'Using n_sponge : ', n_sponge
-             write(*,197) 'Using non_ortho : ', non_ortho
+             !if (n_sponge >= 0) write(*,199) 'Using n_sponge : ', n_sponge
+             !             write(*,197) 'Using non_ortho : ', non_ortho
           endif
 
    197    format(A,l7)

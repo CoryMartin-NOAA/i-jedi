@@ -1329,7 +1329,7 @@ module ijedi_fv3_eta_mod
        !       the pairs must be ordered from surface to TOA
        !       the pairs define the levels of the grid to create levels-1 layers
        if (size(eta_level_unit(:)) /= km+2) then
-          print *,' size is ', size(eta_level_unit(:))
+          !          print *,' size is ', size(eta_level_unit(:))
           call error_mesg ('FV3 set_eta',trim(fv_eta_file)//" has too few or too many entries or has extra &
                           &spaces at the end of the file", FATAL)
        endif
@@ -1742,9 +1742,9 @@ module ijedi_fv3_eta_mod
    call check_eta_levels (ak, bk)
 
    if (is_master()) then
-      write(*, '(A4, A13, A13, A11)') 'klev', 'ak', 'bk', 'p_ref'
+      !      write(*, '(A4, A13, A13, A11)') 'klev', 'ak', 'bk', 'p_ref'
       do k=1,km+1
-         write(*,'(I4, F13.5, F13.5, F11.2)') k, ak(k), bk(k), 1000.E2*bk(k) + ak(k)
+         !         write(*,'(I4, F13.5, F13.5, F11.2)') k, ak(k), bk(k), 1000.E2*bk(k) + ak(k)
       enddo
    endif
 
@@ -1773,7 +1773,7 @@ module ijedi_fv3_eta_mod
    !--- change ks to layers from levels
    ks = ks - 1
 
-   if (is_master()) write(6,*) ' ptop & ks ', ptop, ks
+   !if (is_master()) write(6,*) ' ptop & ks ', ptop, ks
 
    call check_eta_levels (ak, bk)
 
@@ -1855,7 +1855,7 @@ module ijedi_fv3_eta_mod
 !     ze(1) = ztop
 
       if ( is_master() ) then
-           write(*,*) 'var_les: computed model top (m)=', ztop, ' bottom/top dz=', dz(km), dz(1)
+           !           write(*,*) 'var_les: computed model top (m)=', ztop, ' bottom/top dz=', dz(km), dz(1)
 !           do k=1,km
 !              write(*,*) k, s_fac(k)
 !           enddo
@@ -1885,7 +1885,7 @@ module ijedi_fv3_eta_mod
          endif
       enddo
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
       endif
       pint = pe1(ks+1)
 
@@ -1927,8 +1927,8 @@ module ijedi_fv3_eta_mod
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
-          write(*,800) (pm(k), k=km,1,-1)
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,800) (pm(k), k=km,1,-1)
       endif
 
     do k=1,km
@@ -2016,7 +2016,7 @@ module ijedi_fv3_eta_mod
 !     ze(1) = ztop
 
       if ( is_master() ) then
-           write(*,*) 'var_gfs: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
+           !           write(*,*) 'var_gfs: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
 !          do k=1,km
 !             write(*,*) k, s_fac(k)
 !          enddo
@@ -2044,8 +2044,8 @@ module ijedi_fv3_eta_mod
          endif
       enddo
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
-         write(*,*) 'ptop =', ptop
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'ptop =', ptop
       endif
       pint = pe1(ks+1)
 
@@ -2093,15 +2093,15 @@ module ijedi_fv3_eta_mod
 #endif
 
       if ( is_master() ) then
-          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
+          !          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
           do k=1,km
-             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
+             !             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
           enddo
           tmp1 = ak(ks+1)
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
       endif
 
  end subroutine var_gfs
@@ -2192,7 +2192,7 @@ module ijedi_fv3_eta_mod
 !     ze(1) = ztop
 
       if ( is_master() ) then
-           write(*,*) 'var_hi: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
+           !           write(*,*) 'var_hi: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
 !          do k=1,km
 !             write(*,*) k, s_fac(k)
 !          enddo
@@ -2220,8 +2220,8 @@ module ijedi_fv3_eta_mod
          endif
       enddo
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
-         write(*,*) 'ptop =', ptop
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'ptop =', ptop
       endif
       pint = pe1(ks+1)
 
@@ -2269,15 +2269,15 @@ module ijedi_fv3_eta_mod
 #endif
 
       if ( is_master() ) then
-          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
+          !          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
           do k=1,km
-             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
+             !             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
           enddo
           tmp1 = ak(ks+1)
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
       endif
 
 
@@ -2355,7 +2355,7 @@ module ijedi_fv3_eta_mod
       enddo
 !     ze(1) = ztop
 
-      if ( is_master() ) write(*,*) 'var_hi2: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
+      !if ( is_master() ) write(*,*) 'var_hi2: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
       call sm1_edge(1, 1, 1, 1, km, 1, 1, ze, 1)
 
 ! Given z --> p
@@ -2378,7 +2378,7 @@ module ijedi_fv3_eta_mod
          endif
       enddo
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
       endif
       pint = pe1(ks+1)
 
@@ -2426,15 +2426,15 @@ module ijedi_fv3_eta_mod
 #endif
 
       if ( is_master() ) then
-          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
+          !          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
           do k=1,km
-             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
+             !             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
           enddo
           tmp1 = ak(ks+1)
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
       endif
 
 
@@ -2515,7 +2515,7 @@ module ijedi_fv3_eta_mod
       enddo
 !     ze(1) = ztop
 
-      if ( is_master() ) write(*,*) 'var_dz: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
+      !if ( is_master() ) write(*,*) 'var_dz: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
       call sm1_edge(1, 1, 1, 1, km, 1, 1, ze, 1)
 
 ! Given z --> p
@@ -2538,8 +2538,8 @@ module ijedi_fv3_eta_mod
          endif
       enddo
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
-         write(*,*) 'ptop =', ptop
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'ptop =', ptop
       endif
       pint = pe1(ks+1)
 
@@ -2587,15 +2587,15 @@ module ijedi_fv3_eta_mod
 #endif
 
       if ( is_master() ) then
-          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
+          !          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
           do k=1,km
-             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
+             !             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
           enddo
           tmp1 = ak(ks+1)
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
       endif
 
 
@@ -2679,7 +2679,7 @@ module ijedi_fv3_eta_mod
       enddo
 !     ze(1) = ztop
 
-      if ( is_master() ) write(*,*) 'var55_dz: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
+      !if ( is_master() ) write(*,*) 'var55_dz: computed model top (m)=', ztop*0.001, ' bottom/top dz=', dz(km), dz(1)
       call sm1_edge(1, 1, 1, 1, km, 1, 1, ze, 2)
 
 ! Given z --> p
@@ -2702,7 +2702,7 @@ module ijedi_fv3_eta_mod
          endif
       enddo
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
       endif
       pint = pe1(ks+1)
 
@@ -2750,15 +2750,15 @@ module ijedi_fv3_eta_mod
 #endif
 
       if ( is_master() ) then
-          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
+          !          write(*,*) 'KS=', ks, 'PINT (mb)=', pint/100.
           do k=1,km
-             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
+             !             write(*,*) k, 0.5*(pe1(k)+pe1(k+1))/100., dz(k)
           enddo
           tmp1 = ak(ks+1)
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
       endif
 
 
@@ -2852,9 +2852,9 @@ module ijedi_fv3_eta_mod
 
   if (.not. monotonic) then
     if (is_master()) then
-       write(*, '(A4, A13, A13, A11)') 'klev', 'ak', 'bk', 'p_ref'
+       !       write(*, '(A4, A13, A13, A11)') 'klev', 'ak', 'bk', 'p_ref'
        do k=1,nlev
-          write(*,'(I4, F13.5, F13.5, F11.2)') k, ak(k), bk(k), ak(k) + bk(k)*1000.E2
+          !          write(*,'(I4, F13.5, F13.5, F11.2)') k, ak(k), bk(k), ak(k) + bk(k)*1000.E2
        enddo
     endif
     call error_mesg ('FV3 check_eta_levels',"ak/bk pairs do not provide a monotonic vertical coordinate", &
@@ -2928,10 +2928,10 @@ module ijedi_fv3_eta_mod
   enddo
 
   if ( is_master() ) then
-       write(*,*) 'Hybrid_z:  dz, zm'
+       !       write(*,*) 'Hybrid_z:  dz, zm'
        do k=1,km
           dzt(k) = 0.5*(ze(k)+ze(k+1)) / 1000.
-          write(*,*) k, dz(k), dzt(k)
+          !          write(*,*) k, dz(k), dzt(k)
        enddo
   endif
 
@@ -3108,12 +3108,12 @@ module ijedi_fv3_eta_mod
         ztop = ze(1)
 
         if ( is_master() ) then
-           write(*,*) 'Hybrid_z:  dz, ze'
+           !           write(*,*) 'Hybrid_z:  dz, ze'
            do k=1,km
-              write(*,*) k, 0.001*dz(k), 0.001*ze(k)
+              !              write(*,*) k, 0.001*dz(k), 0.001*ze(k)
            enddo
 !  ztop (km) = 20.2859154
-           write(*,*) 'ztop (km) =', ztop * 0.001
+           !           write(*,*) 'ztop (km) =', ztop * 0.001
         endif
 
  end subroutine compute_dz_L101
@@ -3169,7 +3169,7 @@ module ijedi_fv3_eta_mod
      endif
   enddo
 
-  if ( is_master() ) write(*,*) 'Z_coord interface set at k=',kint, ' ZE=', z(kint)
+  !if ( is_master() ) write(*,*) 'Z_coord interface set at k=',kint, ' ZE=', z(kint)
 
   do j=js,je
      do i=is,ie
@@ -3428,10 +3428,10 @@ module ijedi_fv3_eta_mod
       enddo
 
       if ( is_master() ) then
-         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
-         write(*,*) 'Modified ptop =', ptop, ' ztop=', ze(1)/1000.
+         !         write(*,*) 'For (input) PINT=', 0.01*pint, ' KS=', ks, 'pint(computed)=', 0.01*pe1(ks+1)
+         !         write(*,*) 'Modified ptop =', ptop, ' ztop=', ze(1)/1000.
          do k=1,km
-            write(*,*) k, 'ze =', ze(k)/1000.
+            !            write(*,*) k, 'ze =', ze(k)/1000.
          enddo
       endif
       pint = pe1(ks+1)
@@ -3483,7 +3483,7 @@ module ijedi_fv3_eta_mod
           do k=ks+1,km
              tmp1 = max(tmp1, (ak(k)-ak(k+1))/max(1.E-5, (bk(k+1)-bk(k))) )
           enddo
-          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
+          !          write(*,*) 'Hybrid Sigma-P: minimum allowable surface pressure (hPa)=', tmp1/100.
       endif
 
  end subroutine mount_waves
