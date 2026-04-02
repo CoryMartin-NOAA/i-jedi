@@ -21,7 +21,7 @@ jobs:
         mkdir -p Build
         cd Build
         ecbuild ../i-jedi/bundle
-        cd i-jedi
+        cd ijedi
         make -j4
     - name: Run ctests
       shell: bash
@@ -29,5 +29,5 @@ jobs:
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE
-        cd Build/i-jedi
+        cd Build/ijedi
         ctest
