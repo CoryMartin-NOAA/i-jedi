@@ -28,6 +28,5 @@ jobs:
       run: |
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE
-        cd Build/ijedi
-        ctest
+        cd $GITHUB_WORKSPACE/Build/ijedi
+        ctest -VV
