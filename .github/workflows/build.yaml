@@ -30,4 +30,4 @@ jobs:
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
-        ctest -VV
+        ctest --rerun-failed --output-on-failure
