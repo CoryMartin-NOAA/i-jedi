@@ -7,12 +7,6 @@ jobs:
     name: Full CI (style and tests)
     container: jcsda/docker-gnu-openmpi-dev:1.9
     steps:
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@master
-      with:
-        root-reserve-mb: 512
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
     - name: Checkout
       uses: actions/checkout@v2
       with:
@@ -27,4 +21,13 @@ jobs:
         mkdir -p Build
         cd Build
         ecbuild ../i-jedi/bundle
+        cd i-jedi
         make -j4
+    - name: Run ctests
+      shell: bash
+      run: |
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE
+        cd Build/i-jedi
+        ctest
