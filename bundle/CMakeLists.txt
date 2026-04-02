@@ -30,8 +30,8 @@ ecbuild_bundle( PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.
 #===============================================================================
 # required repositories
 #===============================================================================
-ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda-internal/jedi-cmake.git" UPDATE BRANCH develop RECURSIVE )
-ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA-Internal/oops.git"       UPDATE BRANCH develop )
+ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git" UPDATE BRANCH develop RECURSIVE )
+ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA/oops.git"       UPDATE BRANCH develop )
 #ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA-Internal/vader.git"      UPDATE BRANCH develop )
 #ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA-Internal/saber.git"      UPDATE BRANCH develop )
 #ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA-Internal/ioda.git"       UPDATE BRANCH develop )

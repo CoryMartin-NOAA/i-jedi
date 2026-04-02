@@ -28,4 +28,3 @@ jobs:
         cd Build
         ecbuild ../i-jedi/bundle
         make -j4
-        
