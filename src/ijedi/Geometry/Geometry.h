@@ -43,7 +43,6 @@ namespace ijedi
     static const std::string classname() { return "ijedi::Geometry"; }
 
     Geometry(const eckit::Configuration &, const eckit::mpi::Comm &);
-    Geometry(const Geometry &);
     ~Geometry();
 
     bool levelsAreTopDown() const { return true; }
@@ -59,7 +58,7 @@ namespace ijedi
     const int &numLevels() const { return numberLevels_; }
 
     // Function to access field metadata
-    // const FieldMetadata getFieldMetadata() const { return *fieldsMeta_; };
+    const FieldsMetadata &getFieldMetadata() const { return *fieldsMeta_; }
 
     // Function to return the geometry variables
     const eckit::Configuration &geomVariables() const { return *geomVariables_; }

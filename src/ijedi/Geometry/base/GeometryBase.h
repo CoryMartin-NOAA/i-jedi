@@ -30,6 +30,7 @@ namespace ijedi
                                                 atlas::FieldSet &,
                                                 int &);
     virtual void print(std::ostream &) const = 0;
+    virtual std::vector<double> verticalCoord(std::string &) const = 0;
   };
 
 } // namespace ijedi

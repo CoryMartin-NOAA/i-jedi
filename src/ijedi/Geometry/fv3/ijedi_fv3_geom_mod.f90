@@ -197,8 +197,8 @@ call geom_vars%set("jed", jed)
 call geom_vars%set("ntile", ntile)
 call geom_vars%set("ntiles", ntiles)
 call geom_vars%set("ngrid", ngrid)
-call geom_vars%set("nprocx", Atm(1)%layout(1))
-call geom_vars%set("nprocy", Atm(1)%layout(2))
+call geom_vars%set("layout_x", Atm(1)%layout(1))
+call geom_vars%set("layout_y", Atm(1)%layout(2))
 
 
 !Allocatable arrays

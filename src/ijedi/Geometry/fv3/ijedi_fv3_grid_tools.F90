@@ -247,8 +247,11 @@ use ijedi_kinds_mod,          only: kind_real
           isc2 = 2*is-1; iec2 = 2*ie+1
           jsc2 = 2*js-1; jec2 = 2*je+1
           if( Atm%gridstruct%bounded_domain ) then
-            isc2 = 2*(isd+halo)-1; iec2 = 2*(ied+1+halo)-1   ! For the regional domain the cell corner locations must be transferred
-            jsc2 = 2*(jsd+halo)-1; jec2 = 2*(jed+1+halo)-1   ! from the entire supergrid to the compute grid, including the halo region.
+            isc2 = 2*(isd+halo)-1; iec2 = 2*(ied+1+halo)-1
+                    ! For the regional domain the cell corner locations must be
+                    ! transferred from the entire supergrid to the compute grid,
+                    ! including the halo region.
+            jsc2 = 2*(jsd+halo)-1; jec2 = 2*(jed+1+halo)-1
           endif
           allocate(tmpx(isc2:iec2, jsc2:jec2) )
           allocate(tmpy(isc2:iec2, jsc2:jec2) )
@@ -604,8 +607,10 @@ use ijedi_kinds_mod,          only: kind_real
        !  Setup timing variables
 
        logical, save       :: first_time = .true.
-       integer, save       :: id_timer1, id_timer2, id_timer3, id_timer3a, id_timer3b, id_timer4, id_timer5, id_timer6, id_timer7, id_timer8
-       logical             :: use_timer   ! Set to True for detailed performance profiling, from fv_timers in namelist
+       integer, save       :: id_timer1, id_timer2, id_timer3, id_timer3a, id_timer3b
+       integer, save       :: id_timer4, id_timer5, id_timer6, id_timer7, id_timer8
+       logical             :: use_timer   ! Set to True for detailed performance profiling,
+                                          ! from fv_timers in namelist
        logical             :: debug_log = .false.
        integer             :: this_pe
 
@@ -618,8 +623,10 @@ use ijedi_kinds_mod,          only: kind_real
              id_timer1     = mpp_clock_id ('init_grid Step 1',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
              id_timer2     = mpp_clock_id ('init_grid Step 2',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
              id_timer3     = mpp_clock_id ('init_grid Step 3',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-             id_timer3a    = mpp_clock_id ('init_grid Step 3a read_grid',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-             id_timer3b    = mpp_clock_id ('init_grid Step 3b setup_aligned_nest',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
+             id_timer3a    = mpp_clock_id ('init_grid Step 3a read_grid', &
+                                            flags = clock_flag_default, grain=CLOCK_ROUTINE )
+             id_timer3b    = mpp_clock_id ('init_grid Step 3b setup_aligned_nest', &
+                                            flags = clock_flag_default, grain=CLOCK_ROUTINE )
              id_timer4     = mpp_clock_id ('init_grid Step 4',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
              id_timer5     = mpp_clock_id ('init_grid Step 5',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
              id_timer6     = mpp_clock_id ('init_grid Step 6',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
@@ -711,7 +718,8 @@ use ijedi_kinds_mod,          only: kind_real
        latlon = .false.
        cubed_sphere = .false.
 
-       if ( (Atm%flagstruct%do_schmidt .or. Atm%flagstruct%do_cube_transform) .and. abs(atm%flagstruct%stretch_fac-1.) > 1.E-5 ) then
+       if ( (Atm%flagstruct%do_schmidt .or. Atm%flagstruct%do_cube_transform) &
+            .and. abs(atm%flagstruct%stretch_fac-1.) > 1.E-5 ) then
           stretched_grid = .true.
           if (Atm%flagstruct%do_schmidt .and. Atm%flagstruct%do_cube_transform) then
              call mpp_error(FATAL, ' Cannot set both do_schmidt and do_cube_transform to .true.')
@@ -773,9 +781,13 @@ use ijedi_kinds_mod,          only: kind_real
                       ! if there is a nest, we need to setup grid_global on pe master
                       ! to send it to the nest at the end of init_grid
                       call mpp_gather(isection_s,isection_e,jsection_s,jsection_e,atm%pelist, &
-                                      grid(isection_s:isection_e,jsection_s:jsection_e,1),grid_global(1-ng:npx+ng,1-ng:npy+ng,1,1),is_master(),ng,ng)
+                                      grid(isection_s:isection_e,jsection_s:jsection_e,1), &
+                                      grid_global(1-ng:npx+ng,1-ng:npy+ng,1,1), &
+                                      is_master(),ng,ng)
                       call mpp_gather(isection_s,isection_e,jsection_s,jsection_e,atm%pelist, &
-                                      grid(isection_s:isection_e,jsection_s:jsection_e,2),grid_global(1-ng:npx+ng,1-ng:npy+ng,2,1),is_master(),ng,ng)
+                                      grid(isection_s:isection_e,jsection_s:jsection_e,2), &
+                                      grid_global(1-ng:npx+ng,1-ng:npy+ng,2,1), &
+                                      is_master(),ng,ng)
                       !do we need the haloes?!
                       !do j=jsd,jed
                       !do i=isd,ied
@@ -812,10 +824,13 @@ use ijedi_kinds_mod,          only: kind_real
    !---------------------------------
    ! Shift the corner away from Japan
    !---------------------------------
-   !--------------------- This will result in the corner close to east coast of China ------------------
-                         if ( .not. ( Atm%flagstruct%do_schmidt .or. Atm%flagstruct%do_cube_transform) .and. (Atm%flagstruct%shift_fac)>1.E-4 )   &
-                              grid_global(i,j,1,n) = grid_global(i,j,1,n) - pi/Atm%flagstruct%shift_fac
-   !----------------------------------------------------------------------------------------------------
+   !--------------------- This will result in the corner close to east coast of China
+                         if ( .not. ( Atm%flagstruct%do_schmidt .or. &
+                                      Atm%flagstruct%do_cube_transform) .and. &
+                              (Atm%flagstruct%shift_fac)>1.E-4 )   &
+                              grid_global(i,j,1,n) = grid_global(i,j,1,n) - &
+                                                     pi/Atm%flagstruct%shift_fac
+   !---------------------------------------
                          if ( grid_global(i,j,1,n) < 0. )              &
                               grid_global(i,j,1,n) = grid_global(i,j,1,n) + 2.*pi
                          if (ABS(grid_global(i,j,1,1)) < 1.d-10) grid_global(i,j,1,1) = 0.0
@@ -1377,9 +1392,15 @@ use ijedi_kinds_mod,          only: kind_real
              !             write(*,*) ' Radius is ', radius, ', omega is ', omega, ' small_fac = ', small_fac
              !             write(*,*  ) ' Cubed-Sphere Grid Stats : ', npx,'x',npy,'x',nregions
              !print*, dxN, dxM, dxAV, dxN, dxM
-             !             write(*,'(A,f11.2,A,f11.2,A,f11.2,A,f11.2)') '      Grid Length               : min: ', dxN,' max: ', dxM,' avg: ', dxAV, ' min/max: ',dxN/dxM
-             !             write(*,'(A,e21.14,A,e21.14,A,e21.14)') '      Deviation from Orthogonal : min: ',angN,' max: ',angM,' avg: ',angAV
-             !             write(*,'(A,e21.14,A,e21.14,A,e21.14)') '      Aspect Ratio              : min: ',aspN,' max: ',aspM,' avg: ',aspAV
+             !             write(*,'(A,f11.2,A,f11.2,A,f11.2,A,f11.2)')
+             !    &              '      Grid Length               : min: ', dxN,
+             !    &              ' max: ', dxM,' avg: ', dxAV, ' min/max: ',dxN/dxM
+             !             write(*,'(A,e21.14,A,e21.14,A,e21.14)')
+             !    &              '      Deviation from Orthogonal : min: ',angN,
+             !    &              ' max: ',angM,' avg: ',angAV
+             !             write(*,'(A,e21.14,A,e21.14,A,e21.14)')
+             !    &              '      Aspect Ratio              : min: ',aspN,
+             !    &              ' max: ',aspM,' avg: ',aspAV
              !             write(*,*  ) ''
 
           endif
@@ -1675,8 +1696,11 @@ use ijedi_kinds_mod,          only: kind_real
 
          !--- get the geographical coordinates of super-grid.
 
-         isc2 = 2*(isd+halo)-1; iec2 = 2*(ied+1+halo)-1   ! For the regional domain the cell corner locations must be transferred
-         jsc2 = 2*(jsd+halo)-1; jec2 = 2*(jed+1+halo)-1   ! from the entire supergrid to the compute grid, including the halo region.
+         isc2 = 2*(isd+halo)-1; iec2 = 2*(ied+1+halo)-1
+                 ! For the regional domain the cell corner locations must be
+                 ! transferred from the entire supergrid to the compute grid,
+                 ! including the halo region.
+         jsc2 = 2*(jsd+halo)-1; jec2 = 2*(jed+1+halo)-1
 
 
          allocate(tmpx(isc2:iec2, jsc2:jec2) )
@@ -1764,7 +1788,8 @@ use ijedi_kinds_mod,          only: kind_real
                  dxa(i,j) = tmpu(2*i+halo+2,2*j+halo+3) + tmpu(2*i+halo+3,2*j+halo+3)
                  dya(i,j) = tmpv(2*i+halo+3,2*j+halo+2) + tmpv(2*i+halo+3,2*j+halo+3)
 
-                area(i,j) = tmpa(2*i+halo+2,2*j+halo+2) + tmpa(2*i+halo+3,2*j+halo+2) + tmpa(2*i+halo+2,2*j+halo+3) + tmpa(2*i+halo+3,2*j+halo+3)
+                area(i,j) = tmpa(2*i+halo+2,2*j+halo+2) + tmpa(2*i+halo+3,2*j+halo+2) &
+                          + tmpa(2*i+halo+2,2*j+halo+3) + tmpa(2*i+halo+3,2*j+halo+3)
 
            enddo
          enddo
@@ -1775,7 +1800,8 @@ use ijedi_kinds_mod,          only: kind_real
 
          do j = jsd+1, jed
            do i = isd+1, ied
-             area_c(i,j) = tmpa(2*i+halo+2,2*j+halo+2) + tmpa(2*i+halo+1,2*j+halo+2) + tmpa(2*i+halo+2,2*j+halo+1) + tmpa(2*i+halo+1,2*j+halo+1)
+             area_c(i,j) = tmpa(2*i+halo+2,2*j+halo+2) + tmpa(2*i+halo+1,2*j+halo+2) &
+                         + tmpa(2*i+halo+2,2*j+halo+1) + tmpa(2*i+halo+1,2*j+halo+1)
            enddo
          enddo
 
@@ -1981,8 +2007,12 @@ use ijedi_kinds_mod,          only: kind_real
        !  Setup timing variables
 
        logical, save       :: first_time = .true.
-       integer, save       :: id_timer1, id_timer2, id_timer3a,  id_timer3b,  id_timer3c,  id_timer3d, id_timer4, id_timer5, id_timer6, id_timer7, id_timer8
-       integer, save       :: prev_ioffset, prev_joffset    ! not pointers, because we want to save them between runs of this subroutine
+       integer, save       :: id_timer1, id_timer2, id_timer3a,  id_timer3b
+       integer, save       :: id_timer3c,  id_timer3d, id_timer4, id_timer5
+       integer, save       :: id_timer6, id_timer7, id_timer8
+       integer, save       :: prev_ioffset, prev_joffset
+                      ! not pointers, because we want to save them between runs
+                      ! of this subroutine
        integer, save       :: move_step
        integer             :: delta_i_c, delta_j_c
        integer             :: range_x(2), range_y(2)
@@ -1992,15 +2022,24 @@ use ijedi_kinds_mod,          only: kind_real
        logical             :: moving_nest = .true.  ! TODO set this from the Atm structure
 
        if (first_time .and. use_timer) then
-          id_timer1     = mpp_clock_id ('setup_aligned_nest Step 1',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer2     = mpp_clock_id ('setup_aligned_nest Step 2 sph_lin_interp',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer3a    = mpp_clock_id ('setup_aligned_nest Step 3a mid_pt_sphere',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer3b    = mpp_clock_id ('setup_aligned_nest Step 3b mid_pt_sphere',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer3c    = mpp_clock_id ('setup_aligned_nest Step 3c cell_ctr',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer3d    = mpp_clock_id ('setup_aligned_nest Step 3d',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer4     = mpp_clock_id ('setup_aligned_nest Step 4',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer5     = mpp_clock_id ('setup_aligned_nest Step 5',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
-          id_timer6     = mpp_clock_id ('setup_aligned_nest Step 6',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer1     = mpp_clock_id ('setup_aligned_nest Step 1', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer2     = mpp_clock_id ('setup_aligned_nest Step 2 sph_lin_interp', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer3a    = mpp_clock_id ('setup_aligned_nest Step 3a mid_pt_sphere', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer3b    = mpp_clock_id ('setup_aligned_nest Step 3b mid_pt_sphere', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer3c    = mpp_clock_id ('setup_aligned_nest Step 3c cell_ctr', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer3d    = mpp_clock_id ('setup_aligned_nest Step 3d', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer4     = mpp_clock_id ('setup_aligned_nest Step 4', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer5     = mpp_clock_id ('setup_aligned_nest Step 5', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
+          id_timer6     = mpp_clock_id ('setup_aligned_nest Step 6', &
+                                         flags = clock_flag_default, grain=CLOCK_ROUTINE )
           id_timer7     = mpp_clock_id ('setup_aligned_nest Step 7',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
           id_timer8     = mpp_clock_id ('setup_aligned_nest Step 8',  flags = clock_flag_default, grain=CLOCK_ROUTINE )
 
@@ -2091,8 +2130,9 @@ use ijedi_kinds_mod,          only: kind_real
           if (use_timer) call mpp_clock_end (id_timer1)
           if (use_timer) call mpp_clock_begin (id_timer2)
 
-       !!  Setup full grid for nest; confusingly called grid_global.  Each nest PE is computing the grid lat/lons for the entire nest
-       !!    not just its section.
+       !!  Setup full grid for nest; confusingly called grid_global.
+       !!  Each nest PE is computing the grid lat/lons for the entire nest
+       !!  not just its section.
        !!  INPUTS:  ioffset, joffset, p_grid
        !!  OUTPUTS:  grid_global
 
@@ -2128,11 +2168,13 @@ use ijedi_kinds_mod,          only: kind_real
             if (delta_i_c .lt. 0) then
                range_x(1) = 1-ng
                range_x(2) = 0
-               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
+               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, &
+                                        ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
             elseif  (delta_i_c .gt. 0) then
                range_x(1) = npx
                range_x(2) = npx+ng
-               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
+               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, &
+                                        ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
             end if
 
             range_x(1) = 1-ng
@@ -2140,11 +2182,13 @@ use ijedi_kinds_mod,          only: kind_real
             if (delta_j_c .lt. 0) then
                range_y(1) = 1-ng
                range_y(2) = 0
-               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
+               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, &
+                                        ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
             elseif (delta_j_c .gt. 0) then
                range_y(1) = npy
                range_y(2) = npy+ng
-               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
+               call compute_nest_points(p_grid, shift_p_ind, out_grid, refinement, &
+                                        ioffset, joffset, range_x, range_y, isg, ieg, jsg, jeg)
             end if
 
          end if
@@ -2228,8 +2272,11 @@ use ijedi_kinds_mod,          only: kind_real
                   do j=1-ng,npy+ng
                      do k=1,4
                         if (p_ind(i,j,k) .ne. shift_p_ind(i,j,k)) then
-                           !print '("[ERROR] WDR setup_nest_grid MISMATCH p_ind(",I0,",",I0,",",I0,")=",I0," shift_p_ind(",I0,",",I0,",",I0,")=",I0," npe=",I0, " move_step=",I0," ")', &
-                           !     i, j, k, p_ind(i,j,k), i, j, k, shift_p_ind(i,j,k), this_pe, move_step
+                           !print '("[ERROR] WDR setup_nest_grid MISMATCH p_ind(", &
+                           !    &I0,",",I0,",",I0,")=",I0," shift_p_ind(",I0,",",I0,",", &
+                           !    &I0,")=",I0," npe=",I0, " move_step=",I0," ")', &
+                           !     i, j, k, p_ind(i,j,k), i, j, k, shift_p_ind(i,j,k), &
+                           !     this_pe, move_step
                         end if
                      end do
                   end do
@@ -2238,12 +2285,18 @@ use ijedi_kinds_mod,          only: kind_real
                do i=1-ng,npx+ng
                   do j=1-ng,npy+ng
                      if (abs(grid_global(i,j,1,1) -  out_grid(i,j,1,1)) .gt. 0.01) then
-                        !print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(",I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",",I0,",1)=",F18.12," npe=",I0," move_step=",I0," ")', &
-                         !    i, j, 1, grid_global(i,j,1,1)*180.0/pi, i, j, 1, out_grid(i,j,1,1)*180.0/pi, this_pe, move_step
+                        !print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(", &
+                        !    &I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",", &
+                        !    &I0,",1)=",F18.12," npe=",I0," move_step=",I0," ")', &
+                         !    i, j, 1, grid_global(i,j,1,1)*180.0/pi, i, j, 1, &
+                         !    out_grid(i,j,1,1)*180.0/pi, this_pe, move_step
                      end if
                      if (abs(grid_global(i,j,2,1) -  out_grid(i,j,2,1)) .gt. 0.01) then
-                        !print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(",I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",",I0,",1)=",F18.12," npe=",I0, " move_step=",I0," ")', &
-                         !    i, j, 2, grid_global(i,j,2,1)*180.0/pi, i, j, 2, out_grid(i,j,2,1)*180.0/pi, this_pe, move_step
+                        !print '("[ERROR] WDR setup_nest_grid MISMATCH grid_global(", &
+                        !    &I0,",",I0,",",I0,",1)=",F18.12," out_grid(",I0,",",I0,",", &
+                        !    &I0,",1)=",F18.12," npe=",I0, " move_step=",I0," ")', &
+                         !    i, j, 2, grid_global(i,j,2,1)*180.0/pi, i, j, 2, &
+                         !    out_grid(i,j,2,1)*180.0/pi, this_pe, move_step
                      end if
                   end do
                end do
@@ -2661,13 +2714,17 @@ use ijedi_kinds_mod,          only: kind_real
             else
                !               write(*,*) 'PARENT GRID ', Atm%parent_grid%grid_number, Atm%parent_grid%global_tile
                ic = p_ind(1,1,1) ; jc = p_ind(1,1,2)
-               !               write(*,'(A, 2I5, 4F10.4)') 'SW CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'SW CORNER: ', ic, jc,
+               !    &                 Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
                ic = p_ind(1,npy,1) ; jc = p_ind(1,npy,2)
-               !               write(*,'(A, 2I5, 4F10.4)') 'NW CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'NW CORNER: ', ic, jc,
+               !    &                 Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
                ic = p_ind(npx,npy,1) ; jc = p_ind(npx,npy,2)
-               !               write(*,'(A, 2I5, 4F10.4)') 'NE CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'NE CORNER: ', ic, jc,
+               !    &                 Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
                ic = p_ind(npx,1,1) ; jc = p_ind(npx,1,2)
-               !               write(*,'(A, 2I5, 4F10.4)') 'SE CORNER: ', ic, jc, Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
+               !               write(*,'(A, 2I5, 4F10.4)') 'SE CORNER: ', ic, jc,
+               !    &                 Atm%parent_grid%grid_global(ic,jc,:,parent_tile)*90./pi
             endif
          end if
 
