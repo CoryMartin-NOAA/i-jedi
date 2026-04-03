@@ -5,10 +5,6 @@ use iso_c_binding
 
 use fckit_mpi_module,           only: fckit_mpi_comm
 use fckit_configuration_module, only: fckit_configuration
-use mpp_mod,                    only: mpp_npes, mpp_exit, mpp_set_current_pelist,mpp_get_current_pelist
-use mpp_mod,                    only: mpp_declare_pelist, mpp_pe, mpp_init
-use ensemble_manager_mod,       only: ensemble_manager_init,ensemble_pelist_setup,get_ensemble_id,get_ensemble_size
-use ensemble_manager_mod,       only: get_ensemble_pelist
 
 use ijedi_kinds_mod
 use ijedi_fv3_geom_mod

@@ -1,10 +1,3 @@
-/*
- * (C) Copyright 2020 UCAR
- *
- * This software is licensed under the terms of the Apache Licence Version 2.0
- * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
- */
-
 #pragma once
 
 #include <algorithm>
@@ -22,9 +15,11 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  class FieldMetadata : public util::Printable {
-   public:
-    explicit FieldMetadata(const std::string longName, int nlev) {
+  class FieldMetadata : public util::Printable
+  {
+  public:
+    explicit FieldMetadata(const std::string longName, int nlev)
+    {
       longName_ = longName;
       nlev_ = nlev;
     }
@@ -35,14 +30,14 @@ namespace ijedi
     int getNumLevls() const { return numLevls_; }
     std::string getLongName() const { return longName_; }
     std::string getDataKind() const { return dataKind_; }
-    std::string getMathSpac() const { return mathSpac_; }
+    std::string getVectType() const { return VectType_; }
     std::string getVarUnits() const { return varUnits_; }
     std::string getGridMask() const { return gridMask_; }
 
     // Set functions (strings)
     // -----------------------
     void setDataKind(std::string dataKind) { dataKind_ = dataKind; }
-    void setMathSpac(std::string mathSpac) { mathSpac_ = mathSpac; }
+    void setVectType(std::string VectType) { VectType_ = VectType; }
     void setVarUnits(std::string varUnits) { varUnits_ = varUnits; }
     void setGridMask(std::string gridMask) { gridMask_ = gridMask; }
 
@@ -51,17 +46,26 @@ namespace ijedi
     void setNumLevls(int numLevls) { numLevls_ = numLevls; }
     void setNumLevls(std::string numLevls)
     {
-      if (numLevls == "full") {
+      if (numLevls == "full")
+      {
         numLevls_ = nlev_;
-      } else if (numLevls == "half") {
+      }
+      else if (numLevls == "half")
+      {
         numLevls_ = nlev_ + 1;
-      } else if (numLevls == "halfplusone") {
+      }
+      else if (numLevls == "halfplusone")
+      {
         numLevls_ = nlev_ + 2;
-      } else {
-        try {
+      }
+      else
+      {
+        try
+        {
           numLevls_ = std::stoi(numLevls);
         }
-        catch (std::invalid_argument &e) {
+        catch (std::invalid_argument &e)
+        {
           ABORT("FieldMetadata::setFieldNumLevls levels neither full, half or an integer");
         }
       }
@@ -70,37 +74,46 @@ namespace ijedi
     // Set tracer
     // ----------
     void setIsTracer(bool isTracer) { isTracer_ = isTracer; }
-    void setIsTracer(std::string tracer) {
-      if (tracer == "true") {
+    void setIsTracer(std::string tracer)
+    {
+      if (tracer == "true")
+      {
         isTracer_ = true;
-      } else if (tracer == "false") {
+      }
+      else if (tracer == "false")
+      {
         isTracer_ = false;
-      } else {
+      }
+      else
+      {
         ABORT("FieldMetadata::setIsTracer tracer must be true or false");
       }
     }
 
     // Validity macro
-    void validateVariable(std::vector<std::string> validOptions, std::string choice) const {
+    void validateVariable(std::vector<std::string> validOptions, std::string choice) const
+    {
       auto result = std::find(validOptions.begin(), validOptions.end(), choice);
-      if (result == std::end(validOptions)) {
+      if (result == std::end(validOptions))
+      {
         ABORT("FieldMetadata::validate For long name " + longName_ + " invalid kind: " + choice);
       }
     }
 
     // Check validity of choices
-    void validate() const {
+    void validate() const
+    {
       this->validateVariable(ValidDataKind_, dataKind_);
-      this->validateVariable(ValidMathSpac_, mathSpac_);
+      this->validateVariable(ValidVectType_, VectType_);
       this->validateVariable(ValidGridMask_, gridMask_);
     }
 
-   private:
+  private:
     // Picked up from default file
     std::string longName_;
     std::string dataKind_;
     int numLevls_;
-    std::string mathSpac_;
+    std::string VectType_;
     bool isTracer_;
     std::string gridMask_;
 
@@ -112,7 +125,7 @@ namespace ijedi
 
     // Valid choices
     const std::vector<std::string> ValidDataKind_ = {"double", "integer"};
-    const std::vector<std::string> ValidMathSpac_ = {"vector", "magnitude", "direction"};
+    const std::vector<std::string> ValidVectType_ = {"vector", "magnitude", "direction"};
     const std::vector<std::string> ValidGridMask_ =
         {"none", "ocean", "land"};
 
@@ -128,7 +141,7 @@ namespace ijedi
       os << std::endl
          << "   Levels: " << numLevls_;
       os << std::endl
-         << "   Space: " << mathSpac_;
+         << "   Vector type: " << VectType_;
       os << std::endl
          << "   Tracer: " << isTracer_;
       os << std::endl
@@ -138,8 +151,9 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  class FieldsMetadata : public util::Printable {
-   public:
+  class FieldsMetadata : public util::Printable
+  {
+  public:
     explicit FieldsMetadata(const int);
 
     // Get FieldMetadata from any of the potential field names
@@ -151,7 +165,7 @@ namespace ijedi
     // Function to return all the long names
     const std::vector<std::string> &getLongNames() const { return longNames_; }
 
-   private:
+  private:
     std::map<std::string, FieldMetadata> fieldsMetadata_;
     std::vector<std::string> longNames_;
 
@@ -170,4 +184,4 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-}  // namespace ijedi
+} // namespace ijedi
