@@ -43,7 +43,7 @@ namespace ijedi
                                          *fieldSet_, numberLevels_);
 
     // Construct the fields metadata object using numLevels from the base class
-    fieldsMeta_.reset(new FieldsMetadata(numberLevels_));
+    fieldsMeta_ = std::make_shared<FieldsMetadata>(numberLevels_);
 
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
