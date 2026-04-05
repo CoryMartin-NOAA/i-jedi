@@ -17,10 +17,8 @@ namespace ijedi
   const int HALO_SIZE = 1;
   // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &geomConf, const eckit::mpi::Comm &comm)
-      : comm_(comm),
-        geomVariables_(std::make_shared<eckit::LocalConfiguration>()),
-        functionSpace_(std::make_shared<atlas::FunctionSpace>()),
-        fieldSet_(std::make_shared<atlas::FieldSet>())
+      : mist::base::Geometry(comm),
+        geomVariables_(std::make_shared<eckit::LocalConfiguration>())
   {
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
@@ -39,8 +37,8 @@ namespace ijedi
     }
 
     // Create the geometry implementation (which will set numLevels_)
-    geometryImpl_ = GeometryBase::create(geomConf, comm_, *geomVariables_, *functionSpace_,
-                                         *fieldSet_, numberLevels_);
+    geometryImpl_ = GeometryBase::create(geomConf, comm, *geomVariables_, functionspace_,
+                                         fields_, numberLevels_);
 
     // Construct the fields metadata object using numLevels from the base class
     fieldsMeta_ = std::make_shared<FieldsMetadata>(numberLevels_);
