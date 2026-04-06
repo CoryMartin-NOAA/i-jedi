@@ -15,4 +15,4 @@ namespace ijedi
     typedef ijedi::Geometry Geometry;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

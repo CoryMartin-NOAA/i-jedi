@@ -1,8 +1,8 @@
 #pragma once
 
 #include <ostream>
-#include <string> 
-#include <vector> 
+#include <string>
+#include <vector>
 
 #include "eckit/mpi/Comm.h"
 

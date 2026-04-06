@@ -49,14 +49,11 @@ namespace ijedi
       if (numLevls == "full")
       {
         numLevls_ = nlev_;
-      } else if (numLevls == "half")
-      {
+      } else if (numLevls == "half") {
         numLevls_ = nlev_ + 1;
-      } else if (numLevls == "halfplusone")
-      {
+      } else if (numLevls == "halfplusone") {
         numLevls_ = nlev_ + 2;
-      } else
-      {
+      } else {
         try
         {
           numLevls_ = std::stoi(numLevls);
@@ -76,11 +73,9 @@ namespace ijedi
       if (tracer == "true")
       {
         isTracer_ = true;
-      } else if (tracer == "false")
-      {
+      } else if (tracer == "false") {
         isTracer_ = false;
-      } else
-      {
+      } else {
         ABORT("FieldMetadata::setIsTracer tracer must be true or false");
       }
     }
