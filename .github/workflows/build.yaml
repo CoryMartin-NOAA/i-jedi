@@ -32,4 +32,4 @@ jobs:
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
-        ctest --rerun-failed --output-on-failure
+        ctest --rerun-failed --output-on-failure --allow-run-as-root
