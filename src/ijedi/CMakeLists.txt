@@ -110,6 +110,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC fckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC atlas atlas_f)
 target_link_libraries(${PROJECT_NAME} PUBLIC oops)
 
+# Mist
+target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)
+target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
+
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
