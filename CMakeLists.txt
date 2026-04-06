@@ -2,7 +2,7 @@
 # i-jedi - Interface to JEDI
 # ###############################################################################
 
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 project(ijedi VERSION 0.0.1 LANGUAGES C CXX Fortran)
 
@@ -12,9 +12,6 @@ find_package(ecbuild 3.5 REQUIRED)
 include(ecbuild_system NO_POLICY_SCOPE)
 ecbuild_declare_project()
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(${PROJECT_NAME}_compiler_flags)
-include(${PROJECT_NAME}_extra_macros)
 include(GNUInstallDirs)
 
 # ###############################################################################

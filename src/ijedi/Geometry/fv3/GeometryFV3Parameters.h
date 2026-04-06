@@ -1,8 +1,3 @@
-// (C) Copyright 2026- NOAA.
-// This software is licensed under the terms of the Creative Commons
-// Attribution-NonCommercial-ShareAlike Licence.
-// See LICENSE file in the top-level directory for details.
-
 #pragma once
 
 #include <string>
@@ -19,71 +14,74 @@
 
 namespace eckit
 {
-    class Configuration;
-    class LocalConfiguration;
+  class Configuration;
+  class LocalConfiguration;
 }
 
 namespace ijedi
 {
 
-    // -------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------
 
-    class FMSinitParameters : public oops::Parameters {
-      OOPS_CONCRETE_PARAMETERS(FMSinitParameters, Parameters)
+  class FMSinitParameters : public oops::Parameters
+  {
+    OOPS_CONCRETE_PARAMETERS(FMSinitParameters, Parameters)
 
-     public:
-      oops::Parameter<std::string> fieldTableFilename{"field table filename", "field_table", this};
-      oops::Parameter<std::string> namelistFilename{"namelist filename", "input.nml", this};
-      oops::Parameter<int> stackmax{"stackmax", 4000000, this};
-    };
+  public:
+    oops::Parameter<std::string> fieldTableFilename{"field table filename", "field_table", this};
+    oops::Parameter<std::string> namelistFilename{"namelist filename", "input.nml", this};
+    oops::Parameter<int> stackmax{"stackmax", 4000000, this};
+  };
 
-    // -------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------
 
-    class TimeInvariantFieldsParameters : public oops::Parameters {
-      OOPS_CONCRETE_PARAMETERS(TimeInvariantFieldsParameters, Parameters)
+  class TimeInvariantFieldsParameters : public oops::Parameters
+  {
+    OOPS_CONCRETE_PARAMETERS(TimeInvariantFieldsParameters, Parameters)
 
-     public:
-      oops::OptionalParameter<oops::Variables> derivedFields{"derived fields", this};
-      oops::OptionalParameter<eckit::LocalConfiguration> fieldMasks{"field masks", this};
-    };
+  public:
+    oops::OptionalParameter<oops::Variables> derivedFields{"derived fields", this};
+    oops::OptionalParameter<eckit::LocalConfiguration> fieldMasks{"field masks", this};
+  };
 
-    // -------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------
 
-    class GeometryParameters : public oops::Parameters {
-      OOPS_CONCRETE_PARAMETERS(GeometryParameters, Parameters)
+  class GeometryParameters : public oops::Parameters
+  {
+    OOPS_CONCRETE_PARAMETERS(GeometryParameters, Parameters)
 
-     public:
-        oops::OptionalParameter<std::string> akbk{"akbk", this};
-        oops::OptionalParameter<std::string> ensMember{"member_number", this};
-        oops::Parameter<bool> doSchmidt{"do_schmidt", false, this};
-        oops::OptionalParameter<FMSinitParameters> fmsInit{"fms initialization", this};
-        oops::Parameter<bool> hydrostatic{"hydrostatic", true, this};
-        oops::Parameter<std::vector<int>> ioLayout{"io_layout", {1, 1}, this};
-        oops::Parameter<std::vector<int>> layout{"layout", {1, 1}, this};
-        // vertical coordinate: sigma (default), logp or orography
-        oops::Parameter<std::string> vertCoord{"vert coordinate", "sigma", this};
-        oops::OptionalParameter<std::string> namelistFilename{"namelist filename", this};
-        oops::Parameter<bool> nested{"nested", false, this};
-        oops::Parameter<int> ntiles{"ntiles", 6, this};
-        oops::OptionalParameter<int> npx{"npx", this};
-        oops::OptionalParameter<int> npy{"npy", this};
-        oops::OptionalParameter<int> npz{"npz", this};
-        oops::Parameter<int> iterator_dimension{"iterator dimension", 2, this};
-        oops::Parameter<int> nwat{"nwat", 1, this};
-        oops::OptionalParameter<TimeInvariantFieldsParameters> timeInvariantFields{
-            "time invariant fields", this};
-        oops::Parameter<bool> regional{"regional", false, this};
-        oops::Parameter<double> stretchFac{"stretch_fac", 0.0, this};
-        oops::Parameter<double> targetLat{"target_lat", 0.0, this};
-        oops::Parameter<double> targetLon{"target_lon", 0.0, this};
-        oops::Parameter<bool> useInternalNamelist{"use internal namelist", false, this};
-        oops::Parameter<bool> writeGeom{"write geom", false, this};
-        oops::Parameter<bool> writeGmsh{"write to gmsh", false, this};
-        oops::Parameter<std::string> writeGmshFilename{"gmsh filename", "out.msh", this};
-        oops::OptionalParameter<eckit::LocalConfiguration> fieldInterpMethods{
-            "field interpolation methods", this};
-    };
+  public:
+    oops::OptionalParameter<std::string> akbk{"akbk", this};
+    oops::OptionalParameter<std::string> ensMember{"member_number", this};
+    oops::Parameter<bool> doSchmidt{"do_schmidt", false, this};
+    oops::OptionalParameter<FMSinitParameters> fmsInit{"fms initialization", this};
+    oops::Parameter<bool> hydrostatic{"hydrostatic", true, this};
+    oops::Parameter<std::vector<int>> ioLayout{"io_layout", {1, 1}, this};
+    oops::Parameter<std::vector<int>> layout{"layout", {1, 1}, this};
+    // vertical coordinate: sigma (default), logp or orography
+    oops::Parameter<std::string> vertCoord{"vert coordinate", "sigma", this};
+    oops::OptionalParameter<std::string> namelistFilename{"namelist filename", this};
+    oops::Parameter<bool> nested{"nested", false, this};
+    oops::Parameter<int> ntiles{"ntiles", 6, this};
+    oops::OptionalParameter<int> npx{"npx", this};
+    oops::OptionalParameter<int> npy{"npy", this};
+    oops::OptionalParameter<int> npz{"npz", this};
+    oops::Parameter<int> iterator_dimension{"iterator dimension", 2, this};
+    oops::Parameter<int> nwat{"nwat", 1, this};
+    oops::OptionalParameter<TimeInvariantFieldsParameters> timeInvariantFields{
+        "time invariant fields", this};
+    oops::Parameter<bool> regional{"regional", false, this};
+    oops::Parameter<double> stretchFac{"stretch_fac", 0.0, this};
+    oops::Parameter<double> targetLat{"target_lat", 0.0, this};
+    oops::Parameter<double> targetLon{"target_lon", 0.0, this};
+    oops::Parameter<bool> useInternalNamelist{"use internal namelist", false, this};
+    oops::Parameter<bool> writeGeom{"write geom", false, this};
+    oops::Parameter<bool> writeGmsh{"write to gmsh", false, this};
+    oops::Parameter<std::string> writeGmshFilename{"gmsh filename", "out.msh", this};
+    oops::OptionalParameter<eckit::LocalConfiguration> fieldInterpMethods{
+        "field interpolation methods", this};
+  };
 
-    // -------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------
 
-}  // namespace ijedi
+} // namespace ijedi

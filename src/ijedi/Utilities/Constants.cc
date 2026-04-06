@@ -1,12 +1,3 @@
-/*
- * (C) Copyright 2023 UCAR
- *
- * This software is licensed under the terms of the Apache Licence Version 2.0
- * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
- */
-
-// -------------------------------------------------------------------------------------------------
-
 #include <cmath>
 #include <unordered_map>
 
@@ -16,7 +7,8 @@
 
 // -------------------------------------------------------------------------------------------------
 
-namespace ijedi {
+namespace ijedi
+{
   // Define the constants where they are used to compute other constants
   static const double grav = 9.80665;
   static const double airmw = 28.965;
@@ -51,27 +43,31 @@ namespace ijedi {
       {"lapse_rate", lapse_rate},
       {"lapse_exponent", lapse_exponent}};
 
-    // Function for accessing the constants given the name
-    double getConstant(const std::string constName) {
-      auto it = constants.find(constName);
-      ASSERT_MSG(it != constants.end(), "Constants: Constant name " + constName + " is not found.");
-      return it->second;
-    }
+  // Function for accessing the constants given the name
+  double getConstant(const std::string constName)
+  {
+    auto it = constants.find(constName);
+    ASSERT_MSG(it != constants.end(), "Constants: Constant name " + constName + " is not found.");
+    return it->second;
+  }
 
-    // Function to return all the constants names
-    std::vector<std::string> getAllConstantsNames() {
-      std::vector<std::string> allNames;
-      for (auto const &imap : constants) {
-        allNames.push_back(imap.first);
-      }
-      return allNames;
+  // Function to return all the constants names
+  std::vector<std::string> getAllConstantsNames()
+  {
+    std::vector<std::string> allNames;
+    for (auto const &imap : constants)
+    {
+      allNames.push_back(imap.first);
     }
+    return allNames;
+  }
 
-    // Function for accessing the constants from Fortran
-    void getConstantF(const char constNameC[], double &constValueC) {
-      std::string constName(constNameC);
-      constValueC = getConstant(constName);
-    }
-}  // namespace ijedi
+  // Function for accessing the constants from Fortran
+  void getConstantF(const char constNameC[], double &constValueC)
+  {
+    std::string constName(constNameC);
+    constValueC = getConstant(constName);
+  }
+} // namespace ijedi
 
 // -------------------------------------------------------------------------------------------------

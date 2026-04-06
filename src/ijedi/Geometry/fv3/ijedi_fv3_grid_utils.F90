@@ -230,7 +230,8 @@ use ijedi_kinds_mod,          only: kind_real
          ne_corner                     => Atm%gridstruct%ne_corner
          nw_corner                     => Atm%gridstruct%nw_corner
 
-         if ( (Atm%flagstruct%do_schmidt .or. Atm%flagstruct%do_cube_transform) .and. abs(Atm%flagstruct%stretch_fac-1.) > 1.E-5 ) then
+         if ( (Atm%flagstruct%do_schmidt .or. Atm%flagstruct%do_cube_transform) &
+              .and. abs(Atm%flagstruct%stretch_fac-1.) > 1.E-5 ) then
               Atm%gridstruct%stretched_grid = .true.
               symm_grid = .false.
          else
@@ -1117,7 +1118,8 @@ use ijedi_kinds_mod,          only: kind_real
 
    !>@brief The subroutine 'efactor_a2c_v' initializes interpolation factors at face edges
    !! for interpolating vectors from A to C grid
-    subroutine efactor_a2c_v(edge_vect_s, edge_vect_n, edge_vect_w, edge_vect_e, non_ortho, grid, agrid, npx, npy, bounded_domain, bd)
+    subroutine efactor_a2c_v(edge_vect_s, edge_vect_n, edge_vect_w, edge_vect_e, &
+                             non_ortho, grid, agrid, npx, npy, bounded_domain, bd)
     type(fv_grid_bounds_type), intent(IN) :: bd
     real(kind=R_GRID),    intent(INOUT), dimension(bd%isd:bd%ied) :: edge_vect_s, edge_vect_n
     real(kind=R_GRID),    intent(INOUT), dimension(bd%jsd:bd%jed) :: edge_vect_w, edge_vect_e

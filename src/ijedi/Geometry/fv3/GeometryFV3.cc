@@ -1,8 +1,3 @@
-// (C) Copyright 2026- NOAA.
-// This software is licensed under the terms of the Creative Commons
-// Attribution-NonCommercial-ShareAlike Licence.
-// See LICENSE file in the top-level directory for details.
-
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
@@ -15,6 +10,7 @@
 #include "atlas/mesh/MeshBuilder.h"
 #include "atlas/output/Gmsh.h"
 
+#include "oops/util/abor1_cpp.h"
 #include "oops/util/Logger.h"
 
 #include "ijedi/Geometry/fv3/GeometryFV3.h"
@@ -58,8 +54,8 @@ namespace ijedi
     int npz = geomVariables.getInt("npz");
     int ntiles = geomVariables.getInt("ntiles");
 
-    int nprocx = geomVariables.getInt("nprocx");
-    int nprocy = geomVariables.getInt("nprocy");
+    int layout_x = geomVariables.getInt("layout_x");
+    int layout_y = geomVariables.getInt("layout_y");
 
     // Set number of levels
     numberLevels = npz;
@@ -80,7 +76,7 @@ namespace ijedi
                     std::to_string(npy) + "\n" +
                     " Number of (full) model levels: " + std::to_string(npz) + "\n" +
                     " Processor layout per tile: " +
-                    std::to_string(nprocx) + " x " + std::to_string(nprocy);
+                    std::to_string(layout_x) + " x " + std::to_string(layout_y);
 
     // Extract variables from geomVariables that were set in Fortran
     int num_nodes;
@@ -230,6 +226,16 @@ namespace ijedi
   void GeometryFV3::print(std::ostream &os) const
   {
     os << printMessage_ << std::endl;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  std::vector<double> GeometryFV3::verticalCoord(std::string &vcUnits) const
+  {
+    // Not implemented, abort --- IGNORE ---
+    std::stringstream errorMsg;
+    errorMsg << "GeometryFV3::verticalCoord is not implemented" << std::endl;
+    ABORT(errorMsg.str());
   }
 
   // -----------------------------------------------------------------------------------------------

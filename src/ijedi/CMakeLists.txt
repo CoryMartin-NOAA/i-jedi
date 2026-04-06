@@ -74,6 +74,20 @@ if(FMS_FOUND)
 
   # Combine with main source files
   list(APPEND ijedi_src_files ${ijedi_fv3_src_files})
+
+  # Compile with double precision
+  if(CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
+    set(fv3_flags "-r8")
+  elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+    set(fv3_flags "-fdefault-real-8 -fdefault-double-8 -ffree-line-length-none")
+  else()
+    message(WARNING
+      "Unknown Fortran compiler '${CMAKE_Fortran_COMPILER_ID}',\n"
+      "  fv3 files not using special flags.")
+    set(fv3_flags "")
+  endif()
+
+  set_source_files_properties(${ijedi_fv3_src_files} PROPERTIES COMPILE_FLAGS "${fv3_flags}")
 endif()
 
 # ###############################################################################
@@ -95,6 +109,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC eckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC fckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC atlas atlas_f)
 target_link_libraries(${PROJECT_NAME} PUBLIC oops)
+
+# Mist
+target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)
+target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
 
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
