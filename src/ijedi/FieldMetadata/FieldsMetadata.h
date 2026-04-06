@@ -17,7 +17,7 @@ namespace ijedi
 
   class FieldMetadata : public util::Printable
   {
-  public:
+   public:
     explicit FieldMetadata(const std::string longName, int nlev)
     {
       longName_ = longName;
@@ -49,17 +49,11 @@ namespace ijedi
       if (numLevls == "full")
       {
         numLevls_ = nlev_;
-      }
-      else if (numLevls == "half")
-      {
+      } else if (numLevls == "half") {
         numLevls_ = nlev_ + 1;
-      }
-      else if (numLevls == "halfplusone")
-      {
+      } else if (numLevls == "halfplusone") {
         numLevls_ = nlev_ + 2;
-      }
-      else
-      {
+      } else {
         try
         {
           numLevls_ = std::stoi(numLevls);
@@ -79,13 +73,9 @@ namespace ijedi
       if (tracer == "true")
       {
         isTracer_ = true;
-      }
-      else if (tracer == "false")
-      {
+      } else if (tracer == "false") {
         isTracer_ = false;
-      }
-      else
-      {
+      } else {
         ABORT("FieldMetadata::setIsTracer tracer must be true or false");
       }
     }
@@ -108,7 +98,7 @@ namespace ijedi
       this->validateVariable(ValidGridMask_, gridMask_);
     }
 
-  private:
+   private:
     // Picked up from default file
     std::string longName_;
     std::string dataKind_;
@@ -153,7 +143,7 @@ namespace ijedi
 
   class FieldsMetadata : public util::Printable
   {
-  public:
+   public:
     explicit FieldsMetadata(const int);
 
     // Get FieldMetadata from any of the potential field names
@@ -165,7 +155,7 @@ namespace ijedi
     // Function to return all the long names
     const std::vector<std::string> &getLongNames() const { return longNames_; }
 
-  private:
+   private:
     std::map<std::string, FieldMetadata> fieldsMetadata_;
     std::vector<std::string> longNames_;
 
@@ -184,4 +174,4 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi
