@@ -1,19 +1,49 @@
-# EMC Repository Template
+Interface to JEDI
+=================
 
-Getting all the right files in the right place can be a pain. 
-This is a simple template repository that you can use to ensure you have all the right files present in your repo.
+Requirements
+------------
 
-## Files you need
+Required dependencies:
 
-These should be at the top level of your repository:
+- NetCDF (Fortran and CXX API)
+- CMake
+- ecbuild
+- eckit
+- fckit
+- ATLAS
+- OOPS
 
-* `README.md` - The `README.md` file should have a short section at the bottom
-  called "DISCLAIMER", with a really brief statement saying that code is provided on an "as is" basis, and the user assumes responsibility for its use.
-* `LICENSE` - The text of the `CC0` license.
-* `DISCLAIMER` - Disclaimer 
-   
+Installation
+------------
+
+I-JEDI employs an out-of-source build/install based on CMake.
+
+Make sure the ecbuild executable script is found ( `which ecbuild` ).
+
+```bash
+# 1. Create the build directory and cd into it:
+mkdir build
+cd build
+
+# 2. Run ecbuild:
+ecbuild /path/to/source
+
+# 3. Compile / Install
+make -j 4
+make install
+```
+
+Extra flags maybe added to step 2 to fine-tune configuration.
+
+- `--build=DEBUG|RELEASE|BIT` --- Optimisation level
+  * DEBUG:   No optimisation (`-O0 -g`)
+  * BIT:     Maximum optimisation while remaning bit-reproducible (`-O2 -g`)
+  * RELEASE: Maximum optimisation (`-O3`)
+
+
 ## License
 
-This project is part of NOAA-EMC Ecosystem. 
+This project is part of NOAA-EMC Ecosystem.
 
 See LICENSE and DISCLAIMER for details.

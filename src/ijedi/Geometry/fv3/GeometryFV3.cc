@@ -1,0 +1,245 @@
+#include <algorithm>
+
+#include "eckit/config/Configuration.h"
+#include "eckit/config/LocalConfiguration.h"
+#include "eckit/exception/Exceptions.h"
+
+#include "atlas/field.h"
+#include "atlas/functionspace.h"
+#include "atlas/grid.h"
+#include "atlas/mesh/actions/BuildHalo.h"
+#include "atlas/mesh/Mesh.h"
+#include "atlas/mesh/MeshBuilder.h"
+#include "atlas/output/Gmsh.h"
+
+#include "oops/util/abor1_cpp.h"
+#include "oops/util/Logger.h"
+
+#include "ijedi/Geometry/fv3/GeometryFV3.h"
+#include "ijedi/Geometry/fv3/GeometryFV3.interface.h"
+#include "ijedi/Geometry/fv3/GeometryFV3Parameters.h"
+
+namespace ijedi
+{
+
+  // -----------------------------------------------------------------------------------------------
+
+  GeometryFV3::GeometryFV3(const eckit::Configuration &geomConfig, const eckit::mpi::Comm &comm,
+                           eckit::Configuration &geomVariables, atlas::FunctionSpace &functionSpace,
+                           atlas::FieldSet &geomFields, int &numberLevels)
+  {
+    oops::Log::trace() << "GeometryFV3 constructor starting" << std::endl;
+
+    // Deserialize the parameters
+    // --------------------------
+    GeometryParameters params;
+    params.deserialize(geomConfig);
+
+    // Call the fms initialize, done only once
+    // ---------------------------------------
+    static bool initialized = false;
+    if (!initialized)
+    {
+      f_fv3_geom_initialize((*params.fmsInit.value()).toConfiguration(), &comm);
+      initialized = true;
+    }
+
+    // Call the setup routine
+    f_fv3_geom_create(geomConfig, geomVariables, &comm);
+
+    // Extract things from GeomVariables
+    int ngrid;
+    ngrid = geomVariables.getInt("ngrid");
+
+    int npx = geomVariables.getInt("npx");
+    int npy = geomVariables.getInt("npy");
+    int npz = geomVariables.getInt("npz");
+    int ntiles = geomVariables.getInt("ntiles");
+
+    int layout_x = geomVariables.getInt("layout_x");
+    int layout_y = geomVariables.getInt("layout_y");
+
+    // Set number of levels
+    numberLevels = npz;
+
+    std::string globalOrRegional = ntiles == 6 ? "Global" : "Regional";
+
+    // Message:
+    // Cubed sphere geometry on <global/regional> grid.
+    //
+    // Number of (full) model levels: <npz>
+    // Number of grids: <ntiles>
+    // Grid dimensions: npx x npy: C<npx=1> x C<npy=1>
+
+    // Create print message
+    printMessage_ = " Cubed Sphere Geometry for " + globalOrRegional + " Grid.\n" +
+                    " Number of tiles (cube faces): " + std::to_string(ntiles) + "\n" +
+                    " Grid dimensions (per tile): c" + std::to_string(npx) + " x c" +
+                    std::to_string(npy) + "\n" +
+                    " Number of (full) model levels: " + std::to_string(npz) + "\n" +
+                    " Processor layout per tile: " +
+                    std::to_string(layout_x) + " x " + std::to_string(layout_y);
+
+    // Extract variables from geomVariables that were set in Fortran
+    int num_nodes;
+    size_t num_tri_elements;
+    size_t num_quad_elements;
+    geomVariables.get("num_nodes", num_nodes);
+    geomVariables.get("num_tri_elements", num_tri_elements);
+    geomVariables.get("num_quad_elements", num_quad_elements);
+
+    std::vector<double> area_owned;
+    std::vector<double> lons;
+    std::vector<double> lats;
+    std::vector<int> ghosts;
+    std::vector<int> global_indices;
+    std::vector<int> remote_indices;
+    std::vector<int> partitions;
+    std::vector<int> raw_tri_boundary_nodes;
+    std::vector<int> raw_quad_boundary_nodes;
+
+    geomVariables.get("area", area_owned);
+    geomVariables.get("lons", lons);
+    geomVariables.get("lats", lats);
+    geomVariables.get("ghosts", ghosts);
+    geomVariables.get("global_indices", global_indices);
+    geomVariables.get("remote_indices", remote_indices);
+    geomVariables.get("partition", partitions);
+    geomVariables.get("raw_tri_boundary_nodes", raw_tri_boundary_nodes);
+    geomVariables.get("raw_quad_boundary_nodes", raw_quad_boundary_nodes);
+
+    // Atlas connection
+    {
+      const int num_elements = num_tri_elements + num_quad_elements;
+      std::vector<int> num_elements_per_rank(comm.size());
+      comm.allGather(num_elements, num_elements_per_rank.begin(), num_elements_per_rank.end());
+      int global_element_index = 1;  // 1-based global index
+      for (size_t i = 0; i < comm.rank(); ++i)
+      {
+        global_element_index += num_elements_per_rank[i];
+      }
+
+      using atlas::gidx_t;
+      using atlas::idx_t;
+
+      std::vector<std::array<gidx_t, 3>> tri_boundary_nodes(num_tri_elements);
+      std::vector<gidx_t> tri_global_indices(num_tri_elements);
+      for (size_t tri = 0; tri < num_tri_elements; ++tri)
+      {
+        for (size_t i = 0; i < 3; ++i)
+        {
+          tri_boundary_nodes[tri][i] = raw_tri_boundary_nodes[3 * tri + i];
+        }
+        tri_global_indices[tri] = global_element_index;
+        ++global_element_index;
+      }
+      std::vector<std::array<gidx_t, 4>> quad_boundary_nodes(num_quad_elements);
+      std::vector<gidx_t> quad_global_indices(num_quad_elements);
+      for (size_t quad = 0; quad < num_quad_elements; ++quad)
+      {
+        for (size_t i = 0; i < 4; ++i)
+        {
+          quad_boundary_nodes[quad][i] = raw_quad_boundary_nodes[4 * quad + i];
+        }
+        quad_global_indices[quad] = global_element_index;
+        ++global_element_index;
+      }
+
+      std::vector<atlas::gidx_t> atlas_global_indices(num_nodes);
+      std::transform(global_indices.begin(), global_indices.end(), atlas_global_indices.begin(),
+                     [](const int index)
+                     { return atlas::gidx_t{index}; });
+
+      const atlas::idx_t remote_index_base = 1;  // 1-based indexing from Fortran
+      std::vector<atlas::idx_t> atlas_remote_indices(num_nodes);
+      std::transform(remote_indices.begin(), remote_indices.end(), atlas_remote_indices.begin(),
+                     [](const int index)
+                     { return atlas::idx_t{index}; });
+
+      eckit::LocalConfiguration atlas_config{};
+      atlas_config.set("mpi_comm", comm.name());
+
+      // establish connectivity
+      const atlas::mesh::MeshBuilder mesh_builder{};
+      atlas::Mesh mesh = mesh_builder(
+          lons,
+          lats,
+          ghosts,
+          atlas_global_indices,
+          atlas_remote_indices,
+          remote_index_base,
+          partitions,
+          tri_boundary_nodes,
+          tri_global_indices,
+          quad_boundary_nodes,
+          quad_global_indices,
+          atlas_config);
+
+      atlas::mesh::actions::build_halo(mesh, 1);
+      functionSpace = atlas::functionspace::NodeColumns(mesh, atlas_config);
+
+      // Optionally write atlas mesh for viewing with gmsh
+      if (params.writeGmsh)
+      {
+        const std::string filename = params.writeGmshFilename;
+        eckit::LocalConfiguration gmsh_config{};
+        gmsh_config.set("coordinates", "xyz");
+        gmsh_config.set("ghost", true);  // enables viewing halos per task
+        atlas::output::Gmsh gmsh(filename, gmsh_config);
+        gmsh.write(mesh);
+      }
+    }
+
+    // Atlas fields for geometry variables
+    geomFields = atlas::FieldSet();
+
+    // Create fields needed in geomFields
+    atlas::Field area = functionSpace.createField<double>(atlas::option::name("area") |
+                                                          atlas::option::levels(1));
+    atlas::Field owned = functionSpace.createField<int>(atlas::option::name("owned") |
+                                                        atlas::option::levels(1));
+
+    // Start with area being -1 everywhere
+    auto areaView = atlas::array::make_view<double, 2>(area);
+    auto ownedView = atlas::array::make_view<int, 2>(owned);
+
+    // 1. initialize all local entries, including halo, to -1
+    for (atlas::idx_t j = 0; j < functionSpace.size(); ++j)
+    {
+      areaView(j, 0) = -1.0;
+      ownedView(j, 0) = 0;
+    }
+    // 2. overwrite owned points with your data
+    for (atlas::idx_t j = 0; j < ngrid; ++j)
+    {
+      areaView(j, 0) = area_owned[j];
+      ownedView(j, 0) = 1;
+    }
+
+    // Add area to geomFields
+    geomFields.add(area);
+    geomFields.add(owned);
+
+    oops::Log::trace() << "GeometryFV3 constructor done" << std::endl;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  void GeometryFV3::print(std::ostream &os) const
+  {
+    os << printMessage_ << std::endl;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  std::vector<double> GeometryFV3::verticalCoord(std::string &vcUnits) const
+  {
+    // Not implemented, abort --- IGNORE ---
+    std::stringstream errorMsg;
+    errorMsg << "GeometryFV3::verticalCoord is not implemented" << std::endl;
+    ABORT(errorMsg.str());
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+}  // namespace ijedi

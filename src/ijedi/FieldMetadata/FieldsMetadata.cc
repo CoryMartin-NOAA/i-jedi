@@ -1,0 +1,56 @@
+#include <iostream>
+#include <map>
+#include <utility>
+
+#include "eckit/exception/Exceptions.h"
+#include "ijedi/FieldMetadata/FieldsMetadata.h"
+#include "ijedi/FieldMetadata/FieldsMetadataDefault.h"
+
+// -------------------------------------------------------------------------------------------------
+
+namespace ijedi
+{
+
+  // -----------------------------------------------------------------------------------------------
+
+  FieldsMetadata::FieldsMetadata(const int nlev) : longNames_()
+  {
+    // Set the default metadata
+    // ------------------------
+    setMetadata(fieldsMetadata_, nlev);
+
+    // Create vector of the field long names
+    // -------------------------------------
+    for (const auto &field : fieldsMetadata_)
+    {
+      longNames_.push_back(field.first);
+    }
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  FieldMetadata FieldsMetadata::getFieldMetadata(const std::string &longName) const
+  {
+    // Check that fieldsMetadata_ has longName in the keys and abort if not
+    ASSERT_MSG(fieldsMetadata_.find(longName) != fieldsMetadata_.end(),
+               "FieldMetadata error. Field \"" + longName + "\" not found in map. Ensure that " +
+                   "the field is listed in FieldMetadataDefault.h");
+    // Return Field Metadata
+    return fieldsMetadata_.find(longName)->second;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  size_t FieldsMetadata::getLevels(const std::string &longName) const
+  {
+    // Get the element
+    const FieldMetadata field = this->getFieldMetadata(longName);
+    // Return number of levels
+    return field.getNumLevls();
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+}  // namespace ijedi
+
+// -------------------------------------------------------------------------------------------------
