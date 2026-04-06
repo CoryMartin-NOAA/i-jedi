@@ -15,6 +15,7 @@ jobs:
     - name: Build in a bundle
       shell: bash
       run: |
+        su - nonroot
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE
@@ -27,6 +28,7 @@ jobs:
     - name: Run ctests
       shell: bash
       run: |
+        su - nonroot
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
