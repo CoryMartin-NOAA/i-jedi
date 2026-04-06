@@ -1,8 +1,3 @@
-// (C) Copyright 2026- NOAA.
-// This software is licensed under the terms of the Creative Commons
-// Attribution-NonCommercial-ShareAlike Licence.
-// See LICENSE file in the top-level directory for details.
-
 #pragma once
 
 #include <memory>
@@ -35,6 +30,7 @@ namespace ijedi
                                                 atlas::FieldSet &,
                                                 int &);
     virtual void print(std::ostream &) const = 0;
+    virtual std::vector<double> verticalCoord(std::string &) const = 0;
   };
 
 } // namespace ijedi

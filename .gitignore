@@ -144,3 +144,7 @@ dmypy.json
 # Ignore the following bundle repositories
 !bundle/CMakeLists.txt
 bundle/*
+
+# NetCDF files
+*.nc
+*.nc4

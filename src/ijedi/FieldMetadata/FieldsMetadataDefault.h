@@ -1,10 +1,3 @@
-/*
- * (C) Copyright 2022 UCAR
- *
- * This software is licensed under the terms of the Apache Licence Version 2.0
- * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
- */
-
 #pragma once
 
 #include <map>
@@ -24,27 +17,29 @@ namespace ijedi
     std::string longName;
     std::string units;
     std::string kind;
-    std::string tracer;  // Turned into bool but input as string to allow checking
+    std::string tracer; // Turned into bool but input as string to allow checking
     std::string levels;
-    std::string space;
+    std::string vtype;
     std::string mask;
   };
 
   // -----------------------------------------------------------------------------------------------
 
-  void setMetadataStruct(struct metadataStruct md) {
+  void setMetadataStruct(struct metadataStruct md)
+  {
     md.longName = "long name";
     md.units = "units";
     md.kind = "kind";
     md.tracer = "tracer";
     md.levels = "levels";
-    md.space = "space";
+    md.vtype = "vtype";
     md.mask = "mask";
   }
 
   // -----------------------------------------------------------------------------------------------
 
-  void assertStructIsSet(struct metadataStruct md) {
+  void assertStructIsSet(struct metadataStruct md)
+  {
     // Check that structure contains something
     // ---------------------------------------
     ASSERT_MSG(md.longName != "long name", "long name was not set");
@@ -52,14 +47,15 @@ namespace ijedi
     ASSERT_MSG(md.kind != "kind", "kind was not set");
     ASSERT_MSG(md.tracer != "tracer", "tracer was not set");
     ASSERT_MSG(md.levels != "levels", "levels was not set");
-    ASSERT_MSG(md.space != "space", "space was not set");
+    ASSERT_MSG(md.vtype != "vtype", "vector type was not set");
     ASSERT_MSG(md.mask != "mask", "mask was not set");
   }
 
   // -----------------------------------------------------------------------------------------------
 
-  void addFieldMetadata(std::map<std::string, FieldMetadata> & fieldsmetadata, const int &nlev,
-                        struct metadataStruct md) {
+  void addFieldMetadata(std::map<std::string, FieldMetadata> &fieldsmetadata, const int &nlev,
+                        struct metadataStruct md)
+  {
     // Check that structure is set
     assertStructIsSet(md);
 
@@ -70,7 +66,7 @@ namespace ijedi
     fieldmetadata.setVarUnits(md.units);
     fieldmetadata.setDataKind(md.kind);
     fieldmetadata.setNumLevls(md.levels);
-    fieldmetadata.setMathSpac(md.space);
+    fieldmetadata.setVectType(md.vtype);
     fieldmetadata.setIsTracer(md.tracer);
     fieldmetadata.setGridMask(md.mask);
 
@@ -79,7 +75,7 @@ namespace ijedi
 
     // Check key not already in the map
     ASSERT_MSG(fieldsmetadata.find(md.longName) == fieldsmetadata.end(),
-            "FieldMetadataDefault::addFieldMetadata: Long name " + md.longName + " already used.");
+               "FieldMetadataDefault::addFieldMetadata: Long name " + md.longName + " already used.");
 
     // Insert the object into the map
     fieldsmetadata.insert(std::pair<std::string, FieldMetadata>(md.longName, fieldmetadata));
@@ -90,7 +86,7 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  void setMetadata(std::map<std::string, FieldMetadata> & fieldsmetadata, const int nlev)
+  void setMetadata(std::map<std::string, FieldMetadata> &fieldsmetadata, const int nlev)
   {
     // Create structure and set to nothing
     struct metadataStruct md;
@@ -103,7 +99,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -112,7 +108,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -121,7 +117,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -130,7 +126,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -139,7 +135,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -148,7 +144,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -157,7 +153,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -166,7 +162,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "half";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -175,7 +171,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -184,7 +180,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -193,7 +189,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "half";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -202,7 +198,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -211,7 +207,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -220,7 +216,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -229,7 +225,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -238,7 +234,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -247,7 +243,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -256,7 +252,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -265,7 +261,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -274,7 +270,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -283,7 +279,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -292,7 +288,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -301,7 +297,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -310,7 +306,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -319,7 +315,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -328,7 +324,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -337,7 +333,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -346,7 +342,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -355,7 +351,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -364,7 +360,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -373,7 +369,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -382,7 +378,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -391,7 +387,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -400,7 +396,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -409,7 +405,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -418,7 +414,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -427,7 +423,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -436,7 +432,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -445,7 +441,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -454,7 +450,7 @@ namespace ijedi
     md.kind = "integer";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -463,7 +459,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -472,7 +468,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -481,7 +477,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -490,7 +486,7 @@ namespace ijedi
     md.kind = "integer";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -499,7 +495,7 @@ namespace ijedi
     md.kind = "integer";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -508,7 +504,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -517,7 +513,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "4";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -526,7 +522,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "9";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -535,7 +531,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -544,7 +540,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "4";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -553,7 +549,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "9";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -562,7 +558,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -571,7 +567,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -580,7 +576,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -589,7 +585,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -598,7 +594,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -607,7 +603,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -616,7 +612,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -625,7 +621,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -634,7 +630,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -643,7 +639,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -652,7 +648,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -661,7 +657,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -670,7 +666,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -679,7 +675,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -688,7 +684,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -697,7 +693,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -706,7 +702,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -715,7 +711,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -724,7 +720,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -733,7 +729,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -742,7 +738,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -751,7 +747,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -760,7 +756,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -769,7 +765,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -778,7 +774,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -787,7 +783,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -796,7 +792,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -805,7 +801,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -814,7 +810,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -823,7 +819,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -832,7 +828,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -841,7 +837,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -850,7 +846,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "half";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -859,7 +855,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -868,7 +864,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -877,7 +873,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -886,7 +882,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -895,7 +891,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -904,7 +900,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -913,7 +909,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -922,7 +918,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -931,7 +927,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -940,7 +936,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -949,7 +945,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -958,7 +954,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -967,7 +963,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -976,7 +972,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -985,7 +981,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -994,7 +990,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1003,7 +999,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1012,7 +1008,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1021,7 +1017,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1030,7 +1026,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1039,7 +1035,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1048,7 +1044,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1057,7 +1053,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1066,7 +1062,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1075,7 +1071,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1084,7 +1080,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1093,7 +1089,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1102,7 +1098,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1111,7 +1107,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1120,7 +1116,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1129,7 +1125,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1138,7 +1134,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1147,7 +1143,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1156,7 +1152,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1165,7 +1161,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1174,7 +1170,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "direction";
+    md.vtype = "direction";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1183,7 +1179,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1192,7 +1188,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1201,7 +1197,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1210,7 +1206,7 @@ namespace ijedi
     md.kind = "integer";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1219,7 +1215,7 @@ namespace ijedi
     md.kind = "integer";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1228,7 +1224,7 @@ namespace ijedi
     md.kind = "integer";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1237,7 +1233,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1246,7 +1242,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1255,7 +1251,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1264,7 +1260,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1273,7 +1269,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1282,7 +1278,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1291,7 +1287,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1300,7 +1296,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1309,7 +1305,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1318,7 +1314,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1327,7 +1323,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1336,7 +1332,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1345,7 +1341,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1354,7 +1350,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1363,7 +1359,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1372,7 +1368,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1381,7 +1377,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1390,7 +1386,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1399,7 +1395,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1408,7 +1404,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1417,7 +1413,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1426,7 +1422,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1435,7 +1431,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1444,7 +1440,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1453,7 +1449,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1462,7 +1458,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1471,7 +1467,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1480,7 +1476,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1490,7 +1486,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1499,7 +1495,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1508,7 +1504,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1517,7 +1513,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1526,7 +1522,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1535,7 +1531,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1544,7 +1540,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1553,7 +1549,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1562,7 +1558,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1571,7 +1567,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1580,7 +1576,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1589,7 +1585,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1598,7 +1594,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1607,7 +1603,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1616,7 +1612,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1625,7 +1621,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1634,7 +1630,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1643,7 +1639,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1652,7 +1648,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1661,7 +1657,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1670,7 +1666,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1679,7 +1675,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1688,7 +1684,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1697,7 +1693,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1706,7 +1702,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1716,7 +1712,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1725,7 +1721,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1734,7 +1730,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1743,7 +1739,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1752,7 +1748,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1761,7 +1757,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1770,7 +1766,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1779,7 +1775,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1788,7 +1784,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1797,7 +1793,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1806,7 +1802,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1816,7 +1812,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1825,7 +1821,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1834,7 +1830,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1843,7 +1839,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1852,7 +1848,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1861,7 +1857,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1870,7 +1866,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1879,7 +1875,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1888,7 +1884,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1897,7 +1893,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1906,7 +1902,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1915,7 +1911,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1924,7 +1920,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1933,7 +1929,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1942,7 +1938,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1951,7 +1947,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1960,7 +1956,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1969,7 +1965,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1978,7 +1974,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1987,7 +1983,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1996,7 +1992,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2005,7 +2001,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2014,7 +2010,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2023,7 +2019,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2032,7 +2028,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2041,7 +2037,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2050,7 +2046,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2060,7 +2056,7 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2069,8 +2065,8 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
-    md.space = "magnitude";
+    md.vtype = "magnitude";
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
   }
-}  // namespace ijedi
+} // namespace ijedi

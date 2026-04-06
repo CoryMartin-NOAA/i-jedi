@@ -710,15 +710,20 @@ use ijedi_kinds_mod,          only: kind_real
          ! ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ !
          !-------------------------------------------------------------------------------
 
-         subroutine start_var_group_update_2d(group, array, domain, flags, position, whalo, ehalo, shalo, nhalo, complete)
+         subroutine start_var_group_update_2d(group, array, domain, flags, &
+                                                      position, whalo, ehalo, shalo, nhalo, complete)
            type(group_halo_update_type), intent(inout) :: group !< The data type that store information for group update
-           real(kind=kind_real), dimension(:,:),         intent(inout) :: array !< The array which is having its halos points exchanged
+           real(kind=kind_real), dimension(:,:), intent(inout) :: array
+                                                     !< The array which is having its halos points exchanged
            type(domain2D),               intent(inout) :: domain !< contains domain information
-           integer,      optional,       intent(in)    :: flags !< Optional integer indicating which directions the data should be sent
+           integer,      optional,       intent(in)    :: flags
+                                                     !< Optional integer indicating which directions the data should be sent
            integer,      optional,       intent(in)    :: position  !< An optional argument indicating the position
            integer,      optional,       intent(in)    :: whalo, ehalo, shalo, nhalo
-           logical,      optional,       intent(in)    :: complete !< Optional argument indicating whether the halo updates
-                                                                   !! should be initiated immediately or wait for second pass_..._start call
+           logical,      optional,       intent(in)    :: complete
+                                                                !< Optional argument indicating whether the halo updates
+                                                                !! should be initiated immediately or wait
+                                                                !! for second pass_..._start call
            real(kind=kind_real)                                        :: d_type
            logical                                     :: is_complete
          ! Arguments:
@@ -751,15 +756,21 @@ use ijedi_kinds_mod,          only: kind_real
          end subroutine start_var_group_update_2d
 
 
-         subroutine start_var_group_update_3d(group, array, domain, flags, position, whalo, ehalo, shalo, nhalo, complete)
+         subroutine start_var_group_update_3d(group, array, domain, flags, &
+                                                      position, whalo, ehalo, shalo, nhalo, complete)
            type(group_halo_update_type), intent(inout) :: group !< The data type that store information for group update
-           real(kind=kind_real), dimension(:,:,:),       intent(inout) :: array !< The array which is having its halos points exchanged
+           real(kind=kind_real), dimension(:,:,:), intent(inout) :: array
+                                                       !< The array which is having its halos points exchanged
            type(domain2D),               intent(inout) :: domain !< contains domain information
-           integer,           optional,  intent(in)    :: flags !< Optional integer indicating which directions the data should be sent
+           integer,           optional,  intent(in)    :: flags
+                                                                !< Optional integer indicating which directions
+                                                                !! the data should be sent
            integer,           optional,  intent(in)    :: position !< An optional argument indicating the position
            integer,      optional,       intent(in)    :: whalo, ehalo, shalo, nhalo
-           logical,      optional,       intent(in)    :: complete !< Optional argument indicating whether the halo updates
-                                                                   !! should be initiated immediately or wait for second pass_..._start call
+           logical,      optional,       intent(in)    :: complete
+                                                                !< Optional argument indicating whether the halo updates
+                                                                !! should be initiated immediately or wait
+                                                                !! for second pass_..._start call
            real(kind=kind_real)                                        :: d_type
            logical                                     :: is_complete
 
@@ -792,16 +803,23 @@ use ijedi_kinds_mod,          only: kind_real
 
          end subroutine start_var_group_update_3d
 
-         subroutine start_var_group_update_4d(group, array, domain, flags, position, whalo, ehalo, shalo, nhalo, complete)
+         subroutine start_var_group_update_4d(group, array, domain, flags, &
+                                                      position, whalo, ehalo, shalo, nhalo, complete)
            type(group_halo_update_type), intent(inout) :: group !< The data type that store information for group update
-           real(kind=kind_real), dimension(:,:,:,:),     intent(inout) :: array !< The array which is having its halos points exchanged
+           real(kind=kind_real), dimension(:,:,:,:), intent(inout) :: array
+                                                         !< The array which is having its halos points exchanged
            type(domain2D),               intent(inout) :: domain !< contains domain information
-           integer,           optional,  intent(in)    :: flags !< Optional integer indicating which directions the data should be sent
-           integer,           optional,  intent(in)    :: position !< An optional argument indicating the position
-                                                                   !! This is may be CORNER, but is CENTER by default
+           integer,           optional,  intent(in)    :: flags
+                                                                !< Optional integer indicating which directions
+                                                                !! the data should be sent
+           integer,           optional,  intent(in)    :: position
+                                                                !< An optional argument indicating the position
+                                                                !! This is may be CORNER, but is CENTER by default
            integer,      optional,       intent(in)    :: whalo, ehalo, shalo, nhalo
-           logical,      optional,       intent(in)    :: complete !< Optional argument indicating whether the halo updates
-                                                                   !! should be initiated immediately or wait for second pass_..._start call
+           logical,      optional,       intent(in)    :: complete
+                                                                !< Optional argument indicating whether the halo updates
+                                                                !! should be initiated immediately or wait
+                                                                !! for second pass_..._start call
            real(kind=kind_real)                                        :: d_type
            logical                                     :: is_complete
 
@@ -838,19 +856,26 @@ use ijedi_kinds_mod,          only: kind_real
 
 
 
-         subroutine start_vector_group_update_2d(group, u_cmpt, v_cmpt, domain, flags, gridtype, whalo, ehalo, shalo, nhalo, complete)
+         subroutine start_vector_group_update_2d(group, u_cmpt, v_cmpt, domain, &
+                                                         flags, gridtype, whalo, ehalo, shalo, nhalo, complete)
            type(group_halo_update_type), intent(inout) :: group !< The data type that store information for group update
-           real(kind=kind_real),       dimension(:,:),   intent(inout) :: u_cmpt, v_cmpt !< The nominal zonal (u) and meridional (v)
+           real(kind=kind_real), dimension(:,:), intent(inout) :: u_cmpt, v_cmpt
+                                                     !< The nominal zonal (u) and meridional (v)
                                                                          !! components of the vector pair that
                                                                          !! is having its halos points exchanged
            type(domain2d),               intent(inout) :: domain !< Contains domain decomposition information
-           integer,            optional, intent(in)    :: flags !< Optional integer indicating which directions the data should be sent
-           integer,            optional, intent(in)    :: gridtype !< An optional flag, which may be one of A_GRID, BGRID_NE,
-                                                                   !! CGRID_NE or DGRID_NE, indicating where the two components of th
-                                                                   !! vector are discretized
+           integer,            optional, intent(in)    :: flags
+                                                                !< Optional integer indicating which directions
+                                                                !! the data should be sent
+           integer,            optional, intent(in)    :: gridtype
+                                                                !< An optional flag, which may be one of A_GRID, BGRID_NE,
+                                                                !! CGRID_NE or DGRID_NE, indicating where the two components
+                                                                !! of the vector are discretized
            integer,      optional,       intent(in)    :: whalo, ehalo, shalo, nhalo
-           logical,      optional,       intent(in)    :: complete !< Optional argument indicating whether the halo updates
-                                                                   !! should be initiated immediately or wait for second pass_..._start call
+           logical,      optional,       intent(in)    :: complete
+                                                                !< Optional argument indicating whether the halo updates
+                                                                !! should be initiated immediately or wait
+                                                                !! for second pass_..._start call
            real(kind=kind_real)                                        :: d_type
            logical                                     :: is_complete
 
@@ -888,19 +913,26 @@ use ijedi_kinds_mod,          only: kind_real
 
          end subroutine start_vector_group_update_2d
 
-         subroutine start_vector_group_update_3d(group, u_cmpt, v_cmpt, domain, flags, gridtype, whalo, ehalo, shalo, nhalo, complete)
+         subroutine start_vector_group_update_3d(group, u_cmpt, v_cmpt, domain, &
+                                                         flags, gridtype, whalo, ehalo, shalo, nhalo, complete)
            type(group_halo_update_type), intent(inout) :: group !< The data type that store information for group update
-           real(kind=kind_real),       dimension(:,:,:), intent(inout) :: u_cmpt, v_cmpt !! The nominal zonal (u) and meridional (v)
+           real(kind=kind_real), dimension(:,:,:), intent(inout) :: u_cmpt, v_cmpt
+                                                       !! The nominal zonal (u) and meridional (v)
                                                                          !! components of the vector pair that
                                                                          !! is having its halos points exchanged.
            type(domain2d),               intent(inout) :: domain !< Contains domain decomposition information
-           integer,            optional, intent(in)    :: flags !< Optional integer indicating which directions the data should be sent
-           integer,            optional, intent(in)    :: gridtype !< An optional flag, which may be one of A_GRID, BGRID_NE,
-                                                                   !! CGRID_NE or DGRID_NE, indicating where the two components of th
-                                                                   !! vector are discretized
+           integer,            optional, intent(in)    :: flags
+                                                                !< Optional integer indicating which directions
+                                                                !! the data should be sent
+           integer,            optional, intent(in)    :: gridtype
+                                                                !< An optional flag, which may be one of A_GRID, BGRID_NE,
+                                                                !! CGRID_NE or DGRID_NE, indicating where the two components
+                                                                !! of the vector are discretized
            integer,      optional,       intent(in)    :: whalo, ehalo, shalo, nhalo
-           logical,      optional,       intent(in)    :: complete !< Optional argument indicating whether the halo updates
-                                                                   !! should be initiated immediately or wait for second pass_..._start call
+           logical,      optional,       intent(in)    :: complete
+                                                                !< Optional argument indicating whether the halo updates
+                                                                !! should be initiated immediately or wait
+                                                                !! for second pass_..._start call
            real(kind=kind_real)                                        :: d_type
            logical                                     :: is_complete
 
@@ -1754,7 +1786,8 @@ use ijedi_kinds_mod,          only: kind_real
 
                   allocate ( garr(Gsize) )
                   call mpp_gather(larr, Lsize, garr, LsizeS)
-         !         call MPI_GATHERV(larr, Lsize, MPI_DOUBLE_PRECISION, garr, LsizeS, Ldispl, MPI_DOUBLE_PRECISION, masterproc, commglobal, ierror)
+         !         call MPI_GATHERV(larr, Lsize, MPI_DOUBLE_PRECISION, garr, LsizeS,
+         !    &                   Ldispl, MPI_DOUBLE_PRECISION, masterproc, commglobal, ierror)
                   if (gid==masterproc) then
                      do n=2,npes_this_grid
                         icnt=1

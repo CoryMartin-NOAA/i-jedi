@@ -466,7 +466,13 @@ use ijedi_kinds_mod,          only: kind_real
       logical :: do_schmidt = .false.  !< Whether to enable grid stretching and rotation using
                                        !< stretch_fac, target_lat, and target_lon.
                                        !< The default value is .false.
-      logical :: do_cube_transform = .false. !< alternate version of do_schmidt in which rotation is done from the north pole instead of the south pole. This ensures that the target face (tile 6) has the "conventional" orientation with North at the "top", as opposed to do_schmidt which rotates the south pole to the target and for which tile 6 has North at the "bottom". This will be ignored if do_schmidt = .true.
+      logical :: do_cube_transform = .false.
+                                       !< alternate version of do_schmidt in which rotation is done
+                                       !< from the north pole instead of the south pole. This ensures
+                                       !< that the target face (tile 6) has the "conventional" orientation
+                                       !< with North at the "top", as opposed to do_schmidt which rotates
+                                       !< the south pole to the target and for which tile 6 has North
+                                       !< at the "bottom". This will be ignored if do_schmidt = .true.
       real(kind=R_GRID) :: stretch_fac = 1.   !< Stretching factor for the Schmidt transformation. This
                                               !< is the factor by which tile 6 of the cubed sphere will
                                               !< be shrunk, with the grid size shrinking accordingly.
@@ -677,13 +683,17 @@ use ijedi_kinds_mod,          only: kind_real
                             !< considered; and for non-hydrostatic models values of 10 or less should be
                             !< considered, with smaller values for higher-resolution.
       real(kind=kind_real)    :: rf_cutoff = 30.E2   !< Pressure below which no Rayleigh damping is applied if tau > 0.
-      real(kind=kind_real)    :: fast_tau_w_sec = 0.0 !< Time scale (seconds) for Rayleigh damping applied to vertical velocity only.
-                                      !< Values of 0.2 are very effective at eliminating spurious vertical motion in
-                                      !< the stratosphere. Default is 0.0, which disables this.
+      real(kind=kind_real)    :: fast_tau_w_sec = 0.0
+                                      !< Time scale (seconds) for Rayleigh damping applied to vertical
+                                      !< velocity only. Values of 0.2 are very effective at eliminating
+                                      !< spurious vertical motion in the stratosphere. Default is 0.0,
+                                      !< which disables this.
       logical :: filter_phys = .false.
-      logical :: dwind_2d = .false.   !< Whether to use a simpler & faster algorithm for interpolating
-                                      !< the A-grid (cell-centered) wind tendencies computed from the physics
-                                      !< to the D-grid. Typically, the A-grid wind tendencies are first
+      logical :: dwind_2d = .false.
+                                      !< Whether to use a simpler & faster algorithm for interpolating
+                                      !< the A-grid (cell-centered) wind tendencies computed from
+                                      !< the physics to the D-grid. Typically, the A-grid wind tendencies
+                                      !< are first
                                       !< converted in 3D cartesian coordinates and then interpolated before
                                       !< converting back to 2D local coordinates. When this option enabled,
                                       !< a much simpler but less accurate 2D interpolation is used. False by
@@ -815,13 +825,20 @@ use ijedi_kinds_mod,          only: kind_real
       logical :: do_skeb  = .false.         !< save dissipation estimate
       integer :: skeb_npass  = 11           !< Filter dissipation estimate "skeb_npass" times
    ! Default restart files from the "Memphis" latlon FV core:
-      character(len=128) :: res_latlon_dynamics = 'INPUT/fv_rst.res.nc'   !< If external_ic =.true.gives the filename of the
-                                                                          !< input IC file. The default is 'INPUT/fv_rst.res.nc'.
-      character(len=128) :: res_latlon_tracers  = 'INPUT/atmos_tracers.res.nc'   !< If external_ic =.true.and both ncep_ic and fv_diag_ic
-                                                                                 !< are.false., this variable gives the filename of the
-                                                                                 !< initial conditions for the tracers, assumed to be a
-                                                                                 !< legacy lat-lon FV core restart file.
-                                                                                 !< The default is 'INPUT/atmos_tracers.res.nc'.
+      character(len=128) :: res_latlon_dynamics = 'INPUT/fv_rst.res.nc'
+                                                                !< If external_ic =.true.
+                                                                !< gives the filename of the
+                                                                !< input IC file. The default
+                                                                !< is 'INPUT/fv_rst.res.nc'.
+      character(len=128) :: res_latlon_tracers  = 'INPUT/atmos_tracers.res.nc'
+                                                                !< If external_ic =.true.and both
+                                                                !< ncep_ic and fv_diag_ic are.false.,
+                                                                !< this variable gives the filename of
+                                                                !< the initial conditions for the
+                                                                !< tracers, assumed to be a legacy
+                                                                !< lat-lon FV core restart file.
+                                                                !< The default is
+                                                                !< 'INPUT/atmos_tracers.res.nc'.
    ! The user also needs to copy the "cold start" cubed sphere restart files (fv_core.res.tile1-6)
    ! to the INPUT dir during runtime
    !------------------------------------------------
@@ -906,7 +923,9 @@ use ijedi_kinds_mod,          only: kind_real
      integer :: nrows_blend = 0          !< # of blending rows in the outer integration domain.
      logical :: write_restart_with_bcs = .false.   !< Default setting for using DA-updated BC files
      logical :: regional_bcs_from_gsi = .false.    !< Default setting for writing restart files with boundary rows
-     logical :: pass_full_omega_to_physics_in_non_hydrostatic_mode = .false.  !< Default to passing local omega to physics in non-hydrostatic
+     logical :: pass_full_omega_to_physics_in_non_hydrostatic_mode = .false.
+                                                !< Default to passing local omega to physics
+                                                !< in non-hydrostatic
 
 
      !>Convenience pointers
@@ -951,7 +970,9 @@ use ijedi_kinds_mod,          only: kind_real
         !Interpolation arrays for grid nesting
         logical                                :: on_level ! indicate if current processor on this level.
         logical                                :: do_remap_BC
-        integer, allocatable, dimension(:,:,:) :: ind_h, ind_u, ind_v, ind_b ! I don't think these are necessary since BC interpolation is done locally
+        integer, allocatable, dimension(:,:,:) :: ind_h, ind_u, ind_v, ind_b
+                                            ! I don't think these are necessary since BC
+                                            ! interpolation is done locally
         real(kind=kind_real), allocatable, dimension(:,:,:) :: wt_h, wt_u, wt_v, wt_b
      end type nest_level_type
 
@@ -1132,7 +1153,10 @@ use ijedi_kinds_mod,          only: kind_real
         character(len=64) :: strategy  !< Current valid values are: 'model_level' and 'pressure_level'
         logical :: write_coarse_restart_files = .false.  !< Whether to write coarse restart files
         logical :: write_coarse_diagnostics = .false.  !< Whether to enable writing coarse diagnostics
-        logical :: write_only_coarse_intermediate_restarts = .false.  !< Whether to write only coarse intermediate restart files (if write_coarse_restart_files is .true.)
+        logical :: write_only_coarse_intermediate_restarts = .false.
+                                                !< Whether to write only coarse intermediate
+                                                !< restart files (if write_coarse_restart_files
+                                                !< is .true.)
         type(coarse_restart_type) :: restart  !< container for coarse restart data
         logical :: write_coarse_dgrid_vel_rst = .true.  !< Whether to write D-grid winds to coarse restart files
         logical :: write_coarse_agrid_vel_rst = .false.  !< Whether to write A-grid winds to coarse restart files
@@ -1242,7 +1266,9 @@ use ijedi_kinds_mod,          only: kind_real
        real(kind=kind_real), _ALLOCATABLE :: pkz (:,:,:)   _NULL  !< finite-volume mean pk
 
    ! For downscaling/remapping a 2d variable from parent to its nest
-       real(kind=kind_real), _ALLOCATABLE :: parent2nest_2d(:,:) _NULL !< 2d arrary for downscaling a variable from parent to its nest
+       real(kind=kind_real), _ALLOCATABLE :: parent2nest_2d(:,:) _NULL
+                                                !< 2d arrary for downscaling a variable from
+                                                !< parent to its nest
 
    ! For phys coupling:
        real(kind=kind_real), _ALLOCATABLE :: u_srf(:,:)    _NULL  !< Surface u-wind
@@ -1345,7 +1371,8 @@ use ijedi_kinds_mod,          only: kind_real
         logical :: Tra_restart_is_open=.false.
         type(fv_nest_type) :: neststruct
 
-        !Hold on to coarse-grid global grid, so we don't have to waste processor time getting it again when starting to do grid nesting
+        !Hold on to coarse-grid global grid, so we don't have to waste processor time
+        !getting it again when starting to do grid nesting
         real(kind=R_GRID), allocatable, dimension(:,:,:,:) :: grid_global
 
      integer :: atmos_axes(4)

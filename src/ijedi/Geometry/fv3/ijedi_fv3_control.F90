@@ -639,7 +639,10 @@ use ijedi_kinds_mod,          only: kind_real
         if (mpp_pe() == 0 .and. ngrids > 1) then
            !print*, ' NESTING TREE'
            do n=1,ngrids
-              !              write(*,'(12i4)') n, nest_level(n), nest_ioffsets(n), nest_joffsets(n), icount_coarse(n), jcount_coarse(n), tile_fine(n), tile_coarse(n), nest_refine(n), all_ntiles(n), all_npx(n), all_npy(n)
+              !              write(*,'(12i4)') n, nest_level(n), nest_ioffsets(n),
+              !    &             nest_joffsets(n), icount_coarse(n), jcount_coarse(n),
+              !    &             tile_fine(n), tile_coarse(n), nest_refine(n),
+              !    &             all_ntiles(n), all_npx(n), all_npy(n)
               !              write(*,*)
            enddo
            !print*, npes_nest_tile(1:ntiles_nest_all)
@@ -661,11 +664,14 @@ use ijedi_kinds_mod,          only: kind_real
         enddo
 
         ! 6. Set up domain and Atm structure
-        call tm_register_tracers (MODEL_ATMOS, Atm(this_grid)%flagstruct%ncnst, Atm(this_grid)%flagstruct%nt_prog, &
-             Atm(this_grid)%flagstruct%pnats, num_family)
+        call tm_register_tracers (MODEL_ATMOS, Atm(this_grid)%flagstruct%ncnst, &
+                                   Atm(this_grid)%flagstruct%nt_prog, &
+                                   Atm(this_grid)%flagstruct%pnats, num_family)
         if(is_master()) then
-           !           write(*,*) 'ncnst=', ncnst,' num_prog=',Atm(this_grid)%flagstruct%nt_prog,' pnats=',Atm(this_grid)%flagstruct%pnats,' dnats=',dnats,&
-            !    ' num_family=',num_family
+           !           write(*,*) 'ncnst=', ncnst,' num_prog=',
+           !    &           Atm(this_grid)%flagstruct%nt_prog,' pnats=',
+           !    &           Atm(this_grid)%flagstruct%pnats,' dnats=',dnats,
+           !    &           ' num_family=',num_family
            print*, ''
         endif
         if (dnrts < 0) dnrts = dnats
@@ -679,11 +685,15 @@ use ijedi_kinds_mod,          only: kind_real
                 Atm(n)%bd%isc, Atm(n)%bd%iec, &
                 Atm(n)%bd%jsc, Atm(n)%bd%jec, &
                 Atm(n)%flagstruct%npx,    Atm(n)%flagstruct%npy,   Atm(n)%flagstruct%npz, &
-                Atm(n)%flagstruct%ndims, Atm(n)%flagstruct%ntiles,  Atm(n)%flagstruct%ncnst, Atm(n)%flagstruct%ncnst-Atm(n)%flagstruct%pnats, &
-                n/=this_grid, n==this_grid, ngrids) !TODO don't need both of the last arguments
+                Atm(n)%flagstruct%ndims, Atm(n)%flagstruct%ntiles,  Atm(n)%flagstruct%ncnst, &
+                Atm(n)%flagstruct%ncnst-Atm(n)%flagstruct%pnats, &
+                n/=this_grid, n==this_grid, ngrids) !TODO don't need both of last arguments
         enddo
-        if ( (Atm(this_grid)%bd%iec-Atm(this_grid)%bd%isc+1).lt.4 .or. (Atm(this_grid)%bd%jec-Atm(this_grid)%bd%jsc+1).lt.4 ) then
-           !if (is_master()) write(*,'(6I6)') Atm(this_grid)%bd%isc, Atm(this_grid)%bd%iec, Atm(this_grid)%bd%jsc, Atm(this_grid)%bd%jec, this_grid
+        if ( (Atm(this_grid)%bd%iec-Atm(this_grid)%bd%isc+1).lt.4 .or. &
+             (Atm(this_grid)%bd%jec-Atm(this_grid)%bd%jsc+1).lt.4 ) then
+           !if (is_master()) write(*,'(6I6)') Atm(this_grid)%bd%isc, Atm(this_grid)%bd%iec,
+           !    &                              Atm(this_grid)%bd%jsc, Atm(this_grid)%bd%jec,
+           !    &                              this_grid
            call mpp_error(FATAL,'Domain Decomposition:  Cubed Sphere compute domain has a &
                 &minium requirement of 4 points in X and Y, respectively')
         end if
@@ -715,8 +725,10 @@ use ijedi_kinds_mod,          only: kind_real
            Atm(n)%neststruct%do_remap_bc(:) = .false.
            Atm(n)%neststruct%do_remap_bc_level(:) = .false.
         enddo
-        Atm(this_grid)%neststruct%parent_proc = ANY(Atm(this_grid)%neststruct%child_grids) !ANY(tile_coarse == Atm(this_grid)%global_tile)
-        Atm(this_grid)%neststruct%child_proc = ASSOCIATED(Atm(this_grid)%parent_grid) !this means a nested grid
+        Atm(this_grid)%neststruct%parent_proc = ANY(Atm(this_grid)%neststruct%child_grids)
+                                                  !ANY(tile_coarse == Atm(this_grid)%global_tile)
+        Atm(this_grid)%neststruct%child_proc = ASSOCIATED(Atm(this_grid)%parent_grid)
+                                                  !this means a nested grid
 
         if(n>1) then
           call mpp_set_current_pelist( global_pelist )
@@ -749,34 +761,52 @@ use ijedi_kinds_mod,          only: kind_real
              ' Bounded domain: nested = ', Atm(this_grid)%neststruct%nested, ', regional = ', Atm(this_grid)%flagstruct%regional
 
         ! 7. Init_grid() (including two-way nesting)
-        call init_grid(Atm(this_grid), Atm(this_grid)%flagstruct%grid_name, Atm(this_grid)%flagstruct%grid_file, &
-             Atm(this_grid)%flagstruct%npx, Atm(this_grid)%flagstruct%npy, Atm(this_grid)%flagstruct%npz, Atm(this_grid)%flagstruct%ndims, Atm(this_grid)%flagstruct%ntiles, Atm(this_grid)%ng, tile_coarse)
+        call init_grid(Atm(this_grid), Atm(this_grid)%flagstruct%grid_name, &
+                       Atm(this_grid)%flagstruct%grid_file, &
+                       Atm(this_grid)%flagstruct%npx, Atm(this_grid)%flagstruct%npy, &
+                       Atm(this_grid)%flagstruct%npz, Atm(this_grid)%flagstruct%ndims, &
+                       Atm(this_grid)%flagstruct%ntiles, Atm(this_grid)%ng, tile_coarse)
 
 
         ! 8. grid_utils_init()
         ! Initialize the SW (2D) part of the model
-        call grid_utils_init(Atm(this_grid), Atm(this_grid)%flagstruct%npx, Atm(this_grid)%flagstruct%npy, Atm(this_grid)%flagstruct%npz, Atm(this_grid)%flagstruct%non_ortho, Atm(this_grid)%flagstruct%grid_type, Atm(this_grid)%flagstruct%c2l_ord)
+        call grid_utils_init(Atm(this_grid), Atm(this_grid)%flagstruct%npx, &
+                             Atm(this_grid)%flagstruct%npy, Atm(this_grid)%flagstruct%npz, &
+                             Atm(this_grid)%flagstruct%non_ortho, &
+                             Atm(this_grid)%flagstruct%grid_type, &
+                             Atm(this_grid)%flagstruct%c2l_ord)
 
         ! Finish up initialization; write damping coefficients dependent upon
 
         if ( is_master() ) then
-           sdt =  dt_atmos/real(Atm(this_grid)%flagstruct%n_split*Atm(this_grid)%flagstruct%k_split*abs(p_split), kind=kind_real)
+           sdt =  dt_atmos/real(Atm(this_grid)%flagstruct%n_split*Atm(this_grid)%flagstruct%k_split* &
+                               abs(p_split), kind=kind_real)
            !           write(*,*) ' '
            !           write(*,*) 'Divergence damping Coefficients'
            !           write(*,*) 'For small dt=', sdt
-           !           write(*,*) 'External mode del-2 (m**2/s)=',  Atm(this_grid)%flagstruct%d_ext*Atm(this_grid)%gridstruct%da_min_c/sdt
-           !           write(*,*) 'Internal mode del-2 SMAG dimensionless coeff=',  Atm(this_grid)%flagstruct%dddmp
-           !           write(*,*) 'Internal mode del-2 background diff=', Atm(this_grid)%flagstruct%d2_bg*Atm(this_grid)%gridstruct%da_min_c/sdt
+           !           write(*,*) 'External mode del-2 (m**2/s)=',
+           !    &           Atm(this_grid)%flagstruct%d_ext*Atm(this_grid)%gridstruct%da_min_c/sdt
+           !           write(*,*) 'Internal mode del-2 SMAG dimensionless coeff=',
+           !    &           Atm(this_grid)%flagstruct%dddmp
+           !           write(*,*) 'Internal mode del-2 background diff=',
+           !    &           Atm(this_grid)%flagstruct%d2_bg*Atm(this_grid)%gridstruct%da_min_c/sdt
 
            if (nord==1) then
-              !              write(*,*) 'Internal mode del-4 background diff=', Atm(this_grid)%flagstruct%d4_bg
-              !              write(*,*) 'Vorticity del-4 (m**4/s)=', (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2/sdt*1.E-6
+              !              write(*,*) 'Internal mode del-4 background diff=',
+              !    &              Atm(this_grid)%flagstruct%d4_bg
+              !              write(*,*) 'Vorticity del-4 (m**4/s)=',
+              !    &              (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2
+              !    &              /sdt*1.E-6
            endif
-           !if (Atm(this_grid)%flagstruct%nord==2) write(*,*) 'Internal mode del-6 background diff=', Atm(this_grid)%flagstruct%d4_bg
-           !if (Atm(this_grid)%flagstruct%nord==3) write(*,*) 'Internal mode del-8 background diff=', Atm(this_grid)%flagstruct%d4_bg
+           !if (Atm(this_grid)%flagstruct%nord==2) write(*,*)
+           !    &     'Internal mode del-6 background diff=', Atm(this_grid)%flagstruct%d4_bg
+           !if (Atm(this_grid)%flagstruct%nord==3) write(*,*)
+           !    &     'Internal mode del-8 background diff=', Atm(this_grid)%flagstruct%d4_bg
            !           write(*,*) 'tracer del-2 diff=', Atm(this_grid)%flagstruct%trdm2
 
-           !           write(*,*) 'Vorticity del-4 (m**4/s)=', (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2/sdt*1.E-6
+           !           write(*,*) 'Vorticity del-4 (m**4/s)=',
+           !    &           (Atm(this_grid)%flagstruct%vtdm4*Atm(this_grid)%gridstruct%da_min)**2
+           !    &           /sdt*1.E-6
            !           write(*,*) 'beta=', Atm(this_grid)%flagstruct%beta
            !           write(*,*) ' '
         endif
@@ -792,7 +822,9 @@ use ijedi_kinds_mod,          only: kind_real
         subroutine set_namelist_pointers(Atm)
           type(fv_atmos_type), intent(INOUT), target :: Atm
 
-          !This routine associates the MODULE flag pointers with the ARRAY flag variables for the grid active on THIS pe so the flags can be read in from the namelist.
+          !This routine associates the MODULE flag pointers with the ARRAY flag
+          !variables for the grid active on THIS pe so the flags can be read in
+          !from the namelist.
 
           grid_type                     => Atm%flagstruct%grid_type
           grid_name                     => Atm%flagstruct%grid_name
