@@ -71,6 +71,19 @@ add_test(NAME ijedi_setup_obs_testdata
         ${CMAKE_CURRENT_SOURCE_DIR}/data/obs/gen_obs_testdata.py
         ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 
+# FV3 test data generation fixture
+# ----------------------------------
+# Runs gen_fv3_testdata.py once; produces atmf006.nc and sfcf006.nc inside the test's
+# own working directory, referenced by tier1_unit_state-fv3.yaml
+# as input_dir: .
+set(FV3_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/state-fv3)
+file(MAKE_DIRECTORY ${FV3_TEST_WORKDIR})
+
+add_test(NAME ijedi_setup_fv3_testdata
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
+        ${FV3_TEST_WORKDIR})
+
 # Unit tests
 foreach(TIER RANGE 1 3)
     # Find all YAML files for this tier
