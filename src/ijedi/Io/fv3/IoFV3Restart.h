@@ -34,6 +34,6 @@ namespace ijedi
 
         Parameters_ parameters_;
         const Geometry &geom_;
-        F90io_fv3_restart keySelf_;
+        mutable F90io_fv3_restart keySelf_;
     };
 }  // namespace ijedi

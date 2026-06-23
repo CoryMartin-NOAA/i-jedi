@@ -130,8 +130,6 @@ if(FMS_FOUND)
   # Combine with main source files
   list(APPEND ijedi_src_files ${ijedi_fv3_src_files})
 
-  add_definitions(-DFMS_FOUND=1)
-
   # Compile with double precision
   if(CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
     set(fv3_flags "-r8")
@@ -174,6 +172,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC FMS_FOUND=1)
 endif()
 
 if(OpenMP_CXX_FOUND)
