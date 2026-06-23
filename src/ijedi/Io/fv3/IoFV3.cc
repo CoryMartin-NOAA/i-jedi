@@ -14,6 +14,7 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Io/fv3/IoFV3.h"
+#include "ijedi/Io/fv3/IoFV3Restart.h"
 
 namespace ijedi
 {
@@ -46,7 +47,12 @@ namespace ijedi
         {
             readHistoryFiles(x, fileionames, fileioscaling);
         } else if (source == "restart") {
-            throw eckit::Exception("Reading restart files not yet implemented");
+#if FMS_FOUND
+            IoFV3Restart restartIO(geom_, parameters_);
+            restartIO.read(x, fileionames, fileioscaling);
+#else
+            throw eckit::Exception("Reading restart files requires FMS which was not found during build");
+#endif
         } else {
             throw eckit::Exception("Invalid source parameter: " + source);
         }

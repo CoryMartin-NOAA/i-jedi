@@ -93,8 +93,12 @@ if(FMS_FOUND)
     Geometry/fv3/GeometryFV3.interface.h
     Io/fv3/IoFV3.cc
     Io/fv3/IoFV3.h
+    Io/fv3/IoFV3Restart.cc
+    Io/fv3/IoFV3Restart.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
+    Io/fv3/ijedi_io_fv3_restart_mod.F90
+    Io/fv3/IoFV3Restart.interface.F90
     Geometry/fv3/ijedi_fv3_akbk_mod.f90
     Geometry/fv3/ijedi_fv3_arrays.F90
     Geometry/fv3/ijedi_fv3_control.F90
@@ -125,6 +129,8 @@ if(FMS_FOUND)
 
   # Combine with main source files
   list(APPEND ijedi_src_files ${ijedi_fv3_src_files})
+
+  add_definitions(-DFMS_FOUND=1)
 
   # Compile with double precision
   if(CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
