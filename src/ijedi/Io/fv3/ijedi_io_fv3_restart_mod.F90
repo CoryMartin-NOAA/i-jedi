@@ -231,13 +231,36 @@ subroutine get_io_file(self, io_name, npz, indexrst)
 
    character(len=field_clen) :: io_file
 
+   ! Start by setting to core
    io_file = 'core'
-   ! Basic logic ported from fv3-jedi
+   ! Fields with 1 level go in surface file
    if (npz == 1) io_file = 'surface'
+   ! Surface fields in core
+   if (trim(io_name) == 'air_pressure_at_surface') io_file = 'surface'
+   if (trim(io_name) == 'geopotential_height_times_gravity_at_surface') io_file = 'core'
+   ! Surface winds go in surface wind file
+   if (trim(io_name) == 'eastward_wind_at_surface') io_file = 'surface_wind'
+   if (trim(io_name) == 'northward_wind_at_surface') io_file = 'surface_wind'
+   ! Tracers go in tracer file
    if (index(io_name, 'sphum') > 0 .or. index(io_name, 'liq_wat') > 0 .or. &
        index(io_name, 'ice_wat') > 0 .or. index(io_name, 'rainwat') > 0 .or. &
        index(io_name, 'snowwat') > 0 .or. index(io_name, 'graupel') > 0) io_file = 'tracer'
+   ! Orog variables if name contains orog
+   if (index(trim(io_name), 'orog') /= 0) io_file = 'orography'
+   ! Fraction of land is in the orography file
+   if (index(trim(io_name), 'fraction_of_land') /= 0) io_file = 'orography'
+   ! Cold start variables if name contains cold
+   if (index(trim(io_name), 'cold') /= 0) io_file = 'cold'
+   ! Multi-level soils go in surface
+   if (trim(io_name) == 'stc') io_file = 'surface'
+   if (trim(io_name) == 'soilMoistureVolumetric') io_file = 'surface'
+   if (trim(io_name) == 'tslb') io_file = 'surface'
+   if (trim(io_name) == 'smois') io_file = 'surface'
+   ! Reflectivity variable goes in physics file
+   if (trim(io_name) == 'equivalent_reflectivity_factor') io_file = 'physics'
 
+   ! Set the filename index
+   ! ----------------------
    select case (io_file)
    case("core")
       indexrst = self%index_core
