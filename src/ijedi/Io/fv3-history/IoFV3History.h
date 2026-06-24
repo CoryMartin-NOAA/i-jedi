@@ -101,7 +101,7 @@ namespace ijedi
      public:
         static const std::string classname() { return "ijedi::IoFV3History"; }
 
-        typedef IoFV3Parameters Parameters_;
+        typedef IoFV3HistoryParameters Parameters_;
 
         IoFV3History(const Geometry &, const Parameters_ &);
         ~IoFV3History();

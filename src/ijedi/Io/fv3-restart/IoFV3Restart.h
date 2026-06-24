@@ -11,16 +11,16 @@
 #include "oops/util/parameters/RequiredParameter.h"
 
 #include "ijedi/Io/IoBase.h"
-// #include "IoFV3History.interface.h"
+// #include "IoFV3Restart.interface.h"
 
 namespace ijedi
 {
 
   // -------------------------------------------------------------------------------------------------
 
-  class IoFV3HistoryParameters : public IoParametersBase
+  class IoFV3RestartParameters : public IoParametersBase
   {
-    OOPS_CONCRETE_PARAMETERS(IoFV3HistoryParameters, IoParametersBase)
+    OOPS_CONCRETE_PARAMETERS(IoFV3RestartParameters, IoParametersBase)
 
    public:
     // Names of files to be read/written to
@@ -96,15 +96,15 @@ namespace ijedi
   };
 
   // -------------------------------------------------------------------------------------------------
-  class IoFV3History : public IoBase, private util::ObjectCounter<IoFV3History>
+  class IoFV3Restart : public IoBase, private util::ObjectCounter<IoFV3Restart>
   {
    public:
-    static const std::string classname() { return "ijedi::IoFV3History"; }
+    static const std::string classname() { return "ijedi::IoFV3Restart"; }
 
-    typedef IoFV3HistoryParameters Parameters_;
+    typedef IoFV3RestartParameters Parameters_;
 
-    IoFV3History(const Geometry &, const Parameters_ &);
-    ~IoFV3History();
+    IoFV3Restart(const Geometry &, const Parameters_ &);
+    ~IoFV3Restart();
     void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
               const eckit::LocalConfiguration &) const override;
     void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
