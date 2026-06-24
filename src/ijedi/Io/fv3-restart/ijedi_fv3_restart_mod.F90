@@ -11,7 +11,7 @@ use fms2_io_mod,                only: FmsNetcdfDomainFile_t, close_file, get_dim
 use ijedi_fv3_geom_mod,         only: fv3_geom_nodes_to_atlas_nodes, fv3_geom_setup_domain
 use ijedi_kinds_mod,            only: kind_real
 use mpp_domains_mod,            only: center, domain2D, mpp_deallocate_domain
-use mpp_mod,                    only: mpp_pe, mpp_root_pe
+use mpp_mod,                    only: mpp_pe, mpp_root_pe, mpp_sync
 
 implicit none
 private
