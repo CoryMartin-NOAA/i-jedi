@@ -14,7 +14,7 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Io/fv3/IoFV3.h"
-#include "ijedi/Io/fv3/IoFV3Restart.h"
+#include "ijedi/Io/fv3/IoFV3Restart.interface.h"
 
 namespace ijedi
 {
@@ -48,8 +48,7 @@ namespace ijedi
             readHistoryFiles(x, fileionames, fileioscaling);
         } else if (source == "restart") {
 #if FMS_FOUND
-            IoFV3Restart restartIO(geom_, parameters_);
-            restartIO.read(x, fileionames, fileioscaling);
+            readRestartFiles(x, fileionames, fileioscaling);
 #else
             throw eckit::Exception("Reading restart files requires FMS which was not found during build");
 #endif
@@ -69,16 +68,83 @@ namespace ijedi
         oops::Log::trace() << classname() << " write state done" << std::endl;
     }
     // -------------------------------------------------------------------------------------------------
+    void IoFV3::readRestartFiles(atlas::FieldSet &fieldSet,
+                                 const eckit::LocalConfiguration &fileionames,
+                                 const eckit::LocalConfiguration &fileioscaling) const
+    {
+        util::Timer timer(classname(), "read restart state");
+        oops::Log::trace() << classname() << " read restart state starting" << std::endl;
+
+        F90io_fv3_restart keySelf = 0;
+        ijedi_io_fv3_restart_create_f90(keySelf, parameters_.toConfiguration(), geom_.modelData());
+
+        try {
+            std::vector<std::string> jediNames;
+            for (const std::string &jediName : fileionames.keys()) {
+                if (fieldSet.has(jediName)) {
+                    jediNames.push_back(jediName);
+                }
+            }
+            const int numFields = jediNames.size();
+
+            std::vector<int> levels(numFields);
+            std::vector<std::string> ncVarNamesStr(numFields);
+            std::vector<const char *> ncVarNames(numFields);
+            std::vector<double *> dataPtrs(numFields);
+
+            for (int i = 0; i < numFields; ++i) {
+                const std::string &jediName = jediNames[i];
+                atlas::Field &field = fieldSet.field(jediName);
+                levels[i] = field.levels();
+                ncVarNamesStr[i] = fileionames.getString(jediName);
+                ncVarNames[i] = ncVarNamesStr[i].c_str();
+
+                auto view = atlas::array::make_view<double, 2>(field);
+                dataPtrs[i] = view.data();
+            }
+
+            ijedi_io_fv3_restart_read_f90(keySelf, numFields, levels.data(), ncVarNames.data(),
+                                          dataPtrs.data());
+
+            for (int i = 0; i < numFields; ++i) {
+                const std::string &jediName = jediNames[i];
+                if (fileioscaling.has(jediName)) {
+                    const double scale = fileioscaling.getDouble(jediName);
+                    atlas::Field &field = fieldSet.field(jediName);
+                    auto view = atlas::array::make_view<double, 2>(field);
+                    for (atlas::idx_t jnode = 0; jnode < field.shape(0); ++jnode) {
+                        for (int jlev = 0; jlev < field.levels(); ++jlev) {
+                            view(jnode, jlev) *= scale;
+                        }
+                    }
+                }
+            }
+        } catch (...) {
+            ijedi_io_fv3_restart_delete_f90(keySelf);
+            throw;
+        }
+
+        ijedi_io_fv3_restart_delete_f90(keySelf);
+
+        oops::Log::trace() << classname() << " read restart state done" << std::endl;
+    }
+    // -------------------------------------------------------------------------------------------------
     void IoFV3::readHistoryFiles(atlas::FieldSet &fieldSet,
                                  const eckit::LocalConfiguration &fileionames,
                                  const eckit::LocalConfiguration &fileioscaling) const
     {
         const std::string datapath = parameters_.datapath.value();
+        const auto &atmFile = parameters_.atm_file.value();
+        const auto &sfcFile = parameters_.sfc_file.value();
+
+        if (!atmFile || !sfcFile) {
+            throw eckit::Exception("History source requires both atm_file and sfc_file parameters");
+        }
 
         // Build the list of file paths from atm_file and sfc_file
         std::vector<std::string> filepaths;
-        filepaths.push_back(datapath + "/" + parameters_.atm_file.value());
-        filepaths.push_back(datapath + "/" + parameters_.sfc_file.value());
+        filepaths.push_back(datapath + "/" + *atmFile);
+        filepaths.push_back(datapath + "/" + *sfcFile);
 
         // Get per-file dimension name overrides (or use defaults)
         const auto &xdimOpt = parameters_.xdim.value();
@@ -88,7 +154,12 @@ namespace ijedi
 
         // Get the JEDI field names from fileionames keys.
         // Each key is a JEDI long name; the value is the NetCDF variable name in the file.
-        const std::vector<std::string> jediNames = fileionames.keys();
+        std::vector<std::string> jediNames;
+        for (const std::string &jediName : fileionames.keys()) {
+            if (fieldSet.has(jediName)) {
+                jediNames.push_back(jediName);
+            }
+        }
 
         // Track which fields have been read (to avoid reading from a second file)
         std::vector<bool> fieldRead(jediNames.size(), false);
