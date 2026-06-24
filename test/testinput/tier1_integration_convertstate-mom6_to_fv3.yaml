@@ -44,9 +44,8 @@ states:
     - sea_water_salinity
     - sea_surface_height_above_geoid
     io:
-      filetype: fv3
+      filetype: fv3 history
       filename: data_generated/mom6_to_fv3_converted.nc
-      source: history
       datapath: data_generated/fv3/
       atm_file: atmf006.nc
       sfc_file: sfcf006.nc
