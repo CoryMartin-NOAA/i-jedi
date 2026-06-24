@@ -47,7 +47,7 @@ state:
     - air_temperature
     - air_pressure_thickness
     io:
-      filetype: fv3
+      filetype: fv3 history
       source: history
       datapath: data_generated/fv3/
       atm_file: atmf006.nc
