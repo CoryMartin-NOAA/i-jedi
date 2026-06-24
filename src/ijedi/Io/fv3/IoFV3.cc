@@ -1,5 +1,6 @@
 #include <netcdf.h>
 
+#include <cmath>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -59,7 +60,17 @@ namespace ijedi
     {
         util::Timer timer(classname(), "write state");
         oops::Log::trace() << classname() << " write state starting" << std::endl;
-        // CALL WRITE
+
+        const std::string source = parameters_.source.value();
+        if (source == "history")
+        {
+            writeHistoryFiles(x, fileionames, fileioscaling);
+        } else if (source == "restart") {
+            throw eckit::Exception("Writing restart files not yet implemented");
+        } else {
+            throw eckit::Exception("Invalid source parameter: " + source);
+        }
+
         oops::Log::trace() << classname() << " write state done" << std::endl;
     }
     // -------------------------------------------------------------------------------------------------
@@ -306,6 +317,200 @@ namespace ijedi
         oops::Log::info() << classname() << " finished reading "
                           << fieldSet.size() << " fields from "
                           << filepaths.size() << " history file(s)" << std::endl;
+    }
+    // -------------------------------------------------------------------------------------------------
+    void IoFV3::writeHistoryFiles(const atlas::FieldSet &fieldSet,
+                                  const eckit::LocalConfiguration &fileionames,
+                                  const eckit::LocalConfiguration &fileioscaling) const
+    {
+        const std::string datapath = parameters_.datapath.value();
+        const eckit::mpi::Comm &comm = geom_.getComm();
+        const bool isRoot = (comm.rank() == 0);
+
+        // Build the list of file paths from atm_file and sfc_file
+        std::vector<std::string> filepaths;
+        filepaths.push_back(datapath + "/" + parameters_.atm_file.value());
+        filepaths.push_back(datapath + "/" + parameters_.sfc_file.value());
+
+        // Get per-file dimension name overrides (or use defaults)
+        const auto &xdimOpt = parameters_.xdim.value();
+        const auto &ydimOpt = parameters_.ydim.value();
+        const auto &zfdimOpt = parameters_.zfdim.value();
+        const auto &tiledimOpt = parameters_.tiledim.value();
+
+        const std::vector<std::string> jediNames = fileionames.keys();
+
+        // Prepare for gather
+        const auto &funcSpace = geom_.functionSpace();
+
+        // Loop over each file (e.g. atm file, sfc file)
+        for (size_t ifile = 0; ifile < filepaths.size(); ++ifile)
+        {
+            const std::string &filepath = filepaths[ifile];
+
+            // Dimension name defaults for this file
+            const std::string xdimName = (xdimOpt && ifile < xdimOpt->size())
+                                             ? (*xdimOpt)[ifile]
+                                             : "grid_xt";
+            const std::string ydimName = (ydimOpt && ifile < ydimOpt->size())
+                                             ? (*ydimOpt)[ifile]
+                                             : "grid_yt";
+            const std::string zfdimName = (zfdimOpt && ifile < zfdimOpt->size())
+                                              ? (*zfdimOpt)[ifile]
+                                              : "pfull";
+            const bool hasTileDim = (tiledimOpt && ifile < tiledimOpt->size())
+                                        ? (*tiledimOpt)[ifile]
+                                        : true;
+
+            size_t nx = 0, ny = 0, nz = 0, ntiles = 0;
+
+            auto globalIdx = atlas::array::make_view<atlas::gidx_t, 1>(funcSpace.global_index());
+            atlas::gidx_t maxGIdx = 0;
+            for (atlas::idx_t jnode = 0; jnode < funcSpace.size(); ++jnode) {
+                if (globalIdx(jnode) > maxGIdx) maxGIdx = globalIdx(jnode);
+            }
+            comm.allReduceInPlace(maxGIdx, eckit::mpi::max());
+
+            if (maxGIdx == 0) throw eckit::Exception("maxGIdx is zero, cannot write history file");
+
+            ntiles = (hasTileDim && (maxGIdx % 6 == 0)) ? 6 : 1;
+            size_t n2 = maxGIdx / ntiles;
+            nx = ny = std::sqrt(n2);
+            const size_t nxy = nx * ny;
+            if (nxy == 0) throw eckit::Exception("nx*ny is zero, cannot write history file");
+
+            for (const auto & jediName : jediNames) {
+                if (fieldSet.has(jediName)) {
+                    nz = std::max(nz, static_cast<size_t>(fieldSet.field(jediName).shape(1)));
+                }
+            }
+
+            if (isRoot) {
+                oops::Log::info() << classname() << " writing history file: " << filepath << std::endl;
+                int ncid;
+                checkNetCDF(nc_create(filepath.c_str(), NC_NETCDF4 | NC_CLOBBER, &ncid), "creating " + filepath);
+
+                int xdimid, ydimid, zdimid, tdimid, timedimid;
+                checkNetCDF(nc_def_dim(ncid, xdimName.c_str(), nx, &xdimid), "def dim x");
+                checkNetCDF(nc_def_dim(ncid, ydimName.c_str(), ny, &ydimid), "def dim y");
+                checkNetCDF(nc_def_dim(ncid, zfdimName.c_str(), nz, &zdimid), "def dim z");
+                if (hasTileDim) {
+                    checkNetCDF(nc_def_dim(ncid, "tile", ntiles, &tdimid), "def dim tile");
+                }
+                checkNetCDF(nc_def_dim(ncid, "time", NC_UNLIMITED, &timedimid), "def dim time");
+
+                for (const auto & jediName : jediNames) {
+                    if (ifile > 0) break;
+                    if (!fieldSet.has(jediName)) continue;
+
+                    std::string ncVarName = fileionames.getString(jediName);
+                    int varid;
+                    int curr_nz = fieldSet.field(jediName).shape(1);
+
+                    std::vector<int> dimids;
+                    dimids.push_back(timedimid);
+                    if (hasTileDim) dimids.push_back(tdimid);
+                    if (curr_nz > 1) dimids.push_back(zdimid);
+                    dimids.push_back(ydimid);
+                    dimids.push_back(xdimid);
+
+                    checkNetCDF(nc_def_var(ncid, ncVarName.c_str(), NC_DOUBLE, dimids.size(), dimids.data(), &varid), "def var " + ncVarName);
+                }
+                checkNetCDF(nc_enddef(ncid), "enddef");
+
+                for (const auto & jediName : jediNames) {
+                    if (ifile > 0) break;
+                    if (!fieldSet.has(jediName)) continue;
+
+                    std::string ncVarName = fileionames.getString(jediName);
+                    const atlas::Field &field = fieldSet.field(jediName);
+                    int curr_nz = field.shape(1);
+
+                    atlas::Field globalField = funcSpace.createField<double>(
+                        atlas::option::name(jediName) | atlas::option::levels(curr_nz) | atlas::option::global());
+
+                    funcSpace.gather(field, globalField);
+
+                    auto globalView = atlas::array::make_view<double, 2>(globalField);
+
+                    size_t totalNodes = globalField.shape(0);
+                    std::vector<double> buffer;
+                    if (curr_nz > 1) {
+                        buffer.assign(ntiles * curr_nz * nxy, 0.0);
+                    } else {
+                        buffer.assign(ntiles * nxy, 0.0);
+                    }
+
+                    atlas::Field gidxDouble = funcSpace.createField<double>(atlas::option::levels(1));
+                    auto gidxDoubleView = atlas::array::make_view<double, 2>(gidxDouble);
+                    auto localGidxView = atlas::array::make_view<atlas::gidx_t, 1>(funcSpace.global_index());
+                    for (atlas::idx_t j = 0; j < funcSpace.size(); ++j) gidxDoubleView(j, 0) = static_cast<double>(localGidxView(j));
+
+                    atlas::Field globalGidxDouble = funcSpace.createField<double>(atlas::option::levels(1) | atlas::option::global());
+                    funcSpace.gather(gidxDouble, globalGidxDouble);
+                    auto globalGidxDoubleView = atlas::array::make_view<double, 2>(globalGidxDouble);
+
+                    double scale = 1.0;
+                    if (fileioscaling.has(jediName)) {
+                        scale = 1.0 / fileioscaling.getDouble(jediName);
+                    }
+
+                    for (size_t gn = 0; gn < totalNodes; ++gn) {
+                        size_t gid0 = static_cast<size_t>(globalGidxDoubleView(gn, 0)) - 1;
+                        size_t tile0 = gid0 / nxy;
+                        size_t spatialIdx = gid0 % nxy;
+                        if (tile0 >= ntiles) continue;
+
+                        if (curr_nz > 1) {
+                            for (size_t z = 0; z < (size_t)curr_nz; ++z) {
+                                size_t bufIdx = tile0 * (curr_nz * nxy) + z * nxy + spatialIdx;
+                                buffer[bufIdx] = globalView(gn, z) * scale;
+                            }
+                        } else {
+                            size_t bufIdx = tile0 * nxy + spatialIdx;
+                            buffer[bufIdx] = globalView(gn, 0) * scale;
+                        }
+                    }
+
+                    int varid;
+                    checkNetCDF(nc_inq_varid(ncid, ncVarName.c_str(), &varid), "inq varid");
+                    std::vector<size_t> start, count;
+                    start.push_back(0);
+                    if (hasTileDim) start.push_back(0);
+                    if (curr_nz > 1) start.push_back(0);
+                    start.push_back(0);
+                    start.push_back(0);
+
+                    count.push_back(1);
+                    if (hasTileDim) count.push_back(ntiles);
+                    if (curr_nz > 1) count.push_back(curr_nz);
+                    count.push_back(ny);
+                    count.push_back(nx);
+
+                    checkNetCDF(nc_put_vara_double(ncid, varid, start.data(), count.data(), buffer.data()), "put vara " + ncVarName);
+                }
+
+                checkNetCDF(nc_close(ncid), "closing " + filepath);
+            } else {
+                for (const auto & jediName : jediNames) {
+                    if (ifile > 0) break;
+                    if (!fieldSet.has(jediName)) continue;
+
+                    const atlas::Field &field = fieldSet.field(jediName);
+                    int curr_nz = field.shape(1);
+                    atlas::Field globalField = funcSpace.createField<double>(
+                        atlas::option::name(jediName) | atlas::option::levels(curr_nz) | atlas::option::global());
+                    funcSpace.gather(field, globalField);
+
+                    atlas::Field gidxDouble = funcSpace.createField<double>(atlas::option::levels(1));
+                    auto gidxDoubleView = atlas::array::make_view<double, 2>(gidxDouble);
+                    auto localGidxView = atlas::array::make_view<atlas::gidx_t, 1>(funcSpace.global_index());
+                    for (atlas::idx_t j = 0; j < funcSpace.size(); ++j) gidxDoubleView(j, 0) = static_cast<double>(localGidxView(j));
+                    atlas::Field globalGidxDouble = funcSpace.createField<double>(atlas::option::levels(1) | atlas::option::global());
+                    funcSpace.gather(gidxDouble, globalGidxDouble);
+                }
+            }
+        }
     }
     // -------------------------------------------------------------------------------------------------
     void IoFV3::print(std::ostream &os) const
