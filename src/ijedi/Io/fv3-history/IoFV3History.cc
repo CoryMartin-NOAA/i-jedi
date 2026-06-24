@@ -343,9 +343,36 @@ namespace ijedi
             if (maxGIdx == 0) throw eckit::Exception("maxGIdx is zero, cannot write history file");
 
             ntiles = (hasTileDim && (maxGIdx % 6 == 0)) ? 6 : 1;
-            size_t n2 = maxGIdx / ntiles;
-            nx = ny = std::sqrt(n2);
-            const size_t nxy = nx * ny;
+
+            // Prefer compute-domain size from owned nodes, which excludes halo-expanded
+            // nodes that may be present in the function space indexing.
+            size_t nxy = 0;
+            if (geom_.fields().has("owned")) {
+                const atlas::Field &owned = geom_.fields().field("owned");
+                auto ownedView = atlas::array::make_view<int, 2>(owned);
+                atlas::idx_t ownedLocal = 0;
+                for (atlas::idx_t jnode = 0; jnode < funcSpace.size(); ++jnode) {
+                    if (ownedView(jnode, 0) > 0) ++ownedLocal;
+                }
+                atlas::idx_t ownedGlobal = ownedLocal;
+                comm.allReduceInPlace(ownedGlobal, eckit::mpi::sum());
+                if (ownedGlobal > 0 && ownedGlobal % static_cast<atlas::idx_t>(ntiles) == 0) {
+                    const size_t nOwnedPerTile = static_cast<size_t>(ownedGlobal / ntiles);
+                    const size_t side = static_cast<size_t>(std::sqrt(static_cast<double>(nOwnedPerTile)));
+                    if (side * side == nOwnedPerTile) {
+                        nx = ny = side;
+                        nxy = nOwnedPerTile;
+                    }
+                }
+            }
+
+            // Fallback for geometries without an owned mask or non-square owned count.
+            if (nxy == 0) {
+                size_t n2 = maxGIdx / ntiles;
+                nx = ny = std::sqrt(n2);
+                nxy = nx * ny;
+            }
+
             if (nxy == 0) throw eckit::Exception("nx*ny is zero, cannot write history file");
 
             for (const auto & jediName : jediNames) {
