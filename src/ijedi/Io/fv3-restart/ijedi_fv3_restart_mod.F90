@@ -205,6 +205,22 @@ call load_calendar(conf, calendar_type)
 call fv3_geom_setup_domain(domain, npx-1, npy-1, ntiles, (/layout_x, layout_y/), (/1, 1/), 3)
 
 rstflag = .false.
+
+! Remove any stale output files so FMS open_file('overwrite') starts clean.
+! FMS does not unconditionally clobber pre-existing domain-decomposed files.
+block
+  integer :: del_stat
+  if (mpp_pe() == mpp_root_pe()) then
+    do n = 1, numfiles
+      if (trim(filenames(n)) == 'null') cycle
+      open(unit=91, file=trim(datapath)//'/'//trim(filenames(n)), &
+           status='old', iostat=del_stat)
+      if (del_stat == 0) close(unit=91, status='delete')
+    end do
+  end if
+  call mpp_sync()
+end block
+
 allocate(buffers(size(active_fields)))
 do ifield = 1, size(active_fields)
   buffers(ifield)%field_name = trim(active_fields(ifield))
