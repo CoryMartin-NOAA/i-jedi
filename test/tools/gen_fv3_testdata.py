@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Generate FV3 history-format test data (atmf006.nc and sfcf006.nc).
+Generate FV3 test data.
 
-Produces a cubed-sphere C12 L127 dataset with pseudo-random but physically
-realistic values for each field.  The random seed is fixed so the output
-is reproducible across runs.
+Outputs:
+    1) FV3 history files: atmf006.nc and sfcf006.nc
+    2) FV3/FMS restart files for a single tile domain:
+         coupler.res, fv_core.res.nc, fv_core.res.tile1.nc,
+         fv_tracer.res.tile1.nc, fv_srf_wnd.res.tile1.nc
+
+The random seed is fixed so output is reproducible across runs.
 
 Usage: python3 gen_fv3_testdata.py <output_dir>
 """
@@ -28,6 +32,7 @@ NPZ = 127         # number of full levels
 NTILES = 6
 NX = NPX - 1      # 12
 NY = NPY - 1      # 12
+HALO = 3
 
 # GFS L127 ak/bk (interface pressures: p_half = ak + bk * ps)
 AK = np.array([
@@ -103,6 +108,201 @@ BK = np.array([
 # Reference pressure levels (mb) for pfull and phalf coordinate variables
 PHALF_REF = np.linspace(0.0, 1000.0, NPZ + 1)
 PFULL_REF = 0.5 * (PHALF_REF[:-1] + PHALF_REF[1:])
+
+
+def _axis_values(size):
+    """Create FMS-like axis coordinates (1, 11, 21, ...)."""
+    return (1.0 + 10.0 * np.arange(size, dtype=np.float32))
+
+
+def _set_time_and_axis_attrs(vtime):
+    vtime.cartesian_axis = "T"
+    vtime.units = "time level"
+    vtime.long_name = "Time"
+
+
+def _write_restart_coupler(filepath):
+    """Write a coupler.res file matching FV3 restart text layout."""
+    with open(filepath, "w", encoding="ascii") as fobj:
+        fobj.write("     2        (Calendar: no_calendar=0, thirty_day_months=1, julian=2, gregorian=3, noleap=4)\n")
+        fobj.write("  2024     5    26    23     0     0        Model start time:   year, month, day, hour, minute, second\n")
+        fobj.write("  2024     5    27     0     0     0        Current model time: year, month, day, hour, minute, second\n")
+
+
+def generate_fv_core_res(filepath):
+    """Generate fv_core.res.nc containing vertical coordinate arrays."""
+    ds = nc.Dataset(filepath, "w", format="NETCDF4")
+
+    nlevp1 = NPZ + 1
+    ds.createDimension("Time", 1)
+    ds.createDimension("xaxis_1", nlevp1)
+
+    v = ds.createVariable("xaxis_1", "f4", ("xaxis_1",), fill_value=np.nan)
+    v.axis = "X"
+    v[:] = _axis_values(nlevp1)
+
+    v = ds.createVariable("Time", "f4", ("Time",), fill_value=np.nan)
+    _set_time_and_axis_attrs(v)
+    v[:] = np.array([1.0], dtype=np.float32)
+
+    v = ds.createVariable("ak", "f4", ("Time", "xaxis_1"), fill_value=np.nan)
+    v[:] = np.asarray(AK[:nlevp1], dtype=np.float32)[np.newaxis, :]
+
+    v = ds.createVariable("bk", "f4", ("Time", "xaxis_1"), fill_value=np.nan)
+    v[:] = np.asarray(BK[:nlevp1], dtype=np.float32)[np.newaxis, :]
+
+    ds.close()
+
+
+def generate_fv_core_res_tile1(filepath, rng):
+    """Generate fv_core.res.tile1.nc for a one-tile restart domain."""
+    ds = nc.Dataset(filepath, "w", format="NETCDF4")
+
+    x1 = NX + 2 * HALO
+    y2 = NY + 2 * HALO
+    x2 = x1 + 1
+    y1 = y2 + 1
+
+    ds.createDimension("Time", 1)
+    ds.createDimension("zaxis_1", NPZ)
+    ds.createDimension("yaxis_2", y2)
+    ds.createDimension("xaxis_1", x1)
+    ds.createDimension("yaxis_1", y1)
+    ds.createDimension("xaxis_2", x2)
+
+    ds.setncattr("NumFilesInSet", np.int32(1))
+
+    vx1 = ds.createVariable("xaxis_1", "f4", ("xaxis_1",), fill_value=np.nan)
+    vx1.axis = "X"
+    vx1[:] = _axis_values(x1)
+
+    vx2 = ds.createVariable("xaxis_2", "f4", ("xaxis_2",), fill_value=np.nan)
+    vx2.axis = "X"
+    vx2[:] = _axis_values(x2)
+
+    vy1 = ds.createVariable("yaxis_1", "f4", ("yaxis_1",), fill_value=np.nan)
+    vy1.axis = "Y"
+    vy1[:] = _axis_values(y1)
+
+    vy2 = ds.createVariable("yaxis_2", "f4", ("yaxis_2",), fill_value=np.nan)
+    vy2.axis = "Y"
+    vy2[:] = _axis_values(y2)
+
+    vz = ds.createVariable("zaxis_1", "f4", ("zaxis_1",), fill_value=np.nan)
+    vz.axis = "Z"
+    vz[:] = np.arange(1, NPZ + 1, dtype=np.float32)
+
+    vt = ds.createVariable("Time", "f4", ("Time",), fill_value=np.nan)
+    _set_time_and_axis_attrs(vt)
+    vt[:] = np.array([1.0], dtype=np.float32)
+
+    def add3d(name, dims, mean, std, vmin=None, vmax=None):
+        var = ds.createVariable(name, "f4", dims, fill_value=np.nan)
+        shp = tuple(len(ds.dimensions[d]) for d in dims)
+        data = rng.normal(mean, std, shp).astype(np.float32)
+        if vmin is not None:
+            data = np.clip(data, vmin, None)
+        if vmax is not None:
+            data = np.clip(data, None, vmax)
+        var[:] = data
+
+    add3d("DZ", ("Time", "zaxis_1", "yaxis_2", "xaxis_1"), -615.0, 500.0, vmin=-3500.0, vmax=-10.0)
+    add3d("T", ("Time", "zaxis_1", "yaxis_2", "xaxis_1"), 248.0, 30.0, vmin=160.0, vmax=330.0)
+    add3d("W", ("Time", "zaxis_1", "yaxis_2", "xaxis_1"), 0.0, 1.5)
+    add3d("DELP", ("Time", "zaxis_1", "yaxis_2", "xaxis_1"), 778.0, 300.0, vmin=0.1)
+    add3d("phis", ("Time", "yaxis_2", "xaxis_1"), 219.0, 600.0, vmin=-50.0, vmax=6000.0)
+    add3d("u", ("Time", "zaxis_1", "yaxis_1", "xaxis_1"), 7.0, 15.0)
+    add3d("ua", ("Time", "zaxis_1", "yaxis_2", "xaxis_1"), 7.0, 15.0)
+    add3d("v", ("Time", "zaxis_1", "yaxis_2", "xaxis_2"), 0.0, 15.0)
+    add3d("va", ("Time", "zaxis_1", "yaxis_2", "xaxis_1"), 0.0, 15.0)
+
+    ds.close()
+
+
+def generate_fv_tracer_res_tile1(filepath, rng):
+    """Generate fv_tracer.res.tile1.nc with standard tracer fields."""
+    ds = nc.Dataset(filepath, "w", format="NETCDF4")
+
+    x1 = NX + 2 * HALO
+    y1 = NY + 2 * HALO + 1
+
+    ds.createDimension("Time", 1)
+    ds.createDimension("xaxis_1", x1)
+    ds.createDimension("yaxis_1", y1)
+    ds.createDimension("zaxis_1", NPZ)
+
+    ds.setncattr("NumFilesInSet", np.int32(1))
+
+    vx1 = ds.createVariable("xaxis_1", "f4", ("xaxis_1",), fill_value=np.nan)
+    vx1.axis = "X"
+    vx1[:] = _axis_values(x1)
+
+    vy1 = ds.createVariable("yaxis_1", "f4", ("yaxis_1",), fill_value=np.nan)
+    vy1.axis = "Y"
+    vy1[:] = _axis_values(y1)
+
+    vz = ds.createVariable("zaxis_1", "f4", ("zaxis_1",), fill_value=np.nan)
+    vz.axis = "Z"
+    vz[:] = np.arange(1, NPZ + 1, dtype=np.float32)
+
+    vt = ds.createVariable("Time", "f4", ("Time",), fill_value=np.nan)
+    _set_time_and_axis_attrs(vt)
+    vt[:] = np.array([1.0], dtype=np.float32)
+
+    tracer_fields = [
+        "sphum", "liq_wat", "ice_wat", "rainwat", "snowwat", "graupel",
+        "water_nc", "ice_nc", "rain_nc", "o3mr", "liq_aero", "ice_aero",
+        "sgs_tke", "smoke", "dust", "coarsepm",
+    ]
+
+    for name in tracer_fields:
+        var = ds.createVariable(name, "f4", ("Time", "zaxis_1", "yaxis_1", "xaxis_1"), fill_value=np.nan)
+        if name == "o3mr":
+            data = rng.normal(2.1e-6, 3.0e-6, (1, NPZ, y1, x1)).astype(np.float32)
+            data = np.clip(data, 1e-8, 2e-5)
+        elif name == "sphum":
+            data = rng.normal(0.0024, 0.003, (1, NPZ, y1, x1)).astype(np.float32)
+            data = np.clip(data, 1e-8, 0.025)
+        else:
+            data = rng.normal(0.0, 1.0e-7, (1, NPZ, y1, x1)).astype(np.float32)
+            data = np.clip(data, 0.0, None)
+        var[:] = data
+
+    ds.close()
+
+
+def generate_fv_srf_wnd_res_tile1(filepath, rng):
+    """Generate fv_srf_wnd.res.tile1.nc with surface wind fields."""
+    ds = nc.Dataset(filepath, "w", format="NETCDF4")
+
+    x1 = NX + 2 * HALO
+    y1 = NY + 2 * HALO + 1
+
+    ds.createDimension("Time", 1)
+    ds.createDimension("xaxis_1", x1)
+    ds.createDimension("yaxis_1", y1)
+
+    ds.setncattr("NumFilesInSet", np.int32(1))
+
+    vx1 = ds.createVariable("xaxis_1", "f4", ("xaxis_1",), fill_value=np.nan)
+    vx1.axis = "X"
+    vx1[:] = _axis_values(x1)
+
+    vy1 = ds.createVariable("yaxis_1", "f4", ("yaxis_1",), fill_value=np.nan)
+    vy1.axis = "Y"
+    vy1[:] = _axis_values(y1)
+
+    vt = ds.createVariable("Time", "f4", ("Time",), fill_value=np.nan)
+    _set_time_and_axis_attrs(vt)
+    vt[:] = np.array([1.0], dtype=np.float32)
+
+    us = ds.createVariable("u_srf", "f4", ("Time", "yaxis_1", "xaxis_1"), fill_value=np.nan)
+    us[:] = rng.normal(7.0, 8.0, (1, y1, x1)).astype(np.float32)
+
+    vs = ds.createVariable("v_srf", "f4", ("Time", "yaxis_1", "xaxis_1"), fill_value=np.nan)
+    vs[:] = rng.normal(0.0, 8.0, (1, y1, x1)).astype(np.float32)
+
+    ds.close()
 
 
 def _write_global_attrs(ds):
@@ -321,6 +521,26 @@ def main():
     sfc_path = os.path.join(outdir, "sfcf006.nc")
     generate_sfcf(sfc_path, rng)
     print(f"  {sfc_path}")
+
+    coupler_path = os.path.join(outdir, "coupler.res")
+    _write_restart_coupler(coupler_path)
+    print(f"  {coupler_path}")
+
+    core_path = os.path.join(outdir, "fv_core.res.nc")
+    generate_fv_core_res(core_path)
+    print(f"  {core_path}")
+
+    core_tile_path = os.path.join(outdir, "fv_core.res.tile1.nc")
+    generate_fv_core_res_tile1(core_tile_path, rng)
+    print(f"  {core_tile_path}")
+
+    trcr_tile_path = os.path.join(outdir, "fv_tracer.res.tile1.nc")
+    generate_fv_tracer_res_tile1(trcr_tile_path, rng)
+    print(f"  {trcr_tile_path}")
+
+    sfcw_tile_path = os.path.join(outdir, "fv_srf_wnd.res.tile1.nc")
+    generate_fv_srf_wnd_res_tile1(sfcw_tile_path, rng)
+    print(f"  {sfcw_tile_path}")
 
     print(f"FV3 test data written to: {outdir}")
 
