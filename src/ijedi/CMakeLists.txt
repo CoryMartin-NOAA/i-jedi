@@ -95,6 +95,8 @@ if(FMS_FOUND)
     Io/fv3/IoFV3.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
+    Io/fv3/ijedi_io_fv3_restart_mod.F90
+    Io/fv3/IoFV3Restart.interface.F90
     Geometry/fv3/ijedi_fv3_akbk_mod.f90
     Geometry/fv3/ijedi_fv3_arrays.F90
     Geometry/fv3/ijedi_fv3_control.F90
@@ -168,6 +170,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC FMS_FOUND=1)
 endif()
 
 if(OpenMP_CXX_FOUND)

@@ -27,18 +27,46 @@ namespace ijedi
         oops::Parameter<std::string> source{"source", "history or restart", "history", this};
 
         // Atmosphere file name
-        oops::RequiredParameter<std::string> atm_file{"atm_file",
+        oops::OptionalParameter<std::string> atm_file{"atm_file",
                                                       "atmosphere file name",
                                                       this};
 
         // Surface file name
-        oops::RequiredParameter<std::string> sfc_file{"sfc_file",
+        oops::OptionalParameter<std::string> sfc_file{"sfc_file",
                                                       "surface file name",
                                                       this};
 
         // Path prepended to all files
         oops::Parameter<std::string> datapath{"datapath", "path to location of files to be read",
                                               "./", this};
+
+        oops::OptionalParameter<std::string> filename_core{"filename_core",
+                                   "FV3 core restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_trcr{"filename_trcr",
+                                   "FV3 tracer restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_sfcd{"filename_sfcd",
+                                   "FV3 surface data restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_sfcw{"filename_sfcw",
+                                   "FV3 surface wind restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_cplr{"filename_cplr",
+                                   "FV3 coupler restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_spec{"filename_spec",
+                                   "FV3 spectral restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_phys{"filename_phys",
+                                   "FV3 physics restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_orog{"filename_orog",
+                                   "FV3 orography restart filename",
+                                   this};
+        oops::OptionalParameter<std::string> filename_cold{"filename_cold",
+                                   "FV3 cold-start restart filename",
+                                   this};
 
         // Option to clobber existing files
         oops::OptionalParameter<std::vector<bool>> clobber{"clobber existing files",
@@ -118,6 +146,8 @@ namespace ijedi
         // Helper methods for reading different file formats
         void readHistoryFiles(atlas::FieldSet &, const eckit::LocalConfiguration &,
                               const eckit::LocalConfiguration &) const;
+        void readRestartFiles(atlas::FieldSet &, const eckit::LocalConfiguration &,
+                      const eckit::LocalConfiguration &) const;
         void checkNetCDF(int status, const std::string &operation) const;
 
         // Store parameters and geometry reference
