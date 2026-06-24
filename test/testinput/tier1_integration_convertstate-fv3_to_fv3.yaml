@@ -28,16 +28,16 @@ states:
     - northward_wind
     - air_temperature
     - air_pressure_thickness
-      io:
-        filetype: fv3 history
-        datapath: data_generated/fv3/
-        atm_file: atmf006.nc
-        sfc_file: sfcf006.nc
-        field io names:
-          eastward_wind: ugrd
-          northward_wind: vgrd
-          air_temperature: tmp
-          air_pressure_thickness: dpres
+    io:
+      filetype: fv3 history
+      datapath: data_generated/fv3/
+      atm_file: atmf006.nc
+      sfc_file: sfcf006.nc
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
   output:
     date: 2020-12-15T00:00:00Z
     state variables:
