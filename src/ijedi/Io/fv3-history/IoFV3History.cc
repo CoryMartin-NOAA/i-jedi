@@ -1,5 +1,6 @@
 #include <netcdf.h>
 
+#include <algorithm>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -17,9 +18,9 @@
 
 namespace ijedi
 {
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     static IoMaker<IoFV3History> makerIoFV3_("fv3 history");
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     IoFV3History::IoFV3History(const Geometry &geom, const Parameters_ &params)
         : IoBase(geom, params.toConfiguration()), parameters_(params), geom_(geom)
     {
@@ -27,14 +28,14 @@ namespace ijedi
         oops::Log::trace() << classname() << " constructor starting" << std::endl;
         oops::Log::trace() << classname() << " constructor done" << std::endl;
     }
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     IoFV3History::~IoFV3History()
     {
         util::Timer timer(classname(), "~IoFV3History");
         oops::Log::trace() << classname() << " destructor starting" << std::endl;
         oops::Log::trace() << classname() << " destructor done" << std::endl;
     }
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     void IoFV3History::read(atlas::FieldSet &x, const eckit::LocalConfiguration &fileionames,
                      const eckit::LocalConfiguration &fileioscaling) const
     {
@@ -283,9 +284,11 @@ namespace ijedi
 
         oops::Log::trace() << classname() << " read state done" << std::endl;
     }
-    // -------------------------------------------------------------------------------------------------
-    void IoFV3History::write(const atlas::FieldSet &x, const eckit::LocalConfiguration &fileionames,
-                      const eckit::LocalConfiguration &fileioscaling) const
+    // -----------------------------------------------------------------------------
+    void IoFV3History::write(
+        const atlas::FieldSet &x,
+        const eckit::LocalConfiguration &fileionames,
+        const eckit::LocalConfiguration &fileioscaling) const
     {
         util::Timer timer(classname(), "write state");
         oops::Log::trace() << classname() << " write state starting" << std::endl;
@@ -352,9 +355,12 @@ namespace ijedi
             }
 
             if (isRoot) {
-                oops::Log::info() << classname() << " writing history file: " << filepath << std::endl;
+                oops::Log::info() << classname() << " writing history file: "
+                                  << filepath << std::endl;
                 int ncid;
-                checkNetCDF(nc_create(filepath.c_str(), NC_NETCDF4 | NC_CLOBBER, &ncid), "creating " + filepath);
+                checkNetCDF(
+                    nc_create(filepath.c_str(), NC_NETCDF4 | NC_CLOBBER, &ncid),
+                    "creating " + filepath);
 
                 int xdimid, ydimid, zdimid, tdimid, timedimid;
                 checkNetCDF(nc_def_dim(ncid, xdimName.c_str(), nx, &xdimid), "def dim x");
@@ -380,7 +386,10 @@ namespace ijedi
                     dimids.push_back(ydimid);
                     dimids.push_back(xdimid);
 
-                    checkNetCDF(nc_def_var(ncid, ncVarName.c_str(), NC_DOUBLE, dimids.size(), dimids.data(), &varid), "def var " + ncVarName);
+                    checkNetCDF(
+                        nc_def_var(ncid, ncVarName.c_str(), NC_DOUBLE, dimids.size(),
+                                   dimids.data(), &varid),
+                        "def var " + ncVarName);
                 }
                 checkNetCDF(nc_enddef(ncid), "enddef");
 
@@ -393,7 +402,9 @@ namespace ijedi
                     int curr_nz = field.shape(1);
 
                     atlas::Field globalField = funcSpace.createField<double>(
-                        atlas::option::name(jediName) | atlas::option::levels(curr_nz) | atlas::option::global());
+                        atlas::option::name(jediName)
+                        | atlas::option::levels(curr_nz)
+                        | atlas::option::global());
 
                     funcSpace.gather(field, globalField);
 
@@ -407,14 +418,23 @@ namespace ijedi
                         buffer.assign(ntiles * nxy, 0.0);
                     }
 
-                    atlas::Field gidxDouble = funcSpace.createField<double>(atlas::option::levels(1));
+                    atlas::Field gidxDouble =
+                        funcSpace.createField<double>(atlas::option::levels(1));
                     auto gidxDoubleView = atlas::array::make_view<double, 2>(gidxDouble);
-                    auto localGidxView = atlas::array::make_view<atlas::gidx_t, 1>(funcSpace.global_index());
-                    for (atlas::idx_t j = 0; j < funcSpace.size(); ++j) gidxDoubleView(j, 0) = static_cast<double>(localGidxView(j));
+                    auto localGidxView =
+                        atlas::array::make_view<atlas::gidx_t, 1>(
+                            funcSpace.global_index());
+                    for (atlas::idx_t j = 0; j < funcSpace.size(); ++j) {
+                        gidxDoubleView(j, 0) =
+                            static_cast<double>(localGidxView(j));
+                    }
 
-                    atlas::Field globalGidxDouble = funcSpace.createField<double>(atlas::option::levels(1) | atlas::option::global());
+                    atlas::Field globalGidxDouble =
+                        funcSpace.createField<double>(atlas::option::levels(1)
+                                                      | atlas::option::global());
                     funcSpace.gather(gidxDouble, globalGidxDouble);
-                    auto globalGidxDoubleView = atlas::array::make_view<double, 2>(globalGidxDouble);
+                    auto globalGidxDoubleView =
+                        atlas::array::make_view<double, 2>(globalGidxDouble);
 
                     double scale = 1.0;
                     if (fileioscaling.has(jediName)) {
@@ -453,7 +473,10 @@ namespace ijedi
                     count.push_back(ny);
                     count.push_back(nx);
 
-                    checkNetCDF(nc_put_vara_double(ncid, varid, start.data(), count.data(), buffer.data()), "put vara " + ncVarName);
+                    checkNetCDF(
+                        nc_put_vara_double(ncid, varid, start.data(), count.data(),
+                                           buffer.data()),
+                        "put vara " + ncVarName);
                 }
 
                 checkNetCDF(nc_close(ncid), "closing " + filepath);
@@ -465,27 +488,37 @@ namespace ijedi
                     const atlas::Field &field = x.field(jediName);
                     int curr_nz = field.shape(1);
                     atlas::Field globalField = funcSpace.createField<double>(
-                        atlas::option::name(jediName) | atlas::option::levels(curr_nz) | atlas::option::global());
+                        atlas::option::name(jediName)
+                        | atlas::option::levels(curr_nz)
+                        | atlas::option::global());
                     funcSpace.gather(field, globalField);
 
-                    atlas::Field gidxDouble = funcSpace.createField<double>(atlas::option::levels(1));
+                    atlas::Field gidxDouble =
+                        funcSpace.createField<double>(atlas::option::levels(1));
                     auto gidxDoubleView = atlas::array::make_view<double, 2>(gidxDouble);
-                    auto localGidxView = atlas::array::make_view<atlas::gidx_t, 1>(funcSpace.global_index());
-                    for (atlas::idx_t j = 0; j < funcSpace.size(); ++j) gidxDoubleView(j, 0) = static_cast<double>(localGidxView(j));
-                    atlas::Field globalGidxDouble = funcSpace.createField<double>(atlas::option::levels(1) | atlas::option::global());
+                    auto localGidxView =
+                        atlas::array::make_view<atlas::gidx_t, 1>(
+                            funcSpace.global_index());
+                    for (atlas::idx_t j = 0; j < funcSpace.size(); ++j) {
+                        gidxDoubleView(j, 0) =
+                            static_cast<double>(localGidxView(j));
+                    }
+                    atlas::Field globalGidxDouble =
+                        funcSpace.createField<double>(atlas::option::levels(1)
+                                                      | atlas::option::global());
                     funcSpace.gather(gidxDouble, globalGidxDouble);
                 }
             }
         }
         oops::Log::trace() << classname() << " write state done" << std::endl;
     }
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     void IoFV3History::print(std::ostream &os) const
     {
         os << classname() << " IO for Cube Sphere History files";
     }
 
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     void IoFV3History::checkNetCDF(int status, const std::string &operation) const
     {
         if (status != NC_NOERR)
@@ -493,5 +526,5 @@ namespace ijedi
             throw eckit::Exception("NetCDF error in " + operation + ": " + nc_strerror(status));
         }
     }
-    // -------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
 }  // namespace ijedi

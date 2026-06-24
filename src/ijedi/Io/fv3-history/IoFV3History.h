@@ -23,7 +23,6 @@ namespace ijedi
         OOPS_CONCRETE_PARAMETERS(IoFV3HistoryParameters, IoParametersBase)
 
      public:
-
         // Atmosphere file name
         oops::RequiredParameter<std::string> atm_file{"atm_file",
                                                       "atmosphere file name",
