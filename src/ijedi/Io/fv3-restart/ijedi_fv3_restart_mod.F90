@@ -147,7 +147,8 @@ if (want_ps) then
     afield = afieldset%field('air_pressure_thickness')
     call afield%data(atlas_ptr)
     delp = 0.0_kind_real
-    call copy_atlas_to_fv3(atlas_ptr, delp, isc, iec, jsc, jec, ngrid)
+    call copy_atlas_to_fv3(atlas_ptr, delp, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+                           ntile, ntiles, ngrid)
     call afield%final()
   end if
   afield = afieldset%field('air_pressure_at_surface')
@@ -230,7 +231,8 @@ do ifield = 1, size(active_fields)
 
   allocate(buffers(ifield)%array(isd:ied, jsd:jed, max(1, afield%levels())))
   buffers(ifield)%array = 0.0_kind_real
-  call copy_atlas_to_fv3(atlas_ptr, buffers(ifield)%array, isc, iec, jsc, jec, ngrid)
+  call copy_atlas_to_fv3(atlas_ptr, buffers(ifield)%array, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+                         ntile, ntiles, ngrid)
   call unscale_array(buffers(ifield)%array, trim(active_fields(ifield)), field_io_scaling)
   call get_io_file(trim(active_fields(ifield)), afield%levels(), tracer_fields, buffers(ifield)%file_index)
   call afield%final()
@@ -499,17 +501,58 @@ end do
 
 end function is_tracer_field
 
-subroutine copy_atlas_to_fv3(atlas_ptr, fv3_array, isc, iec, jsc, jec, ngrid)
+subroutine copy_atlas_to_fv3(atlas_ptr, fv3_array, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+                             ntile, ntiles, ngrid)
 
 real(kind=kind_real), pointer, intent(in)    :: atlas_ptr(:,:)
 real(kind=kind_real),          intent(inout) :: fv3_array(:,:,:)
-integer,                       intent(in)    :: isc, iec, jsc, jec
-integer,                       intent(in)    :: ngrid
-integer :: jl
+integer,                       intent(in)    :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed
+integer,                       intent(in)    :: ntile, ntiles, ngrid
+integer :: jl, n, lin, ni, nj, nlev, nxy
+real(kind=kind_real), allocatable :: map_code(:), coded_plane(:,:)
 
-do jl = 1, size(fv3_array, 3)
-  fv3_array(isc:iec, jsc:jec, jl) = reshape(atlas_ptr(jl, 1:ngrid), (/iec-isc+1, jec-jsc+1/))
+nlev = size(fv3_array, 3)
+nxy = (iec - isc + 1) * (jec - jsc + 1)
+
+if (size(atlas_ptr, 1) /= nlev .and. size(atlas_ptr, 2) /= nlev) then
+  call abor1_ftn('copy_atlas_to_fv3: atlas levels dimension does not match FV3 array levels')
+end if
+if (ngrid /= nxy) then
+  call abor1_ftn('copy_atlas_to_fv3: ngrid does not match FV3 compute-domain size')
+end if
+
+allocate(map_code(ngrid))
+allocate(coded_plane(isd:ied, jsd:jed))
+coded_plane = 0.0_kind_real
+
+lin = 0
+do nj = jsc, jec
+  do ni = isc, iec
+    lin = lin + 1
+    coded_plane(ni, nj) = real(lin, kind_real)
+  end do
 end do
+
+call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
+                                   ntiles, ngrid, coded_plane, map_code)
+
+do jl = 1, nlev
+  fv3_array(:,:,jl) = 0.0_kind_real
+  do n = 1, ngrid
+    lin = nint(map_code(n))
+    if (lin < 1 .or. lin > nxy) cycle
+    nj = jsc + (lin - 1) / (iec - isc + 1)
+    ni = isc + mod(lin - 1, (iec - isc + 1))
+    if (size(atlas_ptr, 1) == nlev) then
+      fv3_array(ni, nj, jl) = atlas_ptr(jl, n)
+    else
+      fv3_array(ni, nj, jl) = atlas_ptr(n, jl)
+    end if
+  end do
+end do
+
+deallocate(coded_plane)
+deallocate(map_code)
 
 end subroutine copy_atlas_to_fv3
 
@@ -521,12 +564,23 @@ real(kind=kind_real), pointer, intent(inout) :: atlas_ptr(:,:)
 integer,                       intent(in)    :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed
 integer,                       intent(in)    :: ntile, ntiles, ngrid
 integer :: jl
+real(kind=kind_real), allocatable :: node_values(:)
 
 atlas_ptr = 0.0_kind_real
+allocate(node_values(ngrid))
 do jl = 1, size(fv3_array, 3)
+  node_values = 0.0_kind_real
   call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
-                                     ntiles, ngrid, fv3_array(:,:,jl), atlas_ptr(jl,:))
+                                     ntiles, ngrid, fv3_array(:,:,jl), node_values)
+  if (size(atlas_ptr, 1) == size(fv3_array, 3)) then
+    atlas_ptr(jl, 1:ngrid) = node_values
+  else if (size(atlas_ptr, 2) == size(fv3_array, 3)) then
+    atlas_ptr(1:ngrid, jl) = node_values
+  else
+    call abor1_ftn('copy_fv3_to_atlas: atlas levels dimension does not match FV3 array levels')
+  end if
 end do
+deallocate(node_values)
 
 end subroutine copy_fv3_to_atlas
 
